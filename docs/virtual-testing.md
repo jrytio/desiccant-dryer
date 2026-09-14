@@ -73,8 +73,9 @@ Two things to know about the model. Sensors are published from the plant
 tick, so the controller's view is never more than one plant tick (1 s real)
 old at any speed. And the controller's "not heating" check needs the
 standby pack to rise 5 °C within 5 simulated minutes; with the thermal time
-constant at its 30 min maximum that requires `Sim Heater Max Temp` at least
-about 53 °C above `Sim Ambient Temp`, so extreme knob settings can trip that
+constant at its 30 min maximum that requires `Sim Heater Max Temp` roughly 33 °C above `Sim Ambient Temp` at 1x, rising to about 40 °C at
+60x because the controller then sees the pack up to one plant tick (one
+simulated minute) late. Extreme knob settings can therefore trip that
 fault legitimately.
 
 ## Checklist

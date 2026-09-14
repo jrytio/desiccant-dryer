@@ -39,7 +39,6 @@ are ten-line selectors. Base must only reference the five sensor ids
 hardware package. `hw-real.yaml` is the pin-map source of truth for sensors;
 `base.yaml` for outputs.
 
-
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 6. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
 SPI 36/35, display CS 5 / DC 9 / RST 14 / BL 17, 1-wire 37.
