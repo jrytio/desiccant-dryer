@@ -26,10 +26,6 @@ globals:
     type: float
     restore_value: true
     initial_value: "25.0"
-  - id: plant_rh
-    type: float
-    restore_value: true
-    initial_value: "1.0"
   - id: plant_last_ms
     type: uint32_t
     initial_value: "0"
@@ -141,7 +137,9 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
     icon: mdi:test-tube
-  # Pin both pack temps to the two Sim Pack temp numbers.
+  # Pin both pack temps to the two Sim Pack temp numbers. The heaters then have
+  # no effect, so raise the pinned value yourself or expect the controller's
+  # "not heating" fault.
   - platform: template
     name: "Sim Manual Temps"
     id: sim_manual_temps
@@ -154,41 +152,60 @@ interval:
   - interval: 1s
     then:
       - lambda: |-
-          float speed = id(sim_speed).state;
-          if (isnan(speed) || speed < 1.0f) speed = 1.0f;
+          // A knob's state is NaN only if it has never been published; fall back
+          // to its default so a NaN can never be integrated into the plant state
+          // (NaN is absorbing and would persist to flash).
+          auto knob = [](float v, float dflt) { return isnan(v) ? dflt : v; };
+          float speed = knob(id(sim_speed).state, 1.0f);
+          if (speed < 1.0f) speed = 1.0f;
           id(time_scale) = speed;
 
+          // First tick after boot: seed the clock and skip integration so boot
+          // time is not applied to the restored plant state.
           const uint32_t now = millis();
+          if (id(plant_last_ms) == 0) { id(plant_last_ms) = now; return; }
           float dt_real = (now - id(plant_last_ms)) / 1000.0f;
           id(plant_last_ms) = now;
+          // Clamped tighter than the control tick's 60 s on purpose: after a
+          // stall the plant does not chase the controller's clock.
           if (dt_real > 5.0f) dt_real = 5.0f;
           const float dt = dt_real * speed;
 
-          const float ambient = id(sim_ambient).state;
-          const float tau = id(sim_tau_min).state * 60.0f;
+          const float ambient    = knob(id(sim_ambient).state, 25.0f);
+          const float heater_max = knob(id(sim_heater_max).state, 110.0f);
+          const float tau        = knob(id(sim_tau_min).state, 5.0f) * 60.0f;
           const float k = 1.0f - expf(-dt / tau);          // exact first-order step
 
           const bool heat_a = id(heater_a).state && !id(sim_heater_fault).state;
           const bool heat_b = id(heater_b).state && !id(sim_heater_fault).state;
-          const float target_a = heat_a ? id(sim_heater_max).state : ambient;
-          const float target_b = heat_b ? id(sim_heater_max).state : ambient;
-          id(plant_t_a) += (target_a - id(plant_t_a)) * k;
-          id(plant_t_b) += (target_b - id(plant_t_b)) * k;
+          id(plant_t_a) += ((heat_a ? heater_max : ambient) - id(plant_t_a)) * k;
+          id(plant_t_b) += ((heat_b ? heater_max : ambient) - id(plant_t_b)) * k;
           if (id(sim_manual_temps).state) {
-            id(plant_t_a) = id(sim_pack_a_temp).state;
-            id(plant_t_b) = id(sim_pack_b_temp).state;
+            id(plant_t_a) = knob(id(sim_pack_a_temp).state, 25.0f);
+            id(plant_t_b) = knob(id(sim_pack_b_temp).state, 25.0f);
           }
 
+          // A failed element still warms the case, so this is deliberately not
+          // gated by Sim Heater Fault.
           const bool any_heat = id(heater_a).state || id(heater_b).state;
           const float target_case = ambient + (any_heat ? 8.0f : 0.0f);
-          const float k_case = 1.0f - expf(-dt / 600.0f);
-          id(plant_t_case) += (target_case - id(plant_t_case)) * k_case;
+          id(plant_t_case) += (target_case - id(plant_t_case)) * (1.0f - expf(-dt / 600.0f));
 
           const float service_min = id(active_pack) == 0 ? 0.0f : id(service_elapsed_s) / 60.0f;
-          float rh = 1.0f + fmaxf(0.0f, service_min - id(sim_breakthrough_min).state) * id(sim_rh_rate).state;
+          float rh = 1.0f + fmaxf(0.0f, service_min - knob(id(sim_breakthrough_min).state, 60.0f))
+                          * knob(id(sim_rh_rate).state, 0.1f);
           if (rh > 100.0f) rh = 100.0f;
-          id(plant_rh) = rh;
 
+          // Publish from the tick instead of polling, so the controller never
+          // sees a value older than one plant tick regardless of Sim Speed.
+          id(pack_a_temp).publish_state(id(plant_t_a));
+          id(pack_b_temp).publish_state(id(plant_t_b));
+          id(case_temp).publish_state(id(plant_t_case));
+          id(air_rh).publish_state(rh);
+          id(air_temp).publish_state(ambient + 2.0f);
+
+# Published by the plant tick above. The delta filters only keep HA history
+# quiet at 1x; the controller reads the same filtered state.
 sensor:
   - platform: template
     name: "Outlet Air Humidity"
@@ -197,8 +214,9 @@ sensor:
     accuracy_decimals: 1
     device_class: humidity
     state_class: measurement
-    lambda: return id(plant_rh);
-    update_interval: 2s
+    update_interval: never
+    filters:
+      - delta: 0.1
   - platform: template
     name: "Outlet Air Temperature"
     id: air_temp
@@ -206,8 +224,9 @@ sensor:
     accuracy_decimals: 1
     device_class: temperature
     state_class: measurement
-    lambda: return id(sim_ambient).state + 2.0f;
-    update_interval: 2s
+    update_interval: never
+    filters:
+      - delta: 0.2
   - platform: template
     name: "Pack A Temperature"
     id: pack_a_temp
@@ -215,8 +234,9 @@ sensor:
     accuracy_decimals: 1
     device_class: temperature
     state_class: measurement
-    lambda: return id(plant_t_a);
-    update_interval: 2s
+    update_interval: never
+    filters:
+      - delta: 0.2
   - platform: template
     name: "Pack B Temperature"
     id: pack_b_temp
@@ -224,8 +244,9 @@ sensor:
     accuracy_decimals: 1
     device_class: temperature
     state_class: measurement
-    lambda: return id(plant_t_b);
-    update_interval: 2s
+    update_interval: never
+    filters:
+      - delta: 0.2
   - platform: template
     name: "Case Temperature"
     id: case_temp
@@ -233,5 +254,6 @@ sensor:
     accuracy_decimals: 1
     device_class: temperature
     state_class: measurement
-    lambda: return id(plant_t_case);
-    update_interval: 2s
+    update_interval: never
+    filters:
+      - delta: 0.2
