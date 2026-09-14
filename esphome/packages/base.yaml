@@ -544,10 +544,12 @@ interval:
             id(fault_code) = 1;
             ESP_LOGE("cycle", "FAULT: active pack overtemp (%.1f C)", t_act);
           }
-          if (id(fault_code) == 0 && !isnan(t_sb) && t_sb > id(overtemp).state) {
-            id(fault_code) = 2;
-            id(standby_state) = 2;
-            ESP_LOGE("cycle", "FAULT: standby pack overtemp (%.1f C)", t_sb);
+          if (!isnan(t_sb) && t_sb > id(overtemp).state) {
+            id(standby_state) = 2;   // retire it regardless of which fault is held
+            if (id(fault_code) == 0) {
+              id(fault_code) = 2;
+              ESP_LOGE("cycle", "FAULT: standby pack overtemp (%.1f C)", t_sb);
+            }
           }
           if (id(fault_code) != 0) { id(apply_outputs).execute(); return; }   // hold until cleared
           if (isnan(rh) || isnan(t_sb)) { id(apply_outputs).execute(); return; }   // sensors not ready
@@ -604,4 +606,7 @@ interval:
             }
           }
 
+          // Recompute after the state machine so a pack that just became READY
+          // does not show "(waiting)" for one tick.
+          id(waiting_for_standby) = (id(standby_state) != 3 && rh >= id(swap_rh).state);
           id(apply_outputs).execute();
