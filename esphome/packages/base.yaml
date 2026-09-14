@@ -29,8 +29,12 @@
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  # 700 sits after HARDWARE (800: switches and restored globals are ready) and
+  # before DATA (600: intervals and sensors have not started). ESPHome loops
+  # already-set-up components while it waits for WiFi during setup, so a low
+  # priority here would let the control tick run first.
   on_boot:
-    priority: -100
+    priority: 700
     then:
       - lambda: |-
           // Everything off until the state machine has run once.
@@ -51,6 +55,7 @@ esphome:
           if (id(standby_state) == 1) {
             id(reset_regen_counters).execute();
           }
+          id(boot_done) = true;
 
 esp32:
   board: sparkfun_esp32s2_thing_plus   # if rejected, esp32-s2-saola-1 works (same module)
@@ -98,7 +103,7 @@ globals:
     restore_value: true
     initial_value: "0"
   # Elapsed counters in scaled seconds. Persisted so a reboot resumes mid-cycle
-  # (ESPHome batches flash writes about once a minute).
+  # (ESPHome flushes changed keys to flash about once a minute).
   - id: service_elapsed_s
     type: float
     restore_value: true
@@ -133,6 +138,9 @@ globals:
   - id: last_tick_ms
     type: uint32_t
     initial_value: "0"
+  - id: boot_done
+    type: bool
+    initial_value: "false"
 
 # ---------------------------------------------------------------- tunables
 number:
@@ -520,6 +528,7 @@ interval:
   - interval: 5s
     then:
       - lambda: |-
+          if (!id(boot_done)) return;   // never run before on_boot has reset outputs and counters
           if (!id(dryer_enabled).state) return;
           if (id(do_swap).is_running()) return;   // never fight the both-closed window
 

@@ -24,12 +24,14 @@ three persisted counters:
 | Counter | Meaning | Reset by |
 |---|---|---|
 | `service_elapsed_s` | Time the active pack has been in service | swap, first start, Dryer Enabled off |
-| `heat_elapsed_s` | Time the standby heater has run this regen | WET to HEATING, swap, boot while HEATING |
+| `heat_elapsed_s` | Time the standby heater has run this regen | WET to HEATING, swap, first start, Dryer Enabled off, boot while HEATING, Clear Fault while HEATING |
 | `hold_elapsed_s` | Time continuously at or above `regen_temp` | dropping below `regen_temp`, plus all of the above |
 
 `time_scale` is 1.0 in production. The virtual build's "Sim Speed" sets it
-so a full cycle runs in minutes. ESPHome writes changed globals to flash
-about once a minute, so a power loss costs at most a minute of each counter.
+so a full cycle runs in minutes. ESPHome flushes changed globals to flash about once a minute, one NVS key
+per changed global (one to three keys per minute in production, about six
+on the virtual build because the plant temperatures keep moving), so a
+power loss costs at most a minute of each counter.
 
 ## Standby state machine
 
@@ -66,6 +68,11 @@ heater and hold counters reset and the start temperature is cleared, so the
 regen restarts from scratch on the first tick. Resuming the old timers would
 risk a spurious "not heating" fault after a long outage that let the pack
 cool. The cost is at most one extra regen.
+
+`on_boot` runs at setup priority 700, after switches and restored globals
+exist and before intervals start, and sets a `boot_done` flag that the
+tick checks first. Without that, ESPHome would run the tick while setup
+waits for WiFi, before the outputs were forced off or the counters reset.
 
 `Dryer Enabled` off: all outputs off, `active_pack` cleared, state WET, all
 counters zero. A latched fault is left alone. Turning it on again starts on

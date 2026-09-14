@@ -69,9 +69,7 @@ Heating to 90 °C takes about 7 min, the hold 15 min, cooling to 40 °C about
 9 min, so standby is READY around 131 min and the swap fires at 150 min.
 At 60x that is 2.5 real minutes per half cycle.
 
-Two things to know about the model. Sensors are published from the plant
-tick, so the controller's view is never more than one plant tick (1 s real)
-old at any speed. And the controller's "not heating" check needs the
+Two things to know about the model. Pack and case temperatures are published from the plant tick, so the controller's view of them is never more than one plant tick (1 s real) old at any speed; outlet RH reaches the controller through the `Control Humidity` template sensor, which polls every 5 s, so RH can be up to 5 s real (5 simulated minutes at 60x) behind the plant. And the controller's "not heating" check needs the
 standby pack to rise 5 °C within 5 simulated minutes; with the thermal time
 constant at its 30 min maximum that requires `Sim Heater Max Temp` roughly 33 °C above `Sim Ambient Temp` at 1x, rising to about 40 °C at
 60x because the controller then sees the pack up to one plant tick (one
@@ -99,7 +97,7 @@ then on, and returning any knob you changed.
 | 10 | Reboot mid-service | At ~30 sim-min of service press Restart | Same active pack after boot, its valve on within one tick, Service Time within a minute of where it was, standby "wet" |
 | 11 | Reboot mid-HEATING | Press Restart during "B heating" | After boot: still "B heating", Heater B on within one tick, Standby Heater Time and Regen Hold Time restart from 0, Pack B Temperature continues from where it was (plant state persisted) |
 | 12 | Base humidity override | Simulate Humidity on, Simulated RH 12 | Control Humidity reads 12. Swap as soon as standby is ready. Press Restart: Simulate Humidity is off again |
-| 13 | Fan thermostat | Sim Ambient Temp 40 | Case Temperature rises past 36.5 °C, Case Fan on. Back to 25: fan off after the 60 s minimum run time |
+| 13 | Fan thermostat | Sim Ambient Temp 40 | Case Temperature rises past 36.5 °C, Case Fan on. Back to 25: fan off once the case falls below 33.5 °C (about 6 simulated minutes, so 6 s real at 60x) and the 60 s minimum run time has passed |
 | 14 | Sim speed mid-cycle | Change Sim Speed between 1 and 60 during heating | Counters and temperatures stay continuous; nothing resets |
 
 Record anything unexpected with the log excerpt and the knob values.
