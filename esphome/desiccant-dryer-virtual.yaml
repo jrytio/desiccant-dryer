@@ -12,4 +12,5 @@ packages:
   base: !include packages/base.yaml
   platform: !include packages/platform-esp32.yaml
   hardware: !include packages/hw-virtual.yaml
-  display: !include packages/display.yaml
+  draw: !include packages/display-draw.yaml
+  display: !include packages/display-st7789.yaml

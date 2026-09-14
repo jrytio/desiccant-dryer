@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Canonicalise `esphome config` output so two configs can be diffed
-regardless of section order or list order.
+regardless of section order, list order, or which substitutions produced them.
 
 Usage: normalize-config.py CONFIG_DUMP.txt > canonical.json
 Run with ESPHome's own Python so PyYAML is available, e.g.
@@ -46,6 +46,11 @@ def main(path):
     with open(path) as f:
         text = "".join(l for l in f if not l.startswith(("INFO", "WARNING")))
     data = yaml.load(text, Loader=AnyTag)
+    # `esphome config` echoes the substitutions block it expanded. Those are
+    # inputs, already substituted into every other key, so comparing them
+    # would only flag a renamed or newly shared substitution, never a change
+    # in the resulting config. Drop them.
+    data.pop("substitutions", None)
     out = {k: canon(v, top=True) for k, v in sorted(data.items())}
     print(json.dumps(out, indent=1, sort_keys=True))
 
