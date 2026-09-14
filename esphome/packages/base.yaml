@@ -40,13 +40,16 @@ esphome:
           id(valve_b).turn_off();
           id(case_fan).turn_off();
           id(last_tick_ms) = millis();
+          // Restored ints index arrays and drive the state machine; clamp them in
+          // case flash held garbage.
+          if (id(active_pack) < 0 || id(active_pack) > 2) id(active_pack) = 0;
+          if (id(standby_state) < 0 || id(standby_state) > 3) id(standby_state) = 0;
+          if (id(fault_code) < 0 || id(fault_code) > 3) id(fault_code) = 0;
           // A regen interrupted by a reboot restarts from scratch: the pack may
           // have cooled during the outage, and resuming the old timer would
           // trip the "not heating" check.
           if (id(standby_state) == 1) {
-            id(heat_elapsed_s) = 0;
-            id(hold_elapsed_s) = 0;
-            id(heat_start_temp) = NAN;
+            id(reset_regen_counters).execute();
           }
 
 esp32:
@@ -296,11 +299,7 @@ switch:
           id(valve_b).turn_off();
           id(active_pack) = 0;
           id(standby_state) = 0;
-          id(service_elapsed_s) = 0;
-          id(heat_elapsed_s) = 0;
-          id(hold_elapsed_s) = 0;
-          id(heat_start_temp) = NAN;
-          id(waiting_for_standby) = false;
+          id(reset_cycle_counters).execute();
 
 button:
   - platform: template
@@ -309,6 +308,9 @@ button:
     on_press:
       - lambda: |-
           id(fault_code) = 0;
+          // A regen that was interrupted by the fault restarts from scratch, for
+          // the same reason as on boot: the pack has cooled with the heater off.
+          if (id(standby_state) == 1) id(reset_regen_counters).execute();
   - platform: template
     name: "Force Swap"
     icon: mdi:swap-horizontal
@@ -341,6 +343,7 @@ sensor:
       return id(service_elapsed_s) / 60.0f;
     update_interval: 10s
 
+  # Both hold their final value through COOLING and READY so a regen's duration stays visible in HA history; the swap resets them.
   - platform: template
     name: "Standby Heater Time"
     id: heat_min
@@ -348,7 +351,6 @@ sensor:
     accuracy_decimals: 1
     entity_category: diagnostic
     lambda: |-
-      if (id(standby_state) != 1) return 0;
       return id(heat_elapsed_s) / 60.0f;
     update_interval: 10s
 
@@ -359,7 +361,6 @@ sensor:
     accuracy_decimals: 1
     entity_category: diagnostic
     lambda: |-
-      if (id(standby_state) != 1) return 0;
       return id(hold_elapsed_s) / 60.0f;
     update_interval: 10s
 
@@ -440,10 +441,26 @@ climate:
 
 # ---------------------------------------------------------------- cycle logic
 script:
+  # Counter resets shared by boot, disable, first run, swap and Clear Fault.
+  - id: reset_regen_counters
+    mode: single
+    then:
+      - lambda: |-
+          id(heat_elapsed_s) = 0;
+          id(hold_elapsed_s) = 0;
+          id(heat_start_temp) = NAN;
+  - id: reset_cycle_counters
+    mode: single
+    then:
+      - lambda: |-
+          id(service_elapsed_s) = 0;
+          id(waiting_for_standby) = false;
+          id(reset_regen_counters).execute();
   # Outputs are a pure function of state. Runs at the end of every control
   # tick, so a reboot or a missed transition can never leave the active valve
-  # closed or a heater in the wrong state. ESPHome ignores turn_on/turn_off on
-  # a switch already in that state, so this is silent when nothing changes.
+  # closed or a heater in the wrong state. Each switch is written only when
+  # its state differs, so this is silent (even at DEBUG) when nothing changes.
+  # Order matters with interlocks: the partner goes off before the other goes on.
   - id: apply_outputs
     mode: single
     then:
@@ -453,15 +470,15 @@ script:
           const float t_sb = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
           const bool sb_heat = id(standby_state) == 1 && id(fault_code) == 0 && !isnan(t_sb);
           if (a_active) {
-            id(valve_b).turn_off();
-            id(valve_a).turn_on();
-            id(heater_a).turn_off();
-            if (sb_heat) id(heater_b).turn_on(); else id(heater_b).turn_off();
+            if (id(valve_b).state)  id(valve_b).turn_off();
+            if (!id(valve_a).state) id(valve_a).turn_on();
+            if (id(heater_a).state) id(heater_a).turn_off();
+            if (id(heater_b).state != sb_heat) { if (sb_heat) id(heater_b).turn_on(); else id(heater_b).turn_off(); }
           } else {
-            id(valve_a).turn_off();
-            id(valve_b).turn_on();
-            id(heater_b).turn_off();
-            if (sb_heat) id(heater_a).turn_on(); else id(heater_a).turn_off();
+            if (id(valve_a).state)  id(valve_a).turn_off();
+            if (!id(valve_b).state) id(valve_b).turn_on();
+            if (id(heater_b).state) id(heater_b).turn_off();
+            if (id(heater_a).state != sb_heat) { if (sb_heat) id(heater_a).turn_on(); else id(heater_a).turn_off(); }
           }
 
   - id: do_swap
@@ -482,11 +499,7 @@ script:
           if (next == 1) id(valve_a).turn_on(); else id(valve_b).turn_on();
           id(active_pack) = next;
           id(standby_state) = 0;          // the pack just retired is WET
-          id(service_elapsed_s) = 0;
-          id(heat_elapsed_s) = 0;
-          id(hold_elapsed_s) = 0;
-          id(heat_start_temp) = NAN;
-          id(waiting_for_standby) = false;
+          id(reset_cycle_counters).execute();
 
 interval:
   - interval: 5s
@@ -506,10 +519,7 @@ interval:
           if (id(active_pack) == 0) {
             id(active_pack) = 1;
             id(standby_state) = 0;
-            id(service_elapsed_s) = 0;
-            id(heat_elapsed_s) = 0;
-            id(hold_elapsed_s) = 0;
-            id(heat_start_temp) = NAN;
+            id(reset_cycle_counters).execute();
             ESP_LOGI("cycle", "Starting on pack A");
             id(apply_outputs).execute();
             return;
@@ -519,6 +529,8 @@ interval:
           const float t_sb  = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
           const float t_act = a_active ? id(pack_a_temp).state : id(pack_b_temp).state;
           const float rh    = id(ctrl_rh).state;
+          // Flag a wanted-but-blocked swap even while faulted or waiting on sensors.
+          id(waiting_for_standby) = (id(standby_state) != 3 && !isnan(rh) && rh >= id(swap_rh).state);
 
           // Service time counts whenever a pack is in service, faults included:
           // air is still flowing through it.
@@ -526,11 +538,13 @@ interval:
           const float service_m = id(service_elapsed_s) / 60.0f;
 
           // --- safety: overtemp on either pack, checked every tick
-          if (!isnan(t_act) && t_act > id(overtemp).state) {
+          // Latch only when no fault is held, so each fault logs once. A second
+          // fault while one is latched is not recorded; heaters are already off.
+          if (id(fault_code) == 0 && !isnan(t_act) && t_act > id(overtemp).state) {
             id(fault_code) = 1;
             ESP_LOGE("cycle", "FAULT: active pack overtemp (%.1f C)", t_act);
           }
-          if (!isnan(t_sb) && t_sb > id(overtemp).state) {
+          if (id(fault_code) == 0 && !isnan(t_sb) && t_sb > id(overtemp).state) {
             id(fault_code) = 2;
             id(standby_state) = 2;
             ESP_LOGE("cycle", "FAULT: standby pack overtemp (%.1f C)", t_sb);
@@ -543,8 +557,7 @@ interval:
               const bool near_max = service_m >= id(max_service_min).state - id(regen_max_min).state;
               if (rh >= id(arm_rh).state || near_max) {
                 id(standby_state) = 1;
-                id(heat_elapsed_s) = 0;
-                id(hold_elapsed_s) = 0;
+                id(reset_regen_counters).execute();
                 id(heat_start_temp) = t_sb;
                 ESP_LOGI("cycle", "Standby heater on (RH %.1f%%, service %.0f min)", rh, service_m);
               }
@@ -591,6 +604,4 @@ interval:
             }
           }
 
-          // note when we'd like to swap but the standby pack isn't ready
-          id(waiting_for_standby) = (id(standby_state) != 3 && rh >= id(swap_rh).state);
           id(apply_outputs).execute();
