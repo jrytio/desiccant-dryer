@@ -3,3 +3,4 @@ esphome/.esphome/
 *.bin
 .DS_Store
 .superpowers/
+esphome/.gitignore
