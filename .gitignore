@@ -1,0 +1,4 @@
+esphome/secrets.yaml
+esphome/.esphome/
+*.bin
+.DS_Store
