@@ -14,8 +14,11 @@ based on measured outlet humidity and measured pack temperatures instead.
   runs on-device; Home Assistant is for tuning and observation only. The unit
   must keep working with WiFi or HA down.
 - **Board: SparkFun ESP32-S2 Thing Plus (WRL-17743).** Single core, 320 KB RAM,
-  no PSRAM, no Bluetooth, CP2102 UART for flashing. The 240x240 display buffer
-  (~115 KB) fits but is tight; `color_palette: 8BIT` is the fallback.
+  no PSRAM, no Bluetooth, CP2102 UART for flashing. The full 16-bit 240x240
+  display buffer (~115 KB) does not allocate once WiFi, API and the web server
+  are up (seen on the first bench flash), so the display runs
+  `color_palette: 8BIT` (~58 KB). The logger must use `hardware_uart: UART0`;
+  ESPHome's S2 default of USB_CDC is the unconnected native-USB pins.
 - **Heaters are 120 VAC (~117 W, 123 Ω each)**, switched by Songle SRD-05VDC
   relays driven by 2N2222 low-side stages. Mains stays off the ESP board.
 - **Valves are two SMC VDW22 2-port NC solenoids (24 VDC, 3 W)**, one per pack,
