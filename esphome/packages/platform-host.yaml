@@ -1,0 +1,16 @@
+# Host platform: the firmware compiled natively for the Mac. No WiFi, OTA,
+# captive portal or web server exist on host, so this file only provides
+# the host block and the one entity the display reads that would otherwise
+# come from WiFi. Home Assistant reaches the process over the API.
+
+host:
+
+text_sensor:
+  # The display's bottom line prints ip_addr. On host it just says so.
+  # Internal: Home Assistant does not need a fixed-string entity.
+  - platform: template
+    name: "IP Address"
+    id: ip_addr
+    internal: true
+    update_interval: 60s
+    lambda: return std::string("host");
