@@ -60,6 +60,10 @@ esp32:
 
 logger:
   level: INFO
+  # The S2 Thing Plus's USB port is a CP2102 on UART0. ESPHome's S2 default
+  # is USB_CDC, which is the bare native-USB pins on this board, so nothing
+  # would ever reach `esphome logs` over the cable.
+  hardware_uart: UART0
 
 api:
   encryption:
