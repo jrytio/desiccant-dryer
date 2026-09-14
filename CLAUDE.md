@@ -103,11 +103,6 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Before wiring real heaters: make the four heater/valve switches
   `internal: true` with read-only binary_sensor mirrors. A manual toggle from
   HA can currently turn on the active pack's heater for up to one 5 s tick.
-- Before the production flash: debounce the NaN guard on the standby probe.
-  A single DS18B20 CRC miss publishes NaN and drops the heater relay for one
-  tick; a NaN outage long enough for the pack to cool also trips fault 3 on
-  return. Consider a few consecutive NaN ticks before acting, and a
-  `reset_regen_counters` on recovery.
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows
   "(waiting)" if RH is also high. Decide whether `max_service_min` should

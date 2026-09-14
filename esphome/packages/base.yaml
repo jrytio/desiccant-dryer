@@ -26,6 +26,13 @@
 #   Safety: any pack above overtemp -> heaters off + fault. Heater on 5 min
 #   with no temperature rise -> fault. Faults latch until cleared in HA.
 
+substitutions:
+  # Control ticks (5 s each) the standby heater may keep running without a
+  # valid probe reading: 5 ticks = 25 s, which rides out two missed 10 s
+  # DS18B20 updates and acts on the third. The counter starts at this value
+  # so tolerance only applies once a valid reading has been seen.
+  probe_timeout_ticks: "5"
+
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -86,6 +93,9 @@ wifi:
   ap:
     ssid: "${friendly_name} Setup"
     password: !secret ap_password
+  on_connect:
+    - delay: 2s
+    - lambda: ESP_LOGI("wifi", "IP %s", id(ip_addr).state.c_str());
 
 captive_portal:
 
@@ -143,6 +153,10 @@ globals:
   - id: boot_done
     type: bool
     initial_value: "false"
+  # Consecutive control ticks with no standby probe reading. Starts blocked.
+  - id: sb_nan_ticks
+    type: int
+    initial_value: "${probe_timeout_ticks}"
 
 # ---------------------------------------------------------------- tunables
 number:
@@ -494,7 +508,8 @@ script:
           if (id(active_pack) == 0) return;
           const bool a_active = (id(active_pack) == 1);
           const float t_sb = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
-          const bool sb_heat = id(standby_state) == 1 && id(fault_code) == 0 && !isnan(t_sb);
+          const bool sb_heat = id(standby_state) == 1 && id(fault_code) == 0
+                               && (!isnan(t_sb) || id(sb_nan_ticks) < ${probe_timeout_ticks});
           if (a_active) {
             if (id(valve_b).state)  id(valve_b).turn_off();
             if (!id(valve_a).state) id(valve_a).turn_on();
@@ -558,6 +573,19 @@ interval:
           const float rh    = id(ctrl_rh).state;
           // Flag a wanted-but-blocked swap even while faulted or waiting on sensors.
           id(waiting_for_standby) = (id(standby_state) != 3 && !isnan(rh) && rh >= id(swap_rh).state);
+
+          // Tolerate missed probe readings (DS18B20 CRC errors are routine on a
+          // shared bus) for probe_timeout_ticks; then apply_outputs drops the
+          // heater and an interrupted regen restarts when the probe returns.
+          if (isnan(t_sb)) {
+            if (id(sb_nan_ticks) < ${probe_timeout_ticks}) id(sb_nan_ticks) += 1;
+            if (id(sb_nan_ticks) == ${probe_timeout_ticks} && id(standby_state) == 1) {
+              id(reset_regen_counters).execute();
+              ESP_LOGW("cycle", "Standby probe lost; heater off, regen restarts when it returns");
+            }
+          } else {
+            id(sb_nan_ticks) = 0;
+          }
 
           // Service time counts whenever a pack is in service, faults included:
           // air is still flowing through it.
