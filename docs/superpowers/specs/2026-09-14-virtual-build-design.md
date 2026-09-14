@@ -151,7 +151,7 @@ switch standby_state:
   HEATING:
     if heat_start_temp is NaN: heat_start_temp = t_sb        # post-reboot capture
     heat_elapsed_s += dt
-    if heat_elapsed_s >= 300 and t_sb < heat_start_temp + 5:
+    if heat_elapsed_s >= 300 and t_sb < heat_start_temp + 5 and t_sb < regen_temp:
         fault_code = 3; standby_state = COOLING; break
     if t_sb >= regen_temp: hold_elapsed_s += dt  else hold_elapsed_s = 0
     if hold_elapsed_s >= regen_hold_min * 60: standby_state = COOLING; log
@@ -167,7 +167,11 @@ apply_outputs()
 ```
 
 The "not heating" check keeps its hardcoded 5 °C in 5 min; the 5 min is
-now 300 scaled seconds so it accelerates with everything else.
+now 300 scaled seconds so it accelerates with everything else. It only
+applies while the pack is still below `regen_temp`: a pack already at regen
+temperature is heating fine even if it cannot rise another 5 °C, which
+matters after a reboot when the start temperature is captured from an
+already-hot pack.
 
 ### 2.3 apply_outputs script
 
