@@ -2,6 +2,29 @@
 # ${friendly_name} and picks a hardware package (hw-real or hw-virtual)
 # plus display. This file must only reference these sensor ids from the
 # hardware package: air_rh, air_temp, pack_a_temp, pack_b_temp, case_temp.
+#
+# Outputs (12-pin header), identical on both builds:
+#   GPIO13  Heater A relay coil (5 V, low-side NPN)     interlocked with B
+#   GPIO12  Heater B relay coil                          interlocked with A
+#   GPIO11  Valve A  (24 V solenoid, low-side MOSFET)   interlocked with B
+#   GPIO10  Valve B                                      interlocked with A
+#   GPIO6   Case fan (24 V, low-side MOSFET)
+#
+# Cycle logic (control tick every 5 s):
+#   One pack is "active" (valve open, heater off). The other is "standby" and
+#   moves through: WET -> HEATING -> COOLING -> READY.
+#     WET      -> HEATING  when outlet RH >= arm_rh (or service time nears max)
+#     HEATING  -> COOLING  when pack temp has been >= regen_temp for regen_hold min
+#                          (or heater has run regen_max min - logged as a warning)
+#     COOLING  -> READY    when pack temp <= cooldown_temp
+#     READY    -> swap     when outlet RH >= swap_rh, or service time >= max_service
+#   Time: elapsed-second counters advanced by each tick and scaled by
+#   time_scale (1.0 in production; the virtual build accelerates it). The
+#   counters persist, so a reboot resumes the cycle. Outputs are re-asserted
+#   from state every tick (apply_outputs), so a reboot re-opens the active
+#   valve and re-lights a heater.
+#   Safety: any pack above overtemp -> heaters off + fault. Heater on 5 min
+#   with no temperature rise -> fault. Faults latch until cleared in HA.
 
 esphome:
   name: ${name}
@@ -15,6 +38,16 @@ esphome:
           id(heater_b).turn_off();
           id(valve_a).turn_off();
           id(valve_b).turn_off();
+          id(case_fan).turn_off();
+          id(last_tick_ms) = millis();
+          // A regen interrupted by a reboot restarts from scratch: the pack may
+          // have cooled during the outage, and resuming the old timer would
+          // trip the "not heating" check.
+          if (id(standby_state) == 1) {
+            id(heat_elapsed_s) = 0;
+            id(hold_elapsed_s) = 0;
+            id(heat_start_temp) = NAN;
+          }
 
 esp32:
   board: sparkfun_esp32s2_thing_plus   # if rejected, esp32-s2-saola-1 works (same module)
@@ -44,6 +77,7 @@ captive_portal:
 
 web_server:
   port: 80
+
 # ---------------------------------------------------------------- globals
 globals:
   # 0 = none, 1 = A, 2 = B
@@ -56,28 +90,42 @@ globals:
     type: int
     restore_value: true
     initial_value: "0"
-  - id: service_start_ms
-    type: uint32_t
+  # Elapsed counters in scaled seconds. Persisted so a reboot resumes mid-cycle
+  # (ESPHome batches flash writes about once a minute).
+  - id: service_elapsed_s
+    type: float
+    restore_value: true
     initial_value: "0"
-  - id: heat_start_ms
-    type: uint32_t
+  - id: heat_elapsed_s
+    type: float
+    restore_value: true
     initial_value: "0"
+  - id: hold_elapsed_s
+    type: float
+    restore_value: true
+    initial_value: "0"
+  # Standby temp when heating began. NAN = capture on the next valid tick.
   - id: heat_start_temp
     type: float
-    initial_value: "0"
-  - id: above_regen_since_ms
-    type: uint32_t
-    initial_value: "0"
-  - id: fault
-    type: bool
     restore_value: true
-    initial_value: "false"
-  - id: fault_msg
-    type: std::string
-    initial_value: '""'
+    initial_value: "NAN"
+  # 0 none, 1 active pack overtemp, 2 standby pack overtemp,
+  # 3 standby heater not heating. Text lives in the Fault Message sensor.
+  - id: fault_code
+    type: int
+    restore_value: true
+    initial_value: "0"
   - id: waiting_for_standby
     type: bool
     initial_value: "false"
+  # Multiplier on real elapsed time. Production leaves this at 1.0; only the
+  # virtual package's "Sim Speed" writes it.
+  - id: time_scale
+    type: float
+    initial_value: "1.0"
+  - id: last_tick_ms
+    type: uint32_t
+    initial_value: "0"
 
 # ---------------------------------------------------------------- tunables
 number:
@@ -170,8 +218,8 @@ number:
     optimistic: true
     entity_category: config
 
-  # Simulation: when "Simulate Humidity" is on, this value replaces the SHT45
-  # reading everywhere the control logic and display use humidity.
+  # Simulation: when "Simulate Humidity" is on, this value replaces the outlet
+  # humidity everywhere the control logic and display use it. Never persisted.
   - platform: template
     name: "Simulated RH"
     id: sim_rh
@@ -248,6 +296,11 @@ switch:
           id(valve_b).turn_off();
           id(active_pack) = 0;
           id(standby_state) = 0;
+          id(service_elapsed_s) = 0;
+          id(heat_elapsed_s) = 0;
+          id(hold_elapsed_s) = 0;
+          id(heat_start_temp) = NAN;
+          id(waiting_for_standby) = false;
 
 button:
   - platform: template
@@ -255,13 +308,17 @@ button:
     icon: mdi:alert-remove
     on_press:
       - lambda: |-
-          id(fault) = false;
-          id(fault_msg) = "";
+          id(fault_code) = 0;
   - platform: template
     name: "Force Swap"
     icon: mdi:swap-horizontal
     on_press:
       - script.execute: do_swap
+  - platform: restart
+    name: "Restart"
+    entity_category: diagnostic
+
+# ---------------------------------------------------------------- derived sensors
 sensor:
   # The humidity the controller actually acts on: real or simulated.
   - platform: template
@@ -281,8 +338,30 @@ sensor:
     accuracy_decimals: 0
     lambda: |-
       if (id(active_pack) == 0) return 0;
-      return (millis() - id(service_start_ms)) / 60000.0;
-    update_interval: 30s
+      return id(service_elapsed_s) / 60.0f;
+    update_interval: 10s
+
+  - platform: template
+    name: "Standby Heater Time"
+    id: heat_min
+    unit_of_measurement: "min"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    lambda: |-
+      if (id(standby_state) != 1) return 0;
+      return id(heat_elapsed_s) / 60.0f;
+    update_interval: 10s
+
+  - platform: template
+    name: "Regen Hold Time"
+    id: hold_min
+    unit_of_measurement: "min"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    lambda: |-
+      if (id(standby_state) != 1) return 0;
+      return id(hold_elapsed_s) / 60.0f;
+    update_interval: 10s
 
   - platform: wifi_signal
     name: "WiFi Signal"
@@ -294,17 +373,33 @@ binary_sensor:
   - platform: template
     name: "Fault"
     device_class: problem
-    lambda: return id(fault);
+    lambda: return id(fault_code) != 0;
 
 text_sensor:
   - platform: wifi_info
     ip_address:
       name: "IP Address"
       id: ip_addr
+  # Single place the fault code becomes text; the display reads this too.
   - platform: template
     name: "Fault Message"
-    lambda: return id(fault_msg);
-    update_interval: 10s
+    id: fault_message
+    update_interval: 5s
+    lambda: |-
+      switch (id(fault_code)) {
+        case 1: return std::string("Active pack overtemp");
+        case 2: return std::string("Standby pack overtemp");
+        case 3: return std::string("Standby heater not heating");
+        default: return std::string("");
+      }
+  - platform: template
+    name: "Standby State"
+    id: standby_state_text
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      const char* st[] = {"wet", "heating", "cooling", "ready"};
+      return std::string(st[id(standby_state)]);
   - platform: template
     name: "Dryer Status"
     id: status_text
@@ -345,6 +440,30 @@ climate:
 
 # ---------------------------------------------------------------- cycle logic
 script:
+  # Outputs are a pure function of state. Runs at the end of every control
+  # tick, so a reboot or a missed transition can never leave the active valve
+  # closed or a heater in the wrong state. ESPHome ignores turn_on/turn_off on
+  # a switch already in that state, so this is silent when nothing changes.
+  - id: apply_outputs
+    mode: single
+    then:
+      - lambda: |-
+          if (id(active_pack) == 0) return;
+          const bool a_active = (id(active_pack) == 1);
+          const float t_sb = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
+          const bool sb_heat = id(standby_state) == 1 && id(fault_code) == 0 && !isnan(t_sb);
+          if (a_active) {
+            id(valve_b).turn_off();
+            id(valve_a).turn_on();
+            id(heater_a).turn_off();
+            if (sb_heat) id(heater_b).turn_on(); else id(heater_b).turn_off();
+          } else {
+            id(valve_a).turn_off();
+            id(valve_b).turn_on();
+            id(heater_b).turn_off();
+            if (sb_heat) id(heater_a).turn_on(); else id(heater_a).turn_off();
+          }
+
   - id: do_swap
     mode: single
     then:
@@ -358,11 +477,15 @@ script:
           id(valve_b).turn_off();
       - delay: 500ms
       - lambda: |-
+          if (id(active_pack) == 0) return;   // disabled during the delay
           int next = (id(active_pack) == 1) ? 2 : 1;
           if (next == 1) id(valve_a).turn_on(); else id(valve_b).turn_on();
           id(active_pack) = next;
           id(standby_state) = 0;          // the pack just retired is WET
-          id(service_start_ms) = millis();
+          id(service_elapsed_s) = 0;
+          id(heat_elapsed_s) = 0;
+          id(hold_elapsed_s) = 0;
+          id(heat_start_temp) = NAN;
           id(waiting_for_standby) = false;
 
 interval:
@@ -370,85 +493,89 @@ interval:
     then:
       - lambda: |-
           if (!id(dryer_enabled).state) return;
+          if (id(do_swap).is_running()) return;   // never fight the both-closed window
 
-          // --- first run / after reboot with no state: start on pack A
+          // --- scaled time step
+          const uint32_t now = millis();
+          float dt_real = (now - id(last_tick_ms)) / 1000.0f;
+          id(last_tick_ms) = now;
+          if (dt_real > 60.0f) dt_real = 60.0f;   // stalled-loop guard (OTA, long block)
+          const float dt = dt_real * id(time_scale);
+
+          // --- first run / after a disable: start on pack A
           if (id(active_pack) == 0) {
             id(active_pack) = 1;
             id(standby_state) = 0;
-            id(valve_b).turn_off();
-            id(valve_a).turn_on();
-            id(service_start_ms) = millis();
+            id(service_elapsed_s) = 0;
+            id(heat_elapsed_s) = 0;
+            id(hold_elapsed_s) = 0;
+            id(heat_start_temp) = NAN;
             ESP_LOGI("cycle", "Starting on pack A");
+            id(apply_outputs).execute();
             return;
           }
 
           const bool a_active = (id(active_pack) == 1);
-          float t_sb  = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
-          float t_act = a_active ? id(pack_a_temp).state : id(pack_b_temp).state;
-          float rh    = id(ctrl_rh).state;
-          auto sb_heater_on  = [&]() { if (a_active) id(heater_b).turn_on();  else id(heater_a).turn_on();  };
-          auto sb_heater_off = [&]() { if (a_active) id(heater_b).turn_off(); else id(heater_a).turn_off(); };
-          const uint32_t now = millis();
-          const float service_m = (now - id(service_start_ms)) / 60000.0f;
+          const float t_sb  = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
+          const float t_act = a_active ? id(pack_a_temp).state : id(pack_b_temp).state;
+          const float rh    = id(ctrl_rh).state;
 
-          // --- safety: overtemp on either pack
+          // Service time counts whenever a pack is in service, faults included:
+          // air is still flowing through it.
+          id(service_elapsed_s) += dt;
+          const float service_m = id(service_elapsed_s) / 60.0f;
+
+          // --- safety: overtemp on either pack, checked every tick
           if (!isnan(t_act) && t_act > id(overtemp).state) {
-            id(heater_a).turn_off(); id(heater_b).turn_off();
-            id(fault) = true; id(fault_msg) = "Active pack overtemp";
+            id(fault_code) = 1;
+            ESP_LOGE("cycle", "FAULT: active pack overtemp (%.1f C)", t_act);
           }
           if (!isnan(t_sb) && t_sb > id(overtemp).state) {
-            sb_heater_off();
-            id(fault) = true; id(fault_msg) = "Standby pack overtemp";
+            id(fault_code) = 2;
             id(standby_state) = 2;
+            ESP_LOGE("cycle", "FAULT: standby pack overtemp (%.1f C)", t_sb);
           }
-          if (id(fault)) return;   // hold everything until cleared
-
-          // --- the active heater must never be on
-          if (a_active) id(heater_a).turn_off(); else id(heater_b).turn_off();
-
-          if (isnan(rh) || isnan(t_sb)) return;   // sensors not ready yet
+          if (id(fault_code) != 0) { id(apply_outputs).execute(); return; }   // hold until cleared
+          if (isnan(rh) || isnan(t_sb)) { id(apply_outputs).execute(); return; }   // sensors not ready
 
           switch (id(standby_state)) {
-            case 0: { // WET — wait for breakthrough to begin, or run out of runway
-              bool near_max = service_m >= id(max_service_min).state - id(regen_max_min).state;
+            case 0: { // WET - wait for breakthrough to begin, or run out of runway
+              const bool near_max = service_m >= id(max_service_min).state - id(regen_max_min).state;
               if (rh >= id(arm_rh).state || near_max) {
-                sb_heater_on();
-                id(heat_start_ms) = now;
-                id(heat_start_temp) = t_sb;
-                id(above_regen_since_ms) = 0;
                 id(standby_state) = 1;
-                ESP_LOGI("cycle", "Standby heater on (RH %.1f%%)", rh);
+                id(heat_elapsed_s) = 0;
+                id(hold_elapsed_s) = 0;
+                id(heat_start_temp) = t_sb;
+                ESP_LOGI("cycle", "Standby heater on (RH %.1f%%, service %.0f min)", rh, service_m);
               }
               break;
             }
             case 1: { // HEATING
-              float heat_m = (now - id(heat_start_ms)) / 60000.0f;
-              if (heat_m >= 5 && t_sb < id(heat_start_temp) + 5) {
-                sb_heater_off();
-                id(fault) = true; id(fault_msg) = "Standby heater not heating";
+              if (isnan(id(heat_start_temp))) id(heat_start_temp) = t_sb;   // after a reboot
+              id(heat_elapsed_s) += dt;
+              const float heat_m = id(heat_elapsed_s) / 60.0f;
+              // "Not heating": 5 min on with under 5 C of rise, judged only while
+              // still below regen temp. A pack already at regen temp is heating
+              // fine even if it can't rise another 5 C (matters after a reboot,
+              // when the start temp is captured from an already-hot pack).
+              if (id(heat_elapsed_s) >= 300.0f && t_sb < id(heat_start_temp) + 5.0f
+                  && t_sb < id(regen_temp).state) {
+                id(fault_code) = 3;
                 id(standby_state) = 2;
+                ESP_LOGE("cycle", "FAULT: standby heater not heating (%.1f C after %.0f min)", t_sb, heat_m);
                 break;
               }
-              if (t_sb >= id(regen_temp).state) {
-                if (id(above_regen_since_ms) == 0) id(above_regen_since_ms) = now;
-                float held_m = (now - id(above_regen_since_ms)) / 60000.0f;
-                if (held_m >= id(regen_hold_min).state) {
-                  sb_heater_off();
-                  id(standby_state) = 2;
-                  ESP_LOGI("cycle", "Regen complete after %.0f min", heat_m);
-                }
-              } else {
-                id(above_regen_since_ms) = 0;
-              }
-              if (id(standby_state) == 1 && heat_m >= id(regen_max_min).state) {
-                sb_heater_off();
+              if (t_sb >= id(regen_temp).state) id(hold_elapsed_s) += dt; else id(hold_elapsed_s) = 0;
+              if (id(hold_elapsed_s) >= id(regen_hold_min).state * 60.0f) {
+                id(standby_state) = 2;
+                ESP_LOGI("cycle", "Regen complete after %.0f min", heat_m);
+              } else if (id(heat_elapsed_s) >= id(regen_max_min).state * 60.0f) {
                 id(standby_state) = 2;
                 ESP_LOGW("cycle", "Regen hit max heater time (%.0f min)", heat_m);
               }
               break;
             }
             case 2: { // COOLING
-              sb_heater_off();
               if (t_sb <= id(cooldown_temp).state) {
                 id(standby_state) = 3;
                 ESP_LOGI("cycle", "Standby pack ready");
@@ -458,6 +585,7 @@ interval:
             case 3: { // READY
               if (rh >= id(swap_rh).state || service_m >= id(max_service_min).state) {
                 id(do_swap).execute();
+                return;   // outputs are re-asserted on the next tick, after the swap
               }
               break;
             }
@@ -465,3 +593,4 @@ interval:
 
           // note when we'd like to swap but the standby pack isn't ready
           id(waiting_for_standby) = (id(standby_state) != 3 && rh >= id(swap_rh).state);
+          id(apply_outputs).execute();

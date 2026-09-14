@@ -63,9 +63,9 @@ display:
     lambda: |-
       it.fill(Color::BLACK);
 
-      if (id(fault)) {
+      if (id(fault_code) != 0) {
         it.print(120, 8, id(f_med), id(c_red), TextAlign::TOP_CENTER, "FAULT");
-        it.print(120, 40, id(f_small), id(c_red), TextAlign::TOP_CENTER, id(fault_msg).c_str());
+        it.print(120, 40, id(f_small), id(c_red), TextAlign::TOP_CENTER, id(fault_message).state.c_str());
       } else if (!id(dryer_enabled).state) {
         it.print(120, 8, id(f_med), id(c_grey), TextAlign::TOP_CENTER, "DISABLED");
       } else if (id(active_pack) != 0) {
