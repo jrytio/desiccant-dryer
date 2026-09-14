@@ -26,8 +26,9 @@ bases only; GPIO13 also lights the on-board blue LED.
    esphome run --device /dev/cu.usbserial-XXXX esphome/desiccant-dryer.yaml
    ```
 
-   Expected in the boot log: `Boot: active pack 0, standby state 0, fault 0`
-   first, `[wifi] Connected` then `IP x.x.x.x` (use that address if `.local`
+   Expected in the boot log: a `Boot: active pack N, standby state N, fault N`
+   line first (all zero on a fresh device; a reflash keeps the persisted
+   values), `[wifi] Connected` then `IP x.x.x.x` (use that address if `.local`
    does not resolve), `[one_wire]` listing three found addresses, `[ili9xxx]` without "Failed to init", `[sht4x]` warning
    about communication (expected), `[cycle] Starting on pack A`, Valve A on.
 

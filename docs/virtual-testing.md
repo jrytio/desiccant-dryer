@@ -102,7 +102,7 @@ then on, and returning any knob you changed.
 | 12 | Base humidity override | Simulate Humidity on, Simulated RH 12 | Control Humidity reads 12. Swap as soon as standby is ready. Press Restart: Simulate Humidity is off again |
 | 13 | Fan thermostat | Sim Ambient Temp 40 | Case Temperature rises past 36.5 °C, Case Fan on. Back to 25: fan off once the case falls below 33.5 °C (about 6 simulated minutes, so 6 s real at 60x) and the 60 s minimum run time has passed |
 | 14 | Sim speed mid-cycle | Change Sim Speed between 1 and 60 during heating | Counters and temperatures stay continuous; nothing resets |
-| 15 | Short probe dropout | During "B heating", Sim Probe B Fault on for about 5 s (one control tick), then off | Pack B Temperature shows unknown briefly; Heater B stays on; Standby State stays "heating"; no log warning; regen completes normally |
-| 16 | Long probe dropout | During "B heating", Sim Probe B Fault on for 20 s, then off | After three ticks: log "Standby probe lost", Heater B off, state still "heating", no fault. On recovery: Heater B on within one tick, Standby Heater Time restarts from 0, no fault, regen completes |
+| 15 | Short probe dropout | During "B heating", Sim Probe B Fault on for about 15 s (three control ticks), then off | Pack B Temperature shows unknown; Heater B stays on throughout; Standby State stays "heating"; no log warning; regen completes normally |
+| 16 | Long probe dropout | During "B heating", Sim Probe B Fault on for 40 s, then off | After 25 s: log "Standby probe lost", Heater B off, state still "heating", no fault. On recovery: Heater B on within one tick, Standby Heater Time restarts from 0, no fault, regen completes |
 
 Record anything unexpected with the log excerpt and the knob values.
