@@ -1,0 +1,28 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compile:
+    name: compile ${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: production
+            yaml: esphome/desiccant-dryer.yaml
+          - variant: virtual
+            yaml: esphome/desiccant-dryer-virtual.yaml
+    steps:
+      - uses: actions/checkout@v7
+      - name: Provide dummy secrets
+        run: cp esphome/secrets.ci.yaml esphome/secrets.yaml
+      - name: Compile ${{ matrix.variant }}
+        uses: esphome/build-action@v8.1.0
+        with:
+          yaml-file: ${{ matrix.yaml }}
+          version: 2026.1.4
