@@ -58,7 +58,10 @@ display:
     dc_pin: GPIO9
     reset_pin: GPIO14
     invert_colors: true    # most 1.54" IPS modules need this
-    # color_palette: 8BIT  # uncomment if RAM allocation fails on the S2
+    # 8-bit palette halves the frame buffer to ~58 KB. The full 16-bit buffer
+    # (~115 KB) failed to allocate on the S2 with WiFi, API and web server up
+    # (seen on the first virtual-build flash: "Could not allocate buffer").
+    color_palette: 8BIT
     update_interval: 2s
     lambda: |-
       it.fill(Color::BLACK);
