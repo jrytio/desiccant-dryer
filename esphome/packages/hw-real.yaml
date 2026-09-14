@@ -1,0 +1,45 @@
+# Real hardware: sensor buses and sensors. Provides the sensor ids base.yaml
+# expects: air_rh, air_temp, pack_a_temp, pack_b_temp, case_temp.
+#   GPIO1/2 I2C (Qwiic) - SHT45 in the process-air stream after the valves
+#   GPIO37  1-wire (MISO header pin) - DS18B20 x3: pack A, pack B, case
+
+# ---------------------------------------------------------------- buses
+i2c:
+  sda: GPIO1
+  scl: GPIO2
+  frequency: 100kHz
+
+one_wire:
+  - platform: gpio
+    pin: GPIO37
+
+sensor:
+  - platform: sht4x
+    temperature:
+      name: "Outlet Air Temperature"
+      id: air_temp
+    humidity:
+      name: "Outlet Air Humidity"
+      id: air_rh
+      filters:
+        - sliding_window_moving_average:
+            window_size: 3
+            send_every: 1
+    update_interval: 10s
+
+  # Replace addresses with the ones printed in the log on first boot.
+  - platform: dallas_temp
+    address: 0x0000000000000000
+    name: "Pack A Temperature"
+    id: pack_a_temp
+    update_interval: 10s
+  - platform: dallas_temp
+    address: 0x0000000000000000
+    name: "Pack B Temperature"
+    id: pack_b_temp
+    update_interval: 10s
+  - platform: dallas_temp
+    address: 0x0000000000000000
+    name: "Case Temperature"
+    id: case_temp
+    update_interval: 10s
