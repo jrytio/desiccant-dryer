@@ -26,8 +26,9 @@ bases only; GPIO13 also lights the on-board blue LED.
    esphome run --device /dev/cu.usbserial-XXXX esphome/desiccant-dryer.yaml
    ```
 
-   Expected in the boot log: `[wifi] Connected`, `[one_wire]` listing three
-   found addresses, `[ili9xxx]` without "Failed to init", `[sht4x]` warning
+   Expected in the boot log: `Boot: active pack 0, standby state 0, fault 0`
+   first, `[wifi] Connected` then `IP x.x.x.x` (use that address if `.local`
+   does not resolve), `[one_wire]` listing three found addresses, `[ili9xxx]` without "Failed to init", `[sht4x]` warning
    about communication (expected), `[cycle] Starting on pack A`, Valve A on.
 
 3. Pair in Home Assistant as a second device (Desiccant Dryer, port 6053,
