@@ -1184,6 +1184,8 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 
 ### Task 4: CI that compiles both variants
 
+> Executed as written, then changed in Task 7: `esphome/build-action@v8.1.0` refuses ESPHome older than 2026.7.0, so the shipped workflow runs `ghcr.io/esphome/esphome:2026.1.4` with `docker run` instead. The step below is the original text.
+
 **Files:**
 - Create: `.github/workflows/build.yml`
 

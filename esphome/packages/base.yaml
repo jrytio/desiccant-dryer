@@ -304,6 +304,16 @@ switch:
           id(active_pack) = 0;
           id(standby_state) = 0;
           id(reset_cycle_counters).execute();
+      # The fan is thermostat-driven, so disabling must also park the
+      # thermostat or it would restart the fan on the next reading.
+      - climate.control:
+          id: fan_thermostat
+          mode: "OFF"
+      - switch.turn_off: case_fan
+    on_turn_on:
+      - climate.control:
+          id: fan_thermostat
+          mode: COOL
 
 button:
   - platform: template
@@ -423,6 +433,7 @@ text_sensor:
 climate:
   - platform: thermostat
     name: "Case Fan Thermostat"
+    id: fan_thermostat
     sensor: case_temp
     min_cooling_off_time: 60s
     min_cooling_run_time: 60s

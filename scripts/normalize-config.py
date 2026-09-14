@@ -27,18 +27,27 @@ def _any_ctor(loader, tag_suffix, node):
 AnyTag.add_multi_constructor("!", _any_ctor)
 
 
-def canon(x):
+def canon(x, top=False):
+    """Sort mapping keys everywhere. Sort a list only when it is the direct
+    value of a top-level key (the component lists, whose order ESPHome does
+    not care about). Nested lists such as `then:` actions and `filters:` are
+    ordered semantics and are left in place."""
     if isinstance(x, dict):
-        return {k: canon(v) for k, v in sorted(x.items())}
+        return {k: canon(v, top=False) for k, v in sorted(x.items())}
     if isinstance(x, list):
-        return sorted((canon(v) for v in x), key=lambda v: json.dumps(v, sort_keys=True))
+        items = [canon(v) for v in x]
+        if top:
+            items.sort(key=lambda v: json.dumps(v, sort_keys=True))
+        return items
     return x
 
 
 def main(path):
     with open(path) as f:
         text = "".join(l for l in f if not l.startswith(("INFO", "WARNING")))
-    print(json.dumps(canon(yaml.load(text, Loader=AnyTag)), indent=1, sort_keys=True))
+    data = yaml.load(text, Loader=AnyTag)
+    out = {k: canon(v, top=True) for k, v in sorted(data.items())}
+    print(json.dumps(out, indent=1, sort_keys=True))
 
 
 if __name__ == "__main__":

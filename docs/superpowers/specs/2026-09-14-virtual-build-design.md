@@ -343,9 +343,10 @@ hardware exists; it shows up as a second HA device.
 
 `.github/workflows/build.yml` runs on pushes to `main` and on pull
 requests. A matrix over the two top-level YAMLs copies
-`esphome/secrets.ci.yaml` to `esphome/secrets.yaml` and compiles with the
-official `esphome/build-action`, version pinned to 2026.1.4 to match the
-Mac. The dummy secrets are obviously fake but syntactically valid (the API
+`esphome/secrets.ci.yaml` to `esphome/secrets.yaml` and compiles by running
+the official Docker image `ghcr.io/esphome/esphome:2026.1.4` directly, so
+the version pin matches the Mac. (`esphome/build-action` was the first
+choice, but its v8 release refuses ESPHome older than 2026.7.) The dummy secrets are obviously fake but syntactically valid (the API
 key must be 32 base64 bytes). Font download from Google Fonts needs
 network, which the hosted runner has.
 

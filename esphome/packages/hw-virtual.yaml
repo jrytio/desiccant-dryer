@@ -198,14 +198,16 @@ interval:
 
           // Publish from the tick instead of polling, so the controller never
           // sees a value older than one plant tick regardless of Sim Speed.
-          id(pack_a_temp).publish_state(id(plant_t_a));
-          id(pack_b_temp).publish_state(id(plant_t_b));
-          id(case_temp).publish_state(id(plant_t_case));
-          id(air_rh).publish_state(rh);
-          id(air_temp).publish_state(ambient + 2.0f);
+          // Rounded to 0.1 so an unchanged reading at 1x is the same value
+          // and HA records nothing; no filter sits between here and .state.
+          auto r1 = [](float v) { return roundf(v * 10.0f) / 10.0f; };
+          id(pack_a_temp).publish_state(r1(id(plant_t_a)));
+          id(pack_b_temp).publish_state(r1(id(plant_t_b)));
+          id(case_temp).publish_state(r1(id(plant_t_case)));
+          id(air_rh).publish_state(r1(rh));
+          id(air_temp).publish_state(r1(ambient + 2.0f));
 
-# Published by the plant tick above. The delta filters only keep HA history
-# quiet at 1x; the controller reads the same filtered state.
+# Published by the plant tick above, already rounded; nothing here filters.
 sensor:
   - platform: template
     name: "Outlet Air Humidity"
@@ -215,8 +217,6 @@ sensor:
     device_class: humidity
     state_class: measurement
     update_interval: never
-    filters:
-      - delta: 0.1
   - platform: template
     name: "Outlet Air Temperature"
     id: air_temp
@@ -225,8 +225,6 @@ sensor:
     device_class: temperature
     state_class: measurement
     update_interval: never
-    filters:
-      - delta: 0.2
   - platform: template
     name: "Pack A Temperature"
     id: pack_a_temp
@@ -235,8 +233,6 @@ sensor:
     device_class: temperature
     state_class: measurement
     update_interval: never
-    filters:
-      - delta: 0.2
   - platform: template
     name: "Pack B Temperature"
     id: pack_b_temp
@@ -245,8 +241,6 @@ sensor:
     device_class: temperature
     state_class: measurement
     update_interval: never
-    filters:
-      - delta: 0.2
   - platform: template
     name: "Case Temperature"
     id: case_temp
@@ -255,5 +249,3 @@ sensor:
     device_class: temperature
     state_class: measurement
     update_interval: never
-    filters:
-      - delta: 0.2
