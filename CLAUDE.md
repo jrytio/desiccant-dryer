@@ -14,8 +14,11 @@ based on measured outlet humidity and measured pack temperatures instead.
   runs on-device; Home Assistant is for tuning and observation only. The unit
   must keep working with WiFi or HA down.
 - **Board: SparkFun ESP32-S2 Thing Plus (WRL-17743).** Single core, 320 KB RAM,
-  no PSRAM, no Bluetooth, CP2102 UART for flashing. The 240x240 display buffer
-  (~115 KB) fits but is tight; `color_palette: 8BIT` is the fallback.
+  no PSRAM, no Bluetooth, CP2102 UART for flashing. The full 16-bit 240x240
+  display buffer (~115 KB) does not allocate once WiFi, API and the web server
+  are up (seen on the first bench flash), so the display runs
+  `color_palette: 8BIT` (~58 KB). The logger must use `hardware_uart: UART0`;
+  ESPHome's S2 default of USB_CDC is the unconnected native-USB pins.
 - **Heaters are 120 VAC (~117 W, 123 Ω each)**, switched by Songle SRD-05VDC
   relays driven by 2N2222 low-side stages. Mains stays off the ESP board.
 - **Valves are two SMC VDW22 2-port NC solenoids (24 VDC, 3 W)**, one per pack,
@@ -27,7 +30,17 @@ based on measured outlet humidity and measured pack temperatures instead.
   is used as a *breakthrough detector* (rise off baseline), not a dryness gauge.
 - **Three DS18B20s share one 1-wire bus** on GPIO37: pack A, pack B, case.
 
-## Pin map (esphome/desiccant-dryer.yaml is the source of truth)
+## Layout and pin map
+
+Two builds share one logic file via ESPHome packages: `esphome/packages/base.yaml`
+(platform, globals, tunables, GPIO outputs, state machine, derived entities),
+`packages/hw-real.yaml` (buses and real sensors; the hardware side edits only
+this), `packages/hw-virtual.yaml` (plant model and sim knobs), and
+`packages/display.yaml`. `desiccant-dryer.yaml` and `desiccant-dryer-virtual.yaml`
+are ten-line selectors. Base must only reference the five sensor ids
+`air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`, `case_temp` from the
+hardware package. `hw-real.yaml` is the pin-map source of truth for sensors,
+`base.yaml` for outputs, `display.yaml` for the display.
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 6. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
@@ -41,8 +54,11 @@ Standby pack moves WET → HEATING → COOLING → READY. Heater starts when out
 RH crosses `arm_rh`; regen is judged complete by pack temperature held above
 `regen_temp` for `regen_hold_min`; the pack is READY once it cools below
 `cooldown_temp`; swap happens when RH crosses `swap_rh` (or `max_service_min`).
-All thresholds are HA `number` entities. Overtemp and "heater on but no
-temperature rise" latch a fault that stops everything until cleared.
+All thresholds are HA `number` entities. Durations are persisted elapsed
+counters scaled by a `time_scale` global (1.0 in production); outputs are
+re-asserted from state every tick by the `apply_outputs` script. Overtemp and
+"heater on but no temperature rise" latch a fault code that stops everything
+until cleared.
 
 Defaults (arm 5 %, swap 10 %, regen 90 °C / 15 min, cooldown 40 °C, max
 service 180 min) are untested guesses meant to get first cycles logging.
@@ -55,11 +71,22 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - `Dryer Enabled` off → everything off, state reset.
 - Humidity simulation (`sim_enabled` / `sim_rh`) must never survive a reboot,
   and the display must show "SIM" whenever it is active.
+- `time_scale` is only ever written by `packages/hw-virtual.yaml`. Production
+  runs at 1.0.
+- Virtual plant knobs (`Sim *`) persist across reboot by design; the base
+  `Simulate Humidity` override does not. Don't merge the two mechanisms.
+- Outputs are applied from state by `apply_outputs` every tick. Never toggle
+  a heater or valve from a state transition alone; change the state and let
+  the apply step do it.
 
 ## Working conventions
 
-- Flash with `esphome run esphome/desiccant-dryer.yaml` (copy
-  `secrets.yaml.example` to `secrets.yaml` first).
+- Flash with `esphome run esphome/desiccant-dryer.yaml` (real hardware) or
+  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Copy
+  `secrets.yaml.example` to `secrets.yaml` first; for a compile-only check,
+  `cp esphome/secrets.ci.yaml esphome/secrets.yaml` works.
+- To prove a refactor changed nothing, dump `esphome config` before and
+  after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the
   `address:` placeholders; identify probes by warming them one at a time.
 - Don't invent sensor addresses, thresholds, or "tested" values. Mark anything
@@ -73,3 +100,15 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Decide whether a proper dew-point transmitter (4–20 mA / Modbus) is needed
   once real data is in.
 - PCB design is a separate effort; the breadboard wiring is in docs/hardware.md.
+- Before wiring real heaters: make the four heater/valve switches
+  `internal: true` with read-only binary_sensor mirrors. A manual toggle from
+  HA can currently turn on the active pack's heater for up to one 5 s tick.
+- Before the production flash: debounce the NaN guard on the standby probe.
+  A single DS18B20 CRC miss publishes NaN and drops the heater relay for one
+  tick; a NaN outage long enough for the pack to cool also trips fault 3 on
+  return. Consider a few consecutive NaN ticks before acting, and a
+  `reset_regen_counters` on recovery.
+- The max-service fallback only fires from READY. A standby stuck in COOLING
+  (cooldown below ambient, probe reading high) never swaps and only shows
+  "(waiting)" if RH is also high. Decide whether `max_service_min` should
+  force a swap from any state with a warning.

@@ -1,0 +1,101 @@
+# ST7789 1.54" 240x240 display on SPI, shared by both builds. On the virtual
+# build nothing is attached; the driver still runs so the frame buffer
+# allocation on the S2 gets exercised.
+#   GPIO36/35 SPI SCK/MOSI, GPIO5 CS, GPIO9 DC, GPIO14 RST, GPIO17 backlight
+
+spi:
+  clk_pin: GPIO36
+  mosi_pin: GPIO35
+
+output:
+  - platform: ledc
+    pin: GPIO17
+    id: backlight_pwm
+    frequency: 1000Hz
+
+light:
+  - platform: monochromatic
+    name: "Display Backlight"
+    output: backlight_pwm
+    restore_mode: RESTORE_DEFAULT_ON
+    default_transition_length: 0s
+
+# ---------------------------------------------------------------- display
+font:
+  - file: "gfonts://Roboto"
+    id: f_big
+    size: 34
+  - file: "gfonts://Roboto"
+    id: f_med
+    size: 22
+  - file: "gfonts://Roboto"
+    id: f_small
+    size: 16
+
+color:
+  - id: c_white
+    hex: FFFFFF
+  - id: c_grey
+    hex: 909090
+  - id: c_green
+    hex: 40D060
+  - id: c_orange
+    hex: FFA030
+  - id: c_red
+    hex: FF4040
+  - id: c_blue
+    hex: 50A0FF
+
+display:
+  - platform: ili9xxx
+    model: ST7789V
+    dimensions:
+      height: 240
+      width: 240
+      offset_height: 0     # try 80 if the image is shifted / cropped
+      offset_width: 0
+    cs_pin: GPIO5
+    dc_pin: GPIO9
+    reset_pin: GPIO14
+    invert_colors: true    # most 1.54" IPS modules need this
+    # 8-bit palette halves the frame buffer to ~58 KB. The full 16-bit buffer
+    # (~115 KB) failed to allocate on the S2 with WiFi, API and web server up
+    # (seen on the first virtual-build flash: "Could not allocate buffer").
+    color_palette: 8BIT
+    update_interval: 2s
+    lambda: |-
+      it.fill(Color::BLACK);
+
+      if (id(fault_code) != 0) {
+        it.print(120, 8, id(f_med), id(c_red), TextAlign::TOP_CENTER, "FAULT");
+        it.print(120, 40, id(f_small), id(c_red), TextAlign::TOP_CENTER, id(fault_message).state.c_str());
+      } else if (!id(dryer_enabled).state) {
+        it.print(120, 8, id(f_med), id(c_grey), TextAlign::TOP_CENTER, "DISABLED");
+      } else if (id(active_pack) != 0) {
+        const char* act = id(active_pack) == 1 ? "A" : "B";
+        const char* sb  = id(active_pack) == 1 ? "B" : "A";
+        it.printf(120, 4, id(f_big), id(c_blue), TextAlign::TOP_CENTER, "AIR: %s", act);
+        const char* st[] = {"wet", "heating", "cooling", "ready"};
+        Color sc = id(standby_state) == 1 ? id(c_orange)
+                 : id(standby_state) == 3 ? id(c_green) : id(c_grey);
+        it.printf(120, 44, id(f_small), sc, TextAlign::TOP_CENTER, "pack %s %s", sb, st[id(standby_state)]);
+      }
+
+      // sensors
+      it.printf(8, 74, id(f_med), id(sim_enabled).state ? id(c_orange) : id(c_white), "%.1f %%RH%s",
+                id(ctrl_rh).state, id(sim_enabled).state ? " SIM" : "");
+      it.printf(8, 100, id(f_med), id(c_white), "%.1f \u00b0C air", id(air_temp).state);
+
+      Color ca = id(heater_a).state ? id(c_orange) : id(c_grey);
+      Color cb = id(heater_b).state ? id(c_orange) : id(c_grey);
+      it.printf(8, 134, id(f_small), ca, "A %.0f\u00b0 %s", id(pack_a_temp).state, id(heater_a).state ? "HEAT" : "");
+      it.printf(8, 154, id(f_small), cb, "B %.0f\u00b0 %s", id(pack_b_temp).state, id(heater_b).state ? "HEAT" : "");
+      it.printf(8, 174, id(f_small), id(c_grey), "case %.0f\u00b0 fan %s", id(case_temp).state, id(case_fan).state ? "on" : "off");
+
+      // humidity bar: 0 .. swap threshold
+      float frac = id(ctrl_rh).state / id(swap_rh).state;
+      if (frac < 0) frac = 0; if (frac > 1) frac = 1;
+      it.rectangle(8, 200, 224, 12, id(c_grey));
+      it.filled_rectangle(8, 200, (int)(224 * frac), 12, frac > 0.8 ? id(c_orange) : id(c_green));
+
+      it.print(120, 222, id(f_small), id(c_grey), TextAlign::TOP_CENTER, id(ip_addr).state.c_str());
