@@ -460,6 +460,8 @@ cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop
 
 Expected: `EQUIVALENT prod` and `EQUIVALENT virt`. If the diff shows the lambda text altered (for example braces or `%` sequences changed), ESPHome's substitution expander mangled the body; stop and report rather than editing the lambda to fit.
 
+**Deviation recorded during execution:** `esphome config` echoes the `substitutions:` block it expanded, so the new `display_lambda` key appeared as one extra key in the normalised dump while every expanded value was identical. `scripts/normalize-config.py` now drops the top-level `substitutions` key (they are inputs already expanded into every other key), the raw Task 1 `.txt` dumps were re-normalised with the new script, and the check then printed EQUIVALENT for both builds. The script change is part of this task's commit.
+
 - [ ] **Step 5: Commit**
 
 ```bash
