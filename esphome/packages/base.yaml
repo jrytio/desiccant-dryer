@@ -55,6 +55,8 @@ esphome:
           if (id(standby_state) == 1) {
             id(reset_regen_counters).execute();
           }
+          ESP_LOGI("cycle", "Boot: active pack %d, standby state %d, fault %d",
+                   id(active_pack), id(standby_state), id(fault_code));
           id(boot_done) = true;
 
 esp32:
@@ -337,6 +339,7 @@ button:
     name: "Force Swap"
     icon: mdi:swap-horizontal
     on_press:
+      - lambda: ESP_LOGW("cycle", "Force Swap pressed");
       - script.execute: do_swap
   - platform: restart
     name: "Restart"
@@ -590,7 +593,14 @@ interval:
               break;
             }
             case 1: { // HEATING
-              if (isnan(id(heat_start_temp))) id(heat_start_temp) = t_sb;   // after a reboot
+              if (isnan(id(heat_start_temp))) {
+                // First tick after a reboot into HEATING: record where the pack
+                // is and let apply_outputs re-light the heater. Timing and the
+                // rise check start on the next tick, otherwise a large scaled dt
+                // would arm the "not heating" check with no heating time.
+                id(heat_start_temp) = t_sb;
+                break;
+              }
               id(heat_elapsed_s) += dt;
               const float heat_m = id(heat_elapsed_s) / 60.0f;
               // "Not heating": 5 min on with under 5 C of rise, judged only while
@@ -623,6 +633,7 @@ interval:
             }
             case 3: { // READY
               if (rh >= id(swap_rh).state || service_m >= id(max_service_min).state) {
+                ESP_LOGI("cycle", "Swap: standby ready (RH %.1f%%, service %.0f min)", rh, service_m);
                 id(do_swap).execute();
                 return;   // outputs are re-asserted on the next tick, after the swap
               }

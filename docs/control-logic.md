@@ -65,9 +65,12 @@ no readiness check, so it can put a wet pack into service.
 
 `on_boot` forces all five outputs off. If the restored state is HEATING, the
 heater and hold counters reset and the start temperature is cleared, so the
-regen restarts from scratch on the first tick. Resuming the old timers would
-risk a spurious "not heating" fault after a long outage that let the pack
-cool. The cost is at most one extra regen.
+regen restarts from scratch: the first tick after boot only records the
+pack's current temperature and re-lights the heater, and timing starts on
+the tick after that. Resuming the old timers would risk a spurious "not
+heating" fault after a long outage that let the pack cool. The cost is at
+most one extra regen. Boot logs one `cycle` line with the restored state,
+and `Force Swap` logs a warning so a manual swap is attributable.
 
 `on_boot` runs at setup priority 700, after switches and restored globals
 exist and before intervals start, and sets a `boot_done` flag that the
