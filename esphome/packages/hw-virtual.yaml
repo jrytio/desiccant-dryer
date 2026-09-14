@@ -1,0 +1,237 @@
+# Virtual hardware: nothing attached. A small plant model produces the five
+# sensor ids base.yaml expects (air_rh, air_temp, pack_a_temp, pack_b_temp,
+# case_temp) from the real GPIO output states, in time scaled by "Sim Speed".
+#
+# Model (first-order, integrated every second in scaled time):
+#   pack temp  -> heater max while its heater switch is on, else -> ambient,
+#                 with one thermal time constant for both directions
+#   case temp  -> ambient + 8 C while any heater is on, 10 min time constant
+#   outlet RH  =  1 % until the active pack's service time passes the
+#                 breakthrough point, then rises linearly; resets on swap
+#
+# Everything here is a test-bench control and persists across reboots so the
+# reboot tests keep their settings. That is deliberately different from the
+# base "Simulate Humidity" override, which never persists.
+
+globals:
+  - id: plant_t_a
+    type: float
+    restore_value: true
+    initial_value: "25.0"
+  - id: plant_t_b
+    type: float
+    restore_value: true
+    initial_value: "25.0"
+  - id: plant_t_case
+    type: float
+    restore_value: true
+    initial_value: "25.0"
+  - id: plant_rh
+    type: float
+    restore_value: true
+    initial_value: "1.0"
+  - id: plant_last_ms
+    type: uint32_t
+    initial_value: "0"
+
+number:
+  - platform: template
+    name: "Sim Speed"
+    id: sim_speed
+    unit_of_measurement: "x"
+    min_value: 1
+    max_value: 60
+    step: 1
+    initial_value: 1
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Ambient Temp"
+    id: sim_ambient
+    unit_of_measurement: "°C"
+    min_value: 0
+    max_value: 60
+    step: 1
+    initial_value: 25
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Heater Max Temp"
+    id: sim_heater_max
+    unit_of_measurement: "°C"
+    min_value: 40
+    max_value: 150
+    step: 1
+    initial_value: 110
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Thermal Time Constant"
+    id: sim_tau_min
+    unit_of_measurement: "min"
+    min_value: 1
+    max_value: 30
+    step: 1
+    initial_value: 5
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Breakthrough Time"
+    id: sim_breakthrough_min
+    unit_of_measurement: "min"
+    min_value: 0
+    max_value: 600
+    step: 5
+    initial_value: 60
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim RH Rise Rate"
+    id: sim_rh_rate
+    unit_of_measurement: "%/min"
+    min_value: 0.01
+    max_value: 10
+    step: 0.01
+    initial_value: 0.1
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Pack A Temp"
+    id: sim_pack_a_temp
+    unit_of_measurement: "°C"
+    min_value: 0
+    max_value: 150
+    step: 1
+    initial_value: 25
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Pack B Temp"
+    id: sim_pack_b_temp
+    unit_of_measurement: "°C"
+    min_value: 0
+    max_value: 150
+    step: 1
+    initial_value: 25
+    restore_value: true
+    optimistic: true
+    entity_category: config
+    icon: mdi:test-tube
+
+switch:
+  # Heater on produces no heat: exercises the "not heating" fault.
+  - platform: template
+    name: "Sim Heater Fault"
+    id: sim_heater_fault
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # Pin both pack temps to the two Sim Pack temp numbers.
+  - platform: template
+    name: "Sim Manual Temps"
+    id: sim_manual_temps
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          float speed = id(sim_speed).state;
+          if (isnan(speed) || speed < 1.0f) speed = 1.0f;
+          id(time_scale) = speed;
+
+          const uint32_t now = millis();
+          float dt_real = (now - id(plant_last_ms)) / 1000.0f;
+          id(plant_last_ms) = now;
+          if (dt_real > 5.0f) dt_real = 5.0f;
+          const float dt = dt_real * speed;
+
+          const float ambient = id(sim_ambient).state;
+          const float tau = id(sim_tau_min).state * 60.0f;
+          const float k = 1.0f - expf(-dt / tau);          // exact first-order step
+
+          const bool heat_a = id(heater_a).state && !id(sim_heater_fault).state;
+          const bool heat_b = id(heater_b).state && !id(sim_heater_fault).state;
+          const float target_a = heat_a ? id(sim_heater_max).state : ambient;
+          const float target_b = heat_b ? id(sim_heater_max).state : ambient;
+          id(plant_t_a) += (target_a - id(plant_t_a)) * k;
+          id(plant_t_b) += (target_b - id(plant_t_b)) * k;
+          if (id(sim_manual_temps).state) {
+            id(plant_t_a) = id(sim_pack_a_temp).state;
+            id(plant_t_b) = id(sim_pack_b_temp).state;
+          }
+
+          const bool any_heat = id(heater_a).state || id(heater_b).state;
+          const float target_case = ambient + (any_heat ? 8.0f : 0.0f);
+          const float k_case = 1.0f - expf(-dt / 600.0f);
+          id(plant_t_case) += (target_case - id(plant_t_case)) * k_case;
+
+          const float service_min = id(active_pack) == 0 ? 0.0f : id(service_elapsed_s) / 60.0f;
+          float rh = 1.0f + fmaxf(0.0f, service_min - id(sim_breakthrough_min).state) * id(sim_rh_rate).state;
+          if (rh > 100.0f) rh = 100.0f;
+          id(plant_rh) = rh;
+
+sensor:
+  - platform: template
+    name: "Outlet Air Humidity"
+    id: air_rh
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    device_class: humidity
+    state_class: measurement
+    lambda: return id(plant_rh);
+    update_interval: 2s
+  - platform: template
+    name: "Outlet Air Temperature"
+    id: air_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    lambda: return id(sim_ambient).state + 2.0f;
+    update_interval: 2s
+  - platform: template
+    name: "Pack A Temperature"
+    id: pack_a_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    lambda: return id(plant_t_a);
+    update_interval: 2s
+  - platform: template
+    name: "Pack B Temperature"
+    id: pack_b_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    lambda: return id(plant_t_b);
+    update_interval: 2s
+  - platform: template
+    name: "Case Temperature"
+    id: case_temp
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    lambda: return id(plant_t_case);
+    update_interval: 2s
