@@ -1,12 +1,14 @@
 # Production build: real sensors on the SparkFun ESP32-S2 Thing Plus.
 # Flash:  esphome run esphome/desiccant-dryer.yaml
-# Logic:  packages/base.yaml      (shared with the virtual build)
-# Wiring: packages/hw-real.yaml   (the only file the hardware side needs)
+# Logic:  packages/base.yaml           (shared with the virtual and host builds)
+# Board:  packages/platform-esp32.yaml (board, WiFi, OTA, web server)
+# Wiring: packages/hw-real.yaml        (the only file the hardware side needs)
 substitutions:
   name: desiccant-dryer
   friendly_name: Desiccant Dryer
 
 packages:
   base: !include packages/base.yaml
+  platform: !include packages/platform-esp32.yaml
   hardware: !include packages/hw-real.yaml
   display: !include packages/display.yaml
