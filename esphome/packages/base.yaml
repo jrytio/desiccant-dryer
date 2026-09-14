@@ -86,6 +86,9 @@ wifi:
   ap:
     ssid: "${friendly_name} Setup"
     password: !secret ap_password
+  on_connect:
+    - delay: 2s
+    - lambda: ESP_LOGI("wifi", "IP %s", id(ip_addr).state.c_str());
 
 captive_portal:
 
@@ -143,6 +146,10 @@ globals:
   - id: boot_done
     type: bool
     initial_value: "false"
+  # Consecutive control ticks with no standby probe reading.
+  - id: sb_nan_ticks
+    type: int
+    initial_value: "0"
 
 # ---------------------------------------------------------------- tunables
 number:
@@ -494,7 +501,8 @@ script:
           if (id(active_pack) == 0) return;
           const bool a_active = (id(active_pack) == 1);
           const float t_sb = a_active ? id(pack_b_temp).state : id(pack_a_temp).state;
-          const bool sb_heat = id(standby_state) == 1 && id(fault_code) == 0 && !isnan(t_sb);
+          const bool sb_heat = id(standby_state) == 1 && id(fault_code) == 0
+                               && (!isnan(t_sb) || id(sb_nan_ticks) < 3);   // ride out two missed readings
           if (a_active) {
             if (id(valve_b).state)  id(valve_b).turn_off();
             if (!id(valve_a).state) id(valve_a).turn_on();
@@ -558,6 +566,19 @@ interval:
           const float rh    = id(ctrl_rh).state;
           // Flag a wanted-but-blocked swap even while faulted or waiting on sensors.
           id(waiting_for_standby) = (id(standby_state) != 3 && !isnan(rh) && rh >= id(swap_rh).state);
+
+          // Tolerate a missed probe reading (DS18B20 CRC errors are routine on a
+          // shared bus). After three misses in a row apply_outputs drops the
+          // heater and an interrupted regen restarts when the probe returns.
+          if (isnan(t_sb)) {
+            id(sb_nan_ticks) += 1;
+            if (id(sb_nan_ticks) == 3 && id(standby_state) == 1) {
+              id(reset_regen_counters).execute();
+              ESP_LOGW("cycle", "Standby probe lost; heater off, regen restarts when it returns");
+            }
+          } else {
+            id(sb_nan_ticks) = 0;
+          }
 
           // Service time counts whenever a pack is in service, faults included:
           // air is still flowing through it.

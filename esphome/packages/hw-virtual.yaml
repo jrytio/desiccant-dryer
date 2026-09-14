@@ -147,6 +147,23 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
     icon: mdi:test-tube
+  # While on, that pack's probe publishes NaN (a dead or noisy DS18B20). The
+  # plant keeps integrating underneath, so the real temperature is there when
+  # the switch goes off again.
+  - platform: template
+    name: "Sim Probe A Fault"
+    id: sim_probe_a_fault
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  - platform: template
+    name: "Sim Probe B Fault"
+    id: sim_probe_b_fault
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
 
 interval:
   - interval: 1s
@@ -201,8 +218,8 @@ interval:
           // Rounded to 0.1 so an unchanged reading at 1x is the same value
           // and HA records nothing; no filter sits between here and .state.
           auto r1 = [](float v) { return roundf(v * 10.0f) / 10.0f; };
-          id(pack_a_temp).publish_state(r1(id(plant_t_a)));
-          id(pack_b_temp).publish_state(r1(id(plant_t_b)));
+          id(pack_a_temp).publish_state(id(sim_probe_a_fault).state ? NAN : r1(id(plant_t_a)));
+          id(pack_b_temp).publish_state(id(sim_probe_b_fault).state ? NAN : r1(id(plant_t_b)));
           id(case_temp).publish_state(r1(id(plant_t_case)));
           id(air_rh).publish_state(r1(rh));
           id(air_temp).publish_state(r1(ambient + 2.0f));

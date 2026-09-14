@@ -49,11 +49,14 @@ by the `apply_outputs` script:
 
 - Active pack: valve on, heater off.
 - Standby pack: valve off. Heater on only while HEATING, with no fault, and
-  with a valid pack temperature.
+  with a pack temperature that has been valid within the last two ticks. A
+  reading missing for three consecutive ticks turns the heater off; if that
+  happens mid-regen the regen restarts when the probe returns, with a
+  warning in the log.
 
 Because this runs every tick, a reboot re-opens the active valve and
 re-lights a heater on the first tick, and a heater cannot stay on while its
-probe reads NaN. The tick skips itself while the swap script is running so
+probe has been missing for three ticks. The tick skips itself while the swap script is running so
 it never interferes with the both-valves-closed window.
 
 Swap (`do_swap` script): standby heater off → both valves closed → 500 ms →

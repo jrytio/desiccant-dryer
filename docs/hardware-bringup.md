@@ -46,6 +46,9 @@ bases only; GPIO13 also lights the on-board blue LED.
 
 ## 3. Outputs, one at a time, from HA
 
+Turn `Dryer Enabled` off first: the control tick re-asserts outputs every
+5 s while it is on and would undo your toggles. Turn it back on when done.
+
 | Output | Action | Expect |
 |---|---|---|
 | Valve A | switch on, then off | audible click each way; Valve B stays off |
@@ -54,9 +57,9 @@ bases only; GPIO13 also lights the on-board blue LED.
 | Heater A | switch on | blue LED on GPIO13 lights; collector of the A stage reads near 0 V |
 | Heater B | switch on while A is on | A drops out first, B on 500 ms later; collector of the B stage near 0 V |
 
-Turn every output off afterwards. The control tick re-asserts outputs
-every 5 s while `Dryer Enabled` is on, so it will correct anything you
-leave on; that correction is itself worth watching once.
+Turn every output off afterwards, then `Dryer Enabled` on: within 5 s the
+tick should open Valve A and leave everything else off. That correction is
+itself worth watching once.
 
 ## 4. Display
 

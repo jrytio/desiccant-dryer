@@ -35,7 +35,9 @@ time scaled by "Sim Speed". It appears in Home Assistant as
 
 3. Home Assistant: Settings → Devices & services. The device is discovered
    by mDNS as `desiccant-dryer-virtual`; click Configure and paste the
-   `api_key`. Later flashes go over the air:
+   `api_key`. Later flashes go over the air. The boot log prints
+   `IP x.x.x.x` two seconds after WiFi connects; use that address if
+   `.local` names do not resolve from your machine (common across VLANs):
 
    ```bash
    esphome run esphome/desiccant-dryer-virtual.yaml --device desiccant-dryer-virtual.local
@@ -63,6 +65,7 @@ path completes on its own.
 | Sim Heater Fault | off | Heater on produces no heat; triggers "not heating" |
 | Sim Manual Temps | off | Pin both pack temps to Sim Pack A/B Temp. The heaters then have no effect, so raise the pinned value yourself or expect the "not heating" fault |
 | Sim Pack A Temp, Sim Pack B Temp | 25 °C | Used while Sim Manual Temps is on |
+| Sim Probe A Fault, Sim Probe B Fault | off | That pack's probe reads NaN while on; the plant keeps running underneath |
 
 With the defaults: RH reaches 5 % at 100 min of service and 10 % at 150 min.
 Heating to 90 °C takes about 7 min, the hold 15 min, cooling to 40 °C about
@@ -99,5 +102,7 @@ then on, and returning any knob you changed.
 | 12 | Base humidity override | Simulate Humidity on, Simulated RH 12 | Control Humidity reads 12. Swap as soon as standby is ready. Press Restart: Simulate Humidity is off again |
 | 13 | Fan thermostat | Sim Ambient Temp 40 | Case Temperature rises past 36.5 °C, Case Fan on. Back to 25: fan off once the case falls below 33.5 °C (about 6 simulated minutes, so 6 s real at 60x) and the 60 s minimum run time has passed |
 | 14 | Sim speed mid-cycle | Change Sim Speed between 1 and 60 during heating | Counters and temperatures stay continuous; nothing resets |
+| 15 | Short probe dropout | During "B heating", Sim Probe B Fault on for about 5 s (one control tick), then off | Pack B Temperature shows unknown briefly; Heater B stays on; Standby State stays "heating"; no log warning; regen completes normally |
+| 16 | Long probe dropout | During "B heating", Sim Probe B Fault on for 20 s, then off | After three ticks: log "Standby probe lost", Heater B off, state still "heating", no fault. On recovery: Heater B on within one tick, Standby Heater Time restarts from 0, no fault, regen completes |
 
 Record anything unexpected with the log excerpt and the knob values.
