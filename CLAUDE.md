@@ -27,7 +27,18 @@ based on measured outlet humidity and measured pack temperatures instead.
   is used as a *breakthrough detector* (rise off baseline), not a dryness gauge.
 - **Three DS18B20s share one 1-wire bus** on GPIO37: pack A, pack B, case.
 
-## Pin map (esphome/desiccant-dryer.yaml is the source of truth)
+## Layout and pin map
+
+Two builds share one logic file via ESPHome packages: `esphome/packages/base.yaml`
+(platform, globals, tunables, GPIO outputs, state machine, derived entities),
+`packages/hw-real.yaml` (buses and real sensors; the hardware side edits only
+this), `packages/hw-virtual.yaml` (plant model and sim knobs), and
+`packages/display.yaml`. `desiccant-dryer.yaml` and `desiccant-dryer-virtual.yaml`
+are ten-line selectors. Base must only reference the five sensor ids
+`air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`, `case_temp` from the
+hardware package. `hw-real.yaml` is the pin-map source of truth for sensors;
+`base.yaml` for outputs.
+
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 6. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
@@ -41,8 +52,11 @@ Standby pack moves WET → HEATING → COOLING → READY. Heater starts when out
 RH crosses `arm_rh`; regen is judged complete by pack temperature held above
 `regen_temp` for `regen_hold_min`; the pack is READY once it cools below
 `cooldown_temp`; swap happens when RH crosses `swap_rh` (or `max_service_min`).
-All thresholds are HA `number` entities. Overtemp and "heater on but no
-temperature rise" latch a fault that stops everything until cleared.
+All thresholds are HA `number` entities. Durations are persisted elapsed
+counters scaled by a `time_scale` global (1.0 in production); outputs are
+re-asserted from state every tick by the `apply_outputs` script. Overtemp and
+"heater on but no temperature rise" latch a fault code that stops everything
+until cleared.
 
 Defaults (arm 5 %, swap 10 %, regen 90 °C / 15 min, cooldown 40 °C, max
 service 180 min) are untested guesses meant to get first cycles logging.
@@ -55,11 +69,22 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - `Dryer Enabled` off → everything off, state reset.
 - Humidity simulation (`sim_enabled` / `sim_rh`) must never survive a reboot,
   and the display must show "SIM" whenever it is active.
+- `time_scale` is only ever written by `packages/hw-virtual.yaml`. Production
+  runs at 1.0.
+- Virtual plant knobs (`Sim *`) persist across reboot by design; the base
+  `Simulate Humidity` override does not. Don't merge the two mechanisms.
+- Outputs are applied from state by `apply_outputs` every tick. Never toggle
+  a heater or valve from a state transition alone; change the state and let
+  the apply step do it.
 
 ## Working conventions
 
-- Flash with `esphome run esphome/desiccant-dryer.yaml` (copy
-  `secrets.yaml.example` to `secrets.yaml` first).
+- Flash with `esphome run esphome/desiccant-dryer.yaml` (real hardware) or
+  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Copy
+  `secrets.yaml.example` to `secrets.yaml` first; for a compile-only check,
+  `cp esphome/secrets.ci.yaml esphome/secrets.yaml` works.
+- To prove a refactor changed nothing, dump `esphome config` before and
+  after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the
   `address:` placeholders; identify probes by warming them one at a time.
 - Don't invent sensor addresses, thresholds, or "tested" values. Mark anything
