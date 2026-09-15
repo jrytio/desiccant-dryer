@@ -1,0 +1,755 @@
+# Home Assistant dashboard for the virtual bench board, "Desiccant Dryer
+# (Virtual)". Published on the dev HA instance as dashboard `dryer-bench`;
+# this file is the versioned copy (paste into Raw configuration editor, or
+# publish through the HA API).
+#
+# Layout: Screen, Status and Trends across the top, with a Simulation speed
+# chip (always shown, amber above 1x) in the badge row. Below them one
+# full-width tabbed card: Simulator, Settings, How to test, Diagnostics.
+# Each browser remembers its own selected tab.
+#
+# Prerequisites on the HA side (not part of the dashboard config):
+#   - HACS card Tabdeck Card (tempus2016/tabdeck-card, v1.0.0), resource
+#     /hacsfiles/tabdeck-card/tabdeck-card.js (JavaScript module; HACS
+#     registers it on install). Everything else is a built-in card.
+#   - Display unit overridden to °C on the four dryer temperature sensors
+#     (Pack A, Pack B, Case, Outlet Air). The threshold numbers have no
+#     device class and stay in °C; history-graph draws one chart per unit,
+#     so without the override the recharge/ready lines would not overlay
+#     the pack temperatures on an imperial install.
+#   - image.dryer_screen: template image helper, URL
+#     http://10.42.14.100/screen.png?t={{ now().timestamp() | int }} with
+#     verify_ssl off, re-rendered every 2 s by automation.dryer_screen_refresh
+#     (time_pattern /2 s -> homeassistant.update_entity). A still image works
+#     through the Cloudflare tunnel; a live camera stream does not.
+#
+# Entity ids are the ones ESPHome gives the virtual build on the dev
+# instance. The production unit would be desiccant_dryer_* and has no
+# Sim * plant entities.
+#
+# Inside a tab, groups sit in a built-in grid card with a fixed column
+# count (Tabdeck's own `columns` builds the same grid but would also put
+# the intro note in a grid cell). A grid card does not reflow, so on a
+# phone the groups stay side by side and get narrow.
+
+title: Dryer Bench
+views:
+  - title: Bench
+    path: bench
+    icon: mdi:air-filter
+    type: sections
+    max_columns: 4
+    badges:
+      # Simulation speed is always shown: amber when sped up, plain at 1x.
+      # Tapping it opens the slider.
+      - type: entity
+        entity: number.desiccant_dryer_virtual_sim_speed
+        name: Simulation speed
+        icon: mdi:fast-forward
+        show_name: true
+        show_state: true
+        color: amber
+        visibility:
+          - condition: numeric_state
+            entity: number.desiccant_dryer_virtual_sim_speed
+            above: 1
+      - type: entity
+        entity: number.desiccant_dryer_virtual_sim_speed
+        name: Simulation speed
+        icon: mdi:fast-forward
+        show_name: true
+        show_state: true
+        color: grey
+        visibility:
+          - condition: numeric_state
+            entity: number.desiccant_dryer_virtual_sim_speed
+            below: 1.5
+      - type: entity
+        entity: binary_sensor.desiccant_dryer_virtual_fault
+        name: Fault
+        show_name: true
+        show_state: false
+        color: red
+        visibility:
+          - condition: state
+            entity: binary_sensor.desiccant_dryer_virtual_fault
+            state: "on"
+      - type: entity
+        entity: switch.desiccant_dryer_virtual_override_humidity
+        name: Humidity overridden
+        show_name: true
+        show_state: false
+        color: amber
+        visibility:
+          - condition: state
+            entity: switch.desiccant_dryer_virtual_override_humidity
+            state: "on"
+      - type: entity
+        entity: switch.desiccant_dryer_virtual_sim_manual_temps
+        name: Pack temps set by hand
+        show_name: true
+        show_state: false
+        color: amber
+        visibility:
+          - condition: state
+            entity: switch.desiccant_dryer_virtual_sim_manual_temps
+            state: "on"
+      - type: entity
+        entity: switch.desiccant_dryer_virtual_sim_heater_fault
+        name: Fake heater failure
+        show_name: true
+        show_state: false
+        color: red
+        visibility:
+          - condition: state
+            entity: switch.desiccant_dryer_virtual_sim_heater_fault
+            state: "on"
+      - type: entity
+        entity: switch.desiccant_dryer_virtual_sim_probe_a_fault
+        name: Fake sensor A loss
+        show_name: true
+        show_state: false
+        color: red
+        visibility:
+          - condition: state
+            entity: switch.desiccant_dryer_virtual_sim_probe_a_fault
+            state: "on"
+      - type: entity
+        entity: switch.desiccant_dryer_virtual_sim_probe_b_fault
+        name: Fake sensor B loss
+        show_name: true
+        show_state: false
+        color: red
+        visibility:
+          - condition: state
+            entity: switch.desiccant_dryer_virtual_sim_probe_b_fault
+            state: "on"
+
+    sections:
+      # ------------------------------------------------------------ top row
+      - type: grid
+        cards:
+          - type: heading
+            heading: Screen
+            icon: mdi:monitor
+          - type: picture-entity
+            entity: image.dryer_screen
+            # With an aspect ratio the card paints the last fully loaded
+            # frame as its background, so each 2 s refresh loads over the
+            # previous picture instead of over nothing.
+            aspect_ratio: "1"
+            fit_mode: cover
+            show_name: false
+            show_state: false
+            grid_options:
+              columns: full
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Status
+            icon: mdi:air-filter
+          - type: markdown
+            content: >-
+              **Override humidity is on.** The controller is acting on the
+              Override value slider instead of the humidity sensor, and the
+              screen shows OVR. It turns itself off whenever the unit
+              restarts.
+            visibility:
+              - condition: state
+                entity: switch.desiccant_dryer_virtual_override_humidity
+                state: "on"
+          - type: tile
+            entity: sensor.desiccant_dryer_virtual_dryer_status
+            name: Status
+            icon: mdi:information-outline
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.desiccant_dryer_virtual_fault_message
+            name: Fault · tap to clear
+            icon: mdi:alert
+            color: red
+            tap_action: &clear_fault
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.desiccant_dryer_virtual_clear_fault
+              confirmation:
+                text: >-
+                  Clear the fault and let the cycle carry on? If the cause is
+                  still there, such as a pack still above the overheat limit,
+                  the fault comes straight back. A spare pack the fault sent
+                  to cooling is marked ready once it is cool, even if its
+                  recharge never finished; a spare that was heating starts
+                  its recharge over. On a real dryer, fix the cause first.
+            icon_tap_action: *clear_fault
+            visibility:
+              - condition: state
+                entity: binary_sensor.desiccant_dryer_virtual_fault
+                state: "on"
+            grid_options:
+              columns: full
+          - type: tile
+            entity: switch.desiccant_dryer_virtual_dryer_enabled
+            name: Dryer on
+            color: green
+            features_position: inline
+            features:
+              - type: toggle
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: button.desiccant_dryer_virtual_force_swap
+            name: Switch packs now
+            icon: mdi:swap-horizontal
+            color: blue
+            state_content: []
+            tap_action: &force_swap
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.desiccant_dryer_virtual_force_swap
+              confirmation:
+                text: >-
+                  Switch the air to the spare pack now? This skips the usual
+                  wait for the spare to finish recharging and cool down, so a
+                  wet or still-hot pack can go into use. The pack coming out
+                  of use becomes the new spare, marked wet, and all cycle
+                  timers start over.
+            icon_tap_action: *force_swap
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.desiccant_dryer_virtual_control_humidity
+            name: Outlet humidity
+            icon: mdi:water-percent
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.desiccant_dryer_virtual_standby_state
+            name: Spare pack
+            icon: mdi:state-machine
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.desiccant_dryer_virtual_service_time
+            name: Pack in use for
+            icon: mdi:timer-outline
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.desiccant_dryer_virtual_standby_phase_time
+            name: Spare state for
+            icon: mdi:timer-sand
+            grid_options:
+              columns: 6
+
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Trends
+            icon: mdi:chart-line
+          - type: history-graph
+            title: Outlet humidity
+            hours_to_show: 1
+            entities:
+              - entity: sensor.desiccant_dryer_virtual_control_humidity
+                name: Outlet humidity
+                color: "#1a8fd1"
+              - entity: number.desiccant_dryer_virtual_arm_rh_start_heating_standby
+                name: Start-recharge humidity
+                color: "#f29d38"
+              - entity: number.desiccant_dryer_virtual_swap_rh
+                name: Switch-packs humidity
+                color: "#e0453a"
+            grid_options:
+              columns: full
+              rows: 4
+          - type: history-graph
+            title: Pack temperatures
+            hours_to_show: 1
+            entities:
+              - entity: sensor.desiccant_dryer_virtual_pack_a_temperature
+                name: Pack A
+                color: "#2e9e57"
+              - entity: sensor.desiccant_dryer_virtual_pack_b_temperature
+                name: Pack B
+                color: "#e8710a"
+              - entity: sensor.desiccant_dryer_virtual_case_temperature
+                name: Case
+                color: "#8a939b"
+              - entity: number.desiccant_dryer_virtual_regen_temp
+                name: Recharge temperature
+                color: "#c9a100"
+              - entity: number.desiccant_dryer_virtual_cooldown_temp
+                name: Ready temperature
+                color: "#12879a"
+            grid_options:
+              columns: full
+              rows: 5
+
+      # ------------------------------------------------------------ details (tabs)
+      - type: grid
+        column_span: 4
+        cards:
+          - type: custom:tabdeck-card
+            style: segmented
+            align: start
+            position: top
+            tab_display: both
+            remember: browser
+            default_tab: Simulator
+            grid_options:
+              columns: full
+              rows: auto
+            tabs:
+              # ---------------------------------------------------- Simulator
+              - name: Simulator
+                icon: mdi:test-tube
+                cards:
+                  - type: markdown
+                    text_only: true
+                    content: |-
+                      **How the dryer works.** Air flows through one pack while the other waits as the spare. As the pack in use fills with moisture, outlet humidity rises. At the start-recharge level the spare heats, stays hot, cools, then shows *ready*. At the switch-packs level the air moves to it and the used pack becomes the spare, marked *wet* (both levels are on the Settings tab). Status "Air via A, B heating" means air through A, spare B heating.
+
+                      **Simulation speed** (the chip at the top, default 1): speeds up the simulator and the controller's timers. At 60 a real second counts as a dryer minute, and one pack's turn takes about 2.5 minutes. Tap the chip to change it.
+                  - type: grid
+                    columns: 2
+                    square: false
+                    cards:
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Humidity override
+                            heading_style: subtitle
+                            icon: mdi:water-percent
+                          - type: grid
+                            columns: 2
+                            square: false
+                            cards:
+                              - type: tile
+                                entity: switch.desiccant_dryer_virtual_override_humidity
+                                name: Override humidity
+                                icon: mdi:test-tube
+                                color: amber
+                                features_position: inline
+                                features:
+                                  - type: toggle
+                              - type: tile
+                                entity: number.desiccant_dryer_virtual_override_rh
+                                name: Override value
+                                color: amber
+                                features:
+                                  - type: numeric-input
+                                    style: slider
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              - **Override humidity** makes the controller act on the **Override value** slider instead of the humidity sensor. The screen shows OVR.
+                              - With the default settings, 5 % or more starts recharging a wet spare, and 10 % or more switches packs once the spare is ready.
+                              - This is part of the controller, so a real dryer has it too. Every restart turns it off and puts the slider back to 2 %.
+
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Heat
+                            heading_style: subtitle
+                            icon: mdi:fire
+                          - type: grid
+                            columns: 2
+                            square: false
+                            cards:
+                              - type: tile
+                                entity: number.desiccant_dryer_virtual_sim_ambient_temp
+                                name: Room temp
+                                color: amber
+                                features:
+                                  - type: numeric-input
+                                    style: buttons
+                              - type: tile
+                                entity: number.desiccant_dryer_virtual_sim_heater_max_temp
+                                name: Heater top temp
+                                color: amber
+                                features:
+                                  - type: numeric-input
+                                    style: buttons
+                              - type: tile
+                                entity: number.desiccant_dryer_virtual_sim_thermal_time_constant
+                                name: Warm-up/cool-down time
+                                color: amber
+                                features:
+                                  - type: numeric-input
+                                    style: buttons
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              Simulator only, to fake how the packs heat and cool on this test unit. **Remembered after a restart.**
+
+                              - **Room temp** (default 25 °C): idle packs cool toward it. The case warms toward it, 8 °C more while a heater is on; the case fan runs above 36.5 °C.
+                              - **Heater top temp** (110 °C): where a heating pack levels off. 130 °C takes the spare past the 120 °C overheat limit.
+                              - **Warm-up/cool-down time** (5 min): higher is slower. At 5 a pack heats to 90 °C in about 7 minutes and cools to 40 °C in about 9. Near 30 it can warm too slowly and trip "not heating".
+
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Humidity build-up
+                            heading_style: subtitle
+                            icon: mdi:chart-bell-curve-cumulative
+                          - type: grid
+                            columns: 2
+                            square: false
+                            cards:
+                              - type: tile
+                                entity: number.desiccant_dryer_virtual_sim_breakthrough_time
+                                name: Air stays dry for
+                                color: amber
+                                features:
+                                  - type: numeric-input
+                                    style: buttons
+                              - type: tile
+                                entity: number.desiccant_dryer_virtual_sim_rh_rise_rate
+                                name: Then gets damper by
+                                color: amber
+                                features:
+                                  - type: numeric-input
+                                    style: buttons
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              Simulator only, to fake how fast the pack in use fills with moisture. **Remembered after a restart.**
+
+                              - The humidity sensor reads 1 % until the current pack has been in use for **Air stays dry for** (default 60 min), then climbs by **Then gets damper by** (0.1 % per minute): 5 % at 100 minutes, 10 % at 150. Switching packs starts it over at 1 %.
+                              - Set the climb to 1 and the air gets damp faster than the spare can recharge: Status ends "(waiting)" until the spare is ready, then the packs switch.
+
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Fake temps and failures
+                            heading_style: subtitle
+                            icon: mdi:alert-circle-outline
+                          - type: grid
+                            columns: 2
+                            square: false
+                            cards:
+                              - type: tile
+                                entity: switch.desiccant_dryer_virtual_sim_manual_temps
+                                name: Set pack temps by hand
+                                icon: mdi:pin
+                                color: amber
+                                features_position: inline
+                                features:
+                                  - type: toggle
+                              - type: tile
+                                entity: switch.desiccant_dryer_virtual_sim_heater_fault
+                                name: Fake heater failure
+                                icon: mdi:radiator-off
+                                color: red
+                                features_position: inline
+                                features:
+                                  - type: toggle
+                              - type: tile
+                                entity: switch.desiccant_dryer_virtual_sim_probe_a_fault
+                                name: Sensor A lost
+                                icon: mdi:thermometer-off
+                                color: red
+                                features_position: inline
+                                features:
+                                  - type: toggle
+                              - type: tile
+                                entity: switch.desiccant_dryer_virtual_sim_probe_b_fault
+                                name: Sensor B lost
+                                icon: mdi:thermometer-off
+                                color: red
+                                features_position: inline
+                                features:
+                                  - type: toggle
+                          # The pinned temperatures appear only while
+                          # "Set pack temps by hand" is on.
+                          - type: conditional
+                            conditions:
+                              - condition: state
+                                entity: switch.desiccant_dryer_virtual_sim_manual_temps
+                                state: "on"
+                            card:
+                              type: grid
+                              columns: 2
+                              square: false
+                              cards:
+                                - type: tile
+                                  entity: number.desiccant_dryer_virtual_sim_pack_a_temp
+                                  name: Pack A temp
+                                  color: green
+                                  features:
+                                    - type: numeric-input
+                                      style: buttons
+                                - type: tile
+                                  entity: number.desiccant_dryer_virtual_sim_pack_b_temp
+                                  name: Pack B temp
+                                  color: deep-orange
+                                  features:
+                                    - type: numeric-input
+                                      style: buttons
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              Simulator only, to fake problems and see how the controller protects the dryer. **Remembered after a restart**, so turn them off when you are done.
+
+                              - **Set pack temps by hand**: both packs read the Pack A and Pack B temp values that appear here, and the heaters stop having any effect. Raise the heating spare's value by 5 °C or more, or after 5 dryer-minutes it faults as "not heating".
+                              - **Fake heater failure**: the heater switches on but the pack does not warm; 5 dryer-minutes later, fault "Standby heater not heating".
+                              - **Sensor lost**: that pack reads Unknown. For the spare, the cycle pauses; a heater stays on for up to 25 real seconds, then turns off, and that recharge starts over when the reading returns. No fault. For the pack in use, only its overheat check stops.
+
+              # ---------------------------------------------------- Settings
+              - name: Settings
+                icon: mdi:tune
+                cards:
+                  - type: markdown
+                    text_only: true
+                    content: >-
+                      All eight settings on this tab are starting guesses, not
+                      yet tested on a real dryer. Changes are remembered.
+                  - type: grid
+                    columns: 3
+                    square: false
+                    cards:
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Humidity levels
+                            heading_style: subtitle
+                            icon: mdi:water-percent
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_arm_rh_start_heating_standby
+                            name: Start-recharge humidity
+                            color: orange
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_swap_rh
+                            name: Switch-packs humidity
+                            color: red
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              Both are drawn on the Outlet humidity chart.
+
+                              - **Start-recharge humidity** (default 5 %): once outlet humidity reaches this, a wet spare starts heating. Lower it to recharge sooner.
+                              - **Switch-packs humidity** (10 %): once outlet humidity reaches this and the spare is ready, the air switches to it. If the spare is not ready, Status adds "(waiting)" and the switch happens when it is.
+                              - Keep the first below the second so the spare gets a head start.
+
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Recharging
+                            heading_style: subtitle
+                            icon: mdi:fire
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_regen_temp
+                            name: Recharge temperature
+                            color: orange
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_regen_hold_time
+                            name: Recharge hold time
+                            color: orange
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_cooldown_temp
+                            name: Ready temperature
+                            color: cyan
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              Recharge and Ready temperature are drawn on the Pack temperatures chart.
+
+                              - The spare's heater stays on until the pack has held at or above **Recharge temperature** (default 90 °C) for **Recharge hold time** (15 min). Dipping below starts the hold over.
+                              - It then cools, and shows ready at or below **Ready temperature** (40 °C).
+                              - Lower the first two for a shorter recharge. Keep Ready temperature above the simulator's Room temp, or the pack never cools enough to be ready.
+
+                      - type: vertical-stack
+                        cards:
+                          - type: heading
+                            heading: Safety limits
+                            heading_style: subtitle
+                            icon: mdi:shield-alert-outline
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_regen_max_heater_time
+                            name: Heater time limit
+                            color: grey
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_max_service_time
+                            name: Max time in use
+                            color: grey
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: tile
+                            entity: number.desiccant_dryer_virtual_pack_overtemp_limit
+                            name: Overheat limit
+                            color: red
+                            features:
+                              - type: numeric-input
+                                style: buttons
+                          - type: markdown
+                            text_only: true
+                            content: |-
+                              Backstops in case humidity or temperature never reaches its normal trigger.
+
+                              - **Heater time limit** (default 60 min): if the hold has not finished once the heater has run this long, heating stops and the pack moves on to cooling anyway.
+                              - **Max time in use** (180 min): a wet spare starts heating at this minus the heater time limit (120 min) even if humidity has not risen, and the packs switch at 180 min once the spare is ready.
+                              - **Overheat limit** (120 °C): a pack above this turns the heaters off and shows a fault. The cycle pauses until you clear it, but air keeps flowing.
+
+              # ---------------------------------------------------- How to test
+              - name: How to test
+                icon: mdi:clipboard-list-outline
+                card:
+                  type: markdown
+                  text_only: true
+                  content: |-
+                    **Before each test**, clear any fault (tap the Fault tile), then turn **Dryer on** off and back on: Status should read "Air via A, B wet" within 5 seconds. A fault stays through that and through a restart until you clear it. At **Simulation speed** 1 the spare does not start heating for 100 minutes, so most tests use 60 (a real second counts as a dryer minute) or 10 when you need time to catch the heating step. Change the speed with the chip at the top.
+
+                    **Reading the top row.** "Air via A, B heating" means air flows through pack A and the spare, B, is heating. The spare's states are *wet* (used, needs recharging), *heating*, *cooling* and *ready*. "(waiting)" means the air is damp enough to switch but the spare is not ready. "Disabled" means Dryer on is off; "Starting" shows for a moment after turning it on. Fault messages call the pack in use *active* and the spare *standby*; *overtemp* means too hot. The **Screen** shows what the tiles do not: a glow on a pack whose heater is on, a green valve under the pack in use, a green FAN icon while the case fan runs, and --° for a lost reading.
+
+                    | Test | Do this | You should see | Afterwards |
+                    |---|---|---|---|
+                    | Step through by hand | Simulation speed 10. Turn on **Override humidity** with **Override value** at 2 | "Air via A, B wet". Slide to 6: "B heating" and pack B glows on the Screen. After about 3 minutes: "B cooling", then "B ready". Slide to 12: "Air via B", and A starts recharging at once because 12 % is above 5 % | Slide back to 2, then **Restart** (Diagnostics tab): Override humidity is off again. Speed back to 1 |
+                    | Hands-free cycle | Simulation speed 60, then watch | After about a minute Outlet humidity rises from 1 %. At 5 %: "B heating", pack B climbs on the chart. After 15 dryer-minutes above 90 °C: "B cooling". At 40 °C: "B ready". At 10 %: "Air via B, A wet", humidity back to 1 %, Pack in use for back to 0. Keep watching and it repeats the other way | Speed back to 1 |
+                    | Spare not ready in time | **Then gets damper by** 1, speed 60 | Humidity passes 10 % while B is still heating and Status ends "(waiting)". Within about 5 seconds of "B ready", the air switches to B | Then gets damper by back to 0.1, speed back to 1 |
+                    | Switch by hand | Speed 10. When Status shows "Air via A, B heating", tap **Switch packs now** and confirm | B's glow goes off, then "Air via B, A wet". B is in use without finishing its recharge. No fault | Speed back to 1 |
+                    | Turn the dryer off | Turn **Dryer on** off | "Disabled". The Screen shows both valves closed and nothing heating. Timers go to 0 | Turn it back on: "Air via A, B wet" within 5 seconds |
+                    | Spare overheats | **Heater top temp** 130, speed 60, wait for "B heating" | Once pack B passes 120 °C: Fault badge and "Standby pack overtemp", Spare pack "cooling", air still via A, Pack in use for keeps counting | Heater top temp back to 110, then clear the fault. B cools, shows ready and the cycle carries on. Speed back to 1 |
+                    | Heater failure | **Fake heater failure** on, speed 60, wait for humidity to reach 5 % | A few seconds after "B heating" (5 dryer-minutes): fault "Standby heater not heating", Spare pack "cooling" | Fake heater failure off, clear the fault, speed back to 1. B shows ready at once because it never got hot, even though it was not recharged |
+                    | Pack in use overheats | At speed 1, turn on **Set pack temps by hand**, then set **Pack A temp** to 125 | Within 5 seconds: fault "Active pack overtemp", heaters off, air still via A | Pack A temp back to 25 first (or it faults again), then clear the fault, then Set pack temps by hand off |
+                    | Case fan | **Room temp** 40, speed 60 | Case temp (Diagnostics tab) passes 36.5 °C and the FAN icon on the Screen turns green | Room temp back to 25: the fan stops once the case is below 33.5 °C and it has run at least 60 seconds. Speed back to 1 |
+                    | Short sensor loss | Speed 10. During "B heating", turn **Sensor B lost** on for about 15 seconds, then off | Pack B temp reads Unknown, B keeps glowing, Spare pack stays "heating", no fault, the recharge finishes normally | Speed back to 1 |
+                    | Long sensor loss | Speed 10. During "B heating", turn **Sensor B lost** on for about 40 seconds, then off | After 25 seconds B's glow goes off but it still says "heating", no fault. Once the sensor is back: B glows again within 5 seconds, Heater time (Diagnostics tab) starts again from 0, the recharge finishes | Speed back to 1 |
+                    | Restart mid-recharge | Speed 10. During "B heating", tap **Restart** (Diagnostics tab) and confirm | Once it is back: still "B heating", B glows again, Heater time and Hold time start from 0, Pack B temp carries on from about where it was | Speed back to 1 |
+
+                    **Tips.** The 25-second sensor timings are real seconds and do not speed up. Use speed 10, not 60, for the step-through test: at 60 the Max time in use backstop starts the recharge and switches packs by itself after about 2 and 3 minutes. Default values for every setting are in the notes on the Simulator and Settings tabs; put back anything you changed.
+
+              # ---------------------------------------------------- Diagnostics
+              - name: Diagnostics
+                icon: mdi:stethoscope
+                card:
+                  type: grid
+                  columns: 3
+                  square: false
+                  cards:
+                    - type: vertical-stack
+                      cards:
+                        - type: heading
+                          heading: Recharge timers
+                          heading_style: subtitle
+                          icon: mdi:timer-outline
+                        - type: grid
+                          columns: 2
+                          square: false
+                          cards:
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_standby_heater_time
+                              name: Heater time
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_regen_hold_time
+                              name: Hold time
+                        - type: markdown
+                          text_only: true
+                          content: >-
+                            **Heater time** is how long the spare's heater has
+                            run in this recharge; **Hold time** is how long the
+                            pack has stayed at or above Recharge temperature
+                            without a break. Both keep their last value through
+                            cooling and ready, then go back to 0 when the packs
+                            switch or a recharge starts over. **Spare state
+                            for** on the top row counts only the spare's
+                            current state.
+
+                    - type: vertical-stack
+                      cards:
+                        - type: heading
+                          heading: Sensor readings
+                          heading_style: subtitle
+                          icon: mdi:thermometer-lines
+                        - type: grid
+                          columns: 2
+                          square: false
+                          cards:
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_outlet_air_humidity
+                              name: Humidity sensor
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_outlet_air_temperature
+                              name: Outlet air temp
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_pack_a_temperature
+                              name: Pack A temp
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_pack_b_temperature
+                              name: Pack B temp
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_case_temperature
+                              name: Case temp
+                        - type: markdown
+                          text_only: true
+                          content: >-
+                            What the simulated sensors report. **Outlet
+                            humidity** on the top row is what the controller
+                            acts on: the same as Humidity sensor unless
+                            Override humidity is on. Unknown means no reading.
+                            Outlet air temp is shown for information; the
+                            controller does not use it.
+
+                    - type: vertical-stack
+                      cards:
+                        - type: heading
+                          heading: Device
+                          heading_style: subtitle
+                          icon: mdi:chip
+                        - type: grid
+                          columns: 2
+                          square: false
+                          cards:
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_uptime
+                              name: Since restart
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_wifi_signal
+                              name: WiFi signal
+                            - type: tile
+                              entity: sensor.desiccant_dryer_virtual_ip_address
+                              name: IP address
+                              icon: mdi:ip-network
+                            - type: tile
+                              entity: button.desiccant_dryer_virtual_restart
+                              name: Restart
+                              icon: mdi:restart
+                              state_content: []
+                              tap_action: &restart
+                                action: perform-action
+                                perform_action: button.press
+                                target:
+                                  entity_id: button.desiccant_dryer_virtual_restart
+                                confirmation:
+                                  text: >-
+                                    Restart the controller? Heaters and valves
+                                    are off until it is running again, then it
+                                    carries on from the same point in the cycle.
+                                    A recharge that was heating starts its
+                                    heater and hold timers over. Override
+                                    humidity turns off; simulator settings are
+                                    kept.
+                              icon_tap_action: *restart
