@@ -136,17 +136,19 @@ so a regen's duration stays visible in HA history; the swap resets them.
 resets on every phase change, so after a swap it restarts from zero as WET.
 Transitions are logged under the `cycle` tag at INFO, faults at ERROR.
 
-## Humidity simulation (all builds)
+## Humidity override (all builds)
 
-`Simulate Humidity` switch + `Simulated RH` number. `Control Humidity`
+`Override Humidity` switch + `Override RH` number. `Control Humidity`
 (`ctrl_rh`) is what the logic and display read; it mirrors the outlet sensor
-unless simulation is on. Simulation never persists across reboot and the
-display tags the reading "SIM". Pack temperatures are not simulated here; on
+unless the override is on, when it reads `Override RH` instead. The override
+never persists across reboot and the display shows an "OVR" badge while it is
+on. It replaces a reading rather than simulating one: on the virtual build it
+overrides the plant model's rising RH. Pack temperatures have no override; on
 the real unit heat the probes, on the virtual build use the plant knobs.
 
 ## Test sequence on the real unit
 
-1. Dryer Enabled on, Simulate on at 2 % → expect "Air via A, B wet".
+1. Dryer Enabled on, Override Humidity on at 2 % → expect "Air via A, B wet".
 2. Slider to 6 % → heater B relay on ("B heating").
 3. Warm probe B past `regen_temp` (lower it temporarily if needed), hold for
    `regen_hold_min` → heater off ("B cooling").

@@ -32,8 +32,8 @@ switch:
     optimistic: true
     restore_mode: ALWAYS_OFF
   - platform: template
-    name: "Simulate Humidity"
-    id: sim_enabled
+    name: "Override Humidity"
+    id: rh_override_on
     optimistic: true
     restore_mode: ALWAYS_OFF
   - platform: template
@@ -123,7 +123,7 @@ esphome:
       - lambda: |-
           struct Sc {
             int active, sb, fault;
-            bool enabled, sim, fan, ha, hb, va, vb;
+            bool enabled, rh_override, fan, ha, hb, va, vb;
             float ta, tb, tc, rh, service_s, standby_s;
             const char *status, *fault_msg, *ip;
           };
@@ -154,7 +154,7 @@ esphome:
           id(standby_elapsed_s) = c.standby_s;
           auto set = [](esphome::switch_::Switch *sw, bool on) { if (on) sw->turn_on(); else sw->turn_off(); };
           set(id(dryer_enabled), c.enabled);
-          set(id(sim_enabled), c.sim);
+          set(id(rh_override_on), c.rh_override);
           set(id(case_fan), c.fan);
           set(id(heater_a), c.ha);
           set(id(heater_b), c.hb);

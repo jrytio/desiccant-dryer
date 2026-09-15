@@ -8,7 +8,7 @@ mains until the relays exist.
 
 What to expect with the gaps: the SHT45 logs a read failure every 10 s and
 `Outlet Air Humidity` stays unknown, which holds the state machine safely
-until `Simulate Humidity` is on. The heater switches drive the transistor
+until `Override Humidity` is on. The heater switches drive the transistor
 bases only; GPIO13 also lights the on-board blue LED.
 
 ## 1. Flash
@@ -66,12 +66,12 @@ itself worth watching once.
 ## 4. Display
 
 Confirm the layout matches `display-draw.yaml`: "AIR: A" at the top, the
-humidity line reads "nan %RH" until simulation is on, the three temperature
+humidity line reads "nan %RH" until the override is on, the three temperature
 lines, the humidity bar, the IP at the bottom. If the image is shifted or
 cropped, try `offset_height: 80` as the comment in `display-st7789.yaml` says. Note
 the backlight level and colours.
 
-## 5. Cycle with simulated humidity and real probes
+## 5. Cycle with the humidity override and real probes
 
 Follow "Test sequence on the real unit" in `docs/control-logic.md`. Lower
 `Regen temp` to something a hand can reach (about 30 °C) and `Regen hold

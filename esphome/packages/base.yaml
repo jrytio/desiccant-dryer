@@ -235,11 +235,12 @@ number:
     optimistic: true
     entity_category: config
 
-  # Simulation: when "Simulate Humidity" is on, this value replaces the outlet
-  # humidity everywhere the control logic and display use it. Never persisted.
+  # Override: when "Override Humidity" is on, this value replaces the measured
+  # outlet humidity everywhere the control logic and display use it. Never
+  # persisted.
   - platform: template
-    name: "Simulated RH"
-    id: sim_rh
+    name: "Override RH"
+    id: rh_override
     unit_of_measurement: "%"
     min_value: 0
     max_value: 100
@@ -292,8 +293,8 @@ switch:
     icon: mdi:fan
 
   - platform: template
-    name: "Simulate Humidity"
-    id: sim_enabled
+    name: "Override Humidity"
+    id: rh_override_on
     optimistic: true
     restore_mode: ALWAYS_OFF
     icon: mdi:test-tube
@@ -347,14 +348,14 @@ button:
 
 # ---------------------------------------------------------------- derived sensors
 sensor:
-  # The humidity the controller actually acts on: real or simulated.
+  # The humidity the controller actually acts on: measured, or the override.
   - platform: template
     name: "Control Humidity"
     id: ctrl_rh
     unit_of_measurement: "%"
     accuracy_decimals: 1
     lambda: |-
-      if (id(sim_enabled).state) return id(sim_rh).state;
+      if (id(rh_override_on).state) return id(rh_override).state;
       return id(air_rh).state;
     update_interval: 5s
 
