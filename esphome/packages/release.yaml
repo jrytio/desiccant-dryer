@@ -10,14 +10,17 @@
 # any host on the LAN upload firmware to a mains controller. Firmware
 # arrives only through the signed-off release below or the USB port.
 #
-# The device polls ${update_manifest_url}, the esp-web-tools manifest that
-# .github/workflows/release.yml attaches to every GitHub Release, and
-# reports an update to Home Assistant when the manifest's version differs
-# from ${version}. Installing pulls the .ota.bin over HTTPS (the relative
-# path in the manifest resolves next to it) and checks its md5.
+# The device polls ${update_manifest_url}, the esp-web-tools manifest on
+# the repository's GitHub Pages site, and reports an update to Home
+# Assistant when the manifest's version differs from ${version}.
+# Installing pulls the .ota.bin over HTTPS (the relative path in the
+# manifest resolves next to it) and checks its md5. Pages, not the GitHub
+# Release download URL: that one redirects to an RSA-certificate host
+# with a ~900-byte signed URL, and the S2 has too little free heap for the
+# second handshake (see the sdkconfig notes in platform-esp32.yaml).
 
 substitutions:
-  update_manifest_url: https://github.com/jrytio/desiccant-dryer/releases/latest/download/manifest.json
+  update_manifest_url: https://jrytio.github.io/desiccant-dryer/firmware/manifest.json
 
 esphome:
   project:
@@ -35,10 +38,12 @@ improv_serial:
 http_request:
   verify_ssl: true
   timeout: 10s
-  # The releases/latest/download URL answers with a redirect whose signed
-  # Location header runs to several hundred bytes; the 512-byte default
-  # fails with "Out of buffer" before the manifest is ever read.
-  buffer_size_rx: 2048
+  # GitHub Pages answers directly, with no redirect, so the request and
+  # response headers stay short. (The old releases/latest/download URL
+  # redirected twice, the second time to a ~900-byte signed URL on an RSA
+  # host, which neither the default buffers nor the S2's free heap could
+  # take.) Kept a little above the 512-byte default for header headroom.
+  buffer_size_rx: 1024
 
 ota:
   - platform: http_request
@@ -78,5 +83,9 @@ sensor:
   - platform: debug
     free:
       name: "Free Heap"
+    # TLS needs contiguous blocks; total free heap alone hid 1.0.0's
+    # failed manifest fetch.
+    block:
+      name: "Largest Free Block"
     loop_time:
       name: "Loop Time"

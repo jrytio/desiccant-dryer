@@ -102,8 +102,10 @@ service 180 min) are untested guesses meant to get first cycles logging.
 ## Working conventions
 
 - Flash with `esphome run esphome/desiccant-dryer.yaml` (real hardware) or
-  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). For the
-  virtual and host builds copy `secrets.yaml.example` to `secrets.yaml`
+  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Bench
+  testing on real hardware uses `esphome/desiccant-dryer-hw-test.yaml`
+  (production controller plus dev secrets, so it takes OTA; see
+  docs/hardware-bringup.md). For the virtual, host and hw-test builds copy `secrets.yaml.example` to `secrets.yaml`
   first (compile-only check: `cp esphome/secrets.ci.yaml esphome/secrets.yaml`);
   the production build reads no secrets.
 - WiFi is a `networks:` list in `packages/dev-secrets.yaml`, one secret
@@ -137,8 +139,9 @@ service 180 min) are untested guesses meant to get first cycles logging.
   control logic when either changes.
 - The production selector alone includes `esphome/version.yaml` (semver,
   bumped in the PR) and `packages/release.yaml` (project version, Improv
-  and captive-portal provisioning, HA update entity polling the latest
-  GitHub Release's manifest, safe mode, debug sensors). It has no ESPHome
+  and captive-portal provisioning, HA update entity polling the manifest
+  the release workflow publishes to GitHub Pages (not the Release download
+  URL: its redirect and RSA host exhaust the S2's heap), safe mode, debug sensors). It has no ESPHome
   OTA server and the web server's upload page is off (unauthenticated
   reflash of a mains controller); the API reboot watchdog is off; `api:
   encryption: {}` in base.yaml must stay so HA can hand the released unit
