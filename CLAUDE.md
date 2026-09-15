@@ -40,11 +40,16 @@ server) or `packages/platform-host.yaml` (native build on the Mac). Hardware:
 this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
 `packages/display-draw.yaml` (fonts, SVG sprites from `esphome/assets/display/`,
 and the `ui_draw` script that gathers ids into a `UiState` for
-`packages/display_ui.h`, where all drawing lives with no `id()` calls; the
-`display_lambda` substitution just runs that script) plus a driver,
+`components/dryer_ui/display_ui.h`, where all drawing lives with no `id()`
+calls; the `display_lambda` substitution just runs that script; the art path
+is the `display_assets` substitution) plus `packages/ui-code-local.yaml`,
+which loads the `dryer_ui` component from this checkout, plus a driver,
 `packages/display-st7789.yaml` (real panel) or `packages/display-sdl.yaml`
-(window on the Mac); both give the display id `panel`. `packages/screen-mirror.yaml` (device builds only) serves the panel's frame buffer as `/screen.png` through the local component `esphome/components/screen_mirror`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
-and `desiccant-dryer-host.yaml` are short selectors; `desiccant-dryer-scenarios.yaml`
+(window on the Mac); both give the display id `panel`. `packages/screen-mirror.yaml` (hw-test and virtual builds only) serves the panel's frame buffer as `/screen.png` through the local component `esphome/components/screen_mirror`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`,
+`desiccant-dryer-hw-test.yaml` and `desiccant-dryer-host.yaml` are short
+selectors; the production one wraps `packages/production.yaml`, which
+`desiccant-dryer-adopt.yaml` also wraps with the component and art taken from
+GitHub at the release tag for ESPHome Device Builder adoption (docs/releasing.md); `desiccant-dryer-scenarios.yaml`
 is a fourth, host-only build that swaps the controller for a fixed table of
 twelve screen states (`packages/display-scenarios.yaml`) so
 `scripts/scenario-shots.sh` can render them all through the panel's palette
@@ -124,7 +129,7 @@ service 180 min) are untested guesses meant to get first cycles logging.
   `docs/display/` before flashing. They are rendered through the same RGB
   3-3-2 palette the panel uses (every designed colour already sits on that
   grid); the host build shows the same drawing live but in full colour.
-- The device builds serve the live screen at `http://<board>/screen.png`
+- The hw-test and virtual builds (not production) serve the live screen at `http://<board>/screen.png`
   for Home Assistant's `image.dryer_screen` template image
   (docs/screen-in-ha.md). It streams from the ST7789's 8-bit buffer, taking
   turns with redraws; keep `color_palette: 8BIT` and rotation 0 or the
@@ -137,20 +142,25 @@ service 180 min) are untested guesses meant to get first cycles logging.
   automation). Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
-- The production selector alone includes `esphome/version.yaml` (semver,
+- Only `packages/production.yaml` (wrapped by `desiccant-dryer.yaml` and
+  `desiccant-dryer-adopt.yaml`) includes `esphome/version.yaml` (semver,
   bumped in the PR) and `packages/release.yaml` (project version, Improv
-  and captive-portal provisioning, HA update entity polling the manifest
-  the release workflow publishes to GitHub Pages (not the Release download
-  URL: its redirect and RSA host exhaust the S2's heap), safe mode, debug sensors). It has no ESPHome
-  OTA server and the web server's upload page is off (unauthenticated
-  reflash of a mains controller); the API reboot watchdog is off; `api:
-  encryption: {}` in base.yaml must stay so HA can hand the released unit
-  a key. It contains no secrets and must validate with no `secrets.yaml`
-  present: WiFi, the API
-  key and the OTA password live in `packages/dev-secrets.yaml`, included
-  only by the hand-flashed test builds. Tags `vX.Y.Z` pushed by
-  `scripts/release.sh` run the release workflow; see docs/releasing.md.
-  The 1.x production builds log at DEBUG on purpose.
+  and captive-portal provisioning, safe mode, debug sensors). It has no
+  ESPHome OTA server and the web server's upload page is off
+  (unauthenticated reflash of a mains controller); the API reboot watchdog
+  is off. Updates come from ESPHome Device Builder: `dashboard_import`
+  points at `desiccant-dryer-adopt.yaml`, and the owner's adopted YAML adds
+  their API key, OTA password and WiFi. Do not bring back an on-device
+  `update: platform: http_request`: the S2 never has the ~17 KB contiguous
+  block a TLS firmware download needs (1.0.x). Anything the adopt selector
+  reads from this repository must be remote-safe (no `esphome: includes`,
+  local external components or local image paths outside the
+  `ui-code-*`/`display_assets` switch), and its tag must exist, so run
+  `scripts/release.sh` right after the version bump merges. The production
+  build contains no secrets and must validate with no `secrets.yaml`
+  present: WiFi, the API key and the OTA password of the test builds live
+  in `packages/dev-secrets.yaml`. See docs/releasing.md. The 1.x production
+  builds log at DEBUG on purpose.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the

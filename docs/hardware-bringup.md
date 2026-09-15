@@ -15,10 +15,10 @@ The testing runs on the **hardware test build**,
 `esphome/desiccant-dryer-hw-test.yaml`: the production controller and real
 hardware plus the developer credentials from `secrets.yaml`, so it takes
 OTA updates as often as needed and USB is only used once. The released
-production image (`esphome/desiccant-dryer.yaml`) has no OTA server and no
+production image (`esphome/desiccant-dryer.yaml`) has no OTA server, no
 WiFi credentials (it has WiFi and a setup access point, and is provisioned
-through Improv or that access point); it goes on last, as its own step
-(section 7).
+through Improv or that access point) and no `/screen.png`; it goes on last,
+as its own step (section 7).
 
 ## 1. Flash the test build (USB, once)
 
@@ -135,12 +135,14 @@ display offset of each unit, in this file.
 
 ## 7. Production image
 
-Needs USB access to the board. Flash the release (the `.factory.bin` from
-the GitHub Release through https://web.esphome.io, or `esphome run
-esphome/desiccant-dryer.yaml` over USB), then give it WiFi with web.esphome.io
-→ Connect → Configure Wi-Fi, or through the open `Desiccant Dryer Setup`
-access point. Add it in HA by host, port 6053, with no key: HA sets the
-encryption key itself. Expect `Firmware Version` 1.0.0 (or later) and an
-`update` entity that can read the latest release manifest (see
-docs/releasing.md). Remove the HW Test entry from HA first if it uses the
+Needs USB access to the board. Follow "Installing a release on a dryer" in
+docs/releasing.md: flash the release, give it WiFi, adopt it in ESPHome
+Device Builder, and install the adopted YAML over USB once. After that,
+Device Builder installs updates over WiFi. Expect `Firmware Version` to
+match the release. Remove the HW Test entry from HA first if it uses the
 same host.
+
+The test board (2026-09-15) ran this path with an adopted-style YAML built
+from a branch: USB install of 1.1.0, then a Device Builder-equivalent
+native OTA push (`esphome run --device <board>`) to a relabelled build,
+which rebooted into it with the controller running and no fault.
