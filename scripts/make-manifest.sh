@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Assemble the release files for one production build.
 #   scripts/make-manifest.sh <version> <build-dir> <out-dir> [release-url]
-# <build-dir> is esphome/.esphome/build/desiccant-dryer/.pioenvs/desiccant-dryer
+# <build-dir> is esphome/.esphome/build/desiccant-dryer/build
 # after `esphome compile esphome/desiccant-dryer.yaml`. Writes
 # desiccant-dryer-<version>.ota.bin, desiccant-dryer-<version>.factory.bin
 # and manifest.json (esp-web-tools format: read by the device's

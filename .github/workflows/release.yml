@@ -60,7 +60,7 @@ jobs:
       - name: Assemble manifest and binaries
         run: |
           scripts/make-manifest.sh "${{ steps.ver.outputs.version }}" \
-            esphome/.esphome/build/desiccant-dryer/.pioenvs/desiccant-dryer \
+            esphome/.esphome/build/desiccant-dryer/build \
             site "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
           cat site/manifest.json
 
