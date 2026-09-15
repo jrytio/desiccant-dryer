@@ -1,201 +1,103 @@
-<svg width="1100" height="760" viewBox="0 0 1100 760" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<svg width="1100" height="780" viewBox="0 0 1100 780" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
 <title>Desiccant dryer controller — protoboard layout (logic 70×90 mm, relay 50×70 mm)</title>
 <defs>
-  <pattern id="holes" x="0" y="0" width="2.54" height="2.54" patternUnits="userSpaceOnUse">
-    <circle cx="1.27" cy="1.27" r="0.45" fill="#C9C3B2"/>
-  </pattern>
-  <marker id="arr" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"><path d="M0,0 L4,2 L0,4 z" fill="#2C2C2A"/></marker>
-
+  <pattern id="holes" x="0" y="0" width="2.54" height="2.54" patternUnits="userSpaceOnUse"><circle cx="1.27" cy="1.27" r="0.45" fill="#C9C3B2"/></pattern>
+  <g id="tb2"><rect x="-2.55" y="-3.5" width="10.2" height="8" rx="0.4" fill="#2A5D8F" stroke="#183A5A"/><circle cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
+  <g id="tbm"><rect x="-2.55" y="-3.5" width="10.2" height="8" rx="0.4" fill="#7A2626" stroke="#4A1414"/><circle cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
+  <g id="res"><rect x="-1" y="-2.75" width="2" height="5.5" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A"/></g>
+  <g id="dio"><rect x="-2.6" y="-0.9" width="5.2" height="1.8" rx="0.3" fill="#222" stroke="#000"/><rect x="1.5" y="-0.9" width="0.7" height="1.8" fill="#DDD"/></g>
   <g id="fet">
-    <!-- resistors -->
-    <rect x="0" y="0" width="2" height="5.5" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A"/>
-    <rect x="3.2" y="0" width="2" height="5.5" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A"/>
-    <text x="1" y="-0.8" font-size="1.15" text-anchor="middle" fill="#2C2C2A">100Ω</text>
-    <text x="4.2" y="-0.8" font-size="1.15" text-anchor="middle" fill="#2C2C2A">10k</text>
-    <!-- TO-220 -->
-    <rect x="-1" y="7.5" width="10.2" height="4.5" fill="#444" stroke="#111"/>
-    <rect x="-1" y="7.5" width="10.2" height="1.4" fill="#999" stroke="#111"/>
-    <text x="4.1" y="10.9" font-size="1.4" text-anchor="middle" fill="#FFF">IRLZ44N</text>
-    <text x="1.5" y="14" font-size="1.1" text-anchor="middle" fill="#2C2C2A">G</text><text x="4.1" y="14" font-size="1.1" text-anchor="middle" fill="#2C2C2A">D</text><text x="6.6" y="14" font-size="1.1" text-anchor="middle" fill="#2C2C2A">S</text>
-    <!-- diode -->
-    <rect x="1.5" y="15.2" width="5.2" height="1.8" rx="0.3" fill="#222" stroke="#000"/>
-    <rect x="5.6" y="15.2" width="0.7" height="1.8" fill="#DDD"/>
-    <text x="4.1" y="19" font-size="1.1" text-anchor="middle" fill="#2C2C2A">1N4007, band → 24V+</text>
+    <use href="#res" x="0" y="0"/><use href="#res" x="2.54" y="0"/>
+    <text x="0" y="-3.6" font-size="1.15" text-anchor="middle" fill="#2C2C2A">100Ω</text><text x="2.54" y="-3.6" font-size="1.15" text-anchor="middle" fill="#2C2C2A">10k</text>
+    <rect x="-2.55" y="6" width="10.2" height="4.5" fill="#444" stroke="#111"/><rect x="-2.55" y="6" width="10.2" height="1.4" fill="#999" stroke="#111"/>
+    <text x="2.54" y="9.4" font-size="1.4" text-anchor="middle" fill="#FFF">IRLZ44N</text>
+    <text x="0" y="12.4" font-size="1.1" text-anchor="middle" fill="#2C2C2A">G</text><text x="2.54" y="12.4" font-size="1.1" text-anchor="middle" fill="#2C2C2A">D</text><text x="5.08" y="12.4" font-size="1.1" text-anchor="middle" fill="#2C2C2A">S</text>
+    <use href="#dio" x="2.54" y="15.2"/><text x="2.54" y="18.3" font-size="1.1" text-anchor="middle" fill="#2C2C2A">1N4007 → 24V+</text>
   </g>
-
-  <g id="tb2"><rect x="0" y="0" width="10.2" height="8" rx="0.4" fill="#2A5D8F" stroke="#183A5A"/><circle cx="2.55" cy="3.5" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle cx="7.65" cy="3.5" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
-
   <g id="npn">
-    <rect x="0" y="0" width="2" height="5" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A"/>
-    <rect x="3" y="0" width="2" height="5" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A"/>
-    <text x="1" y="-0.7" font-size="1.1" text-anchor="middle" fill="#2C2C2A">1k</text><text x="4" y="-0.7" font-size="1.1" text-anchor="middle" fill="#2C2C2A">10k</text>
-    <path d="M7,5 a2.4,2.4 0 1,1 4.8,0 L7,5 z" fill="#333" stroke="#000"/>
-    <text x="9.4" y="8.3" font-size="1.1" text-anchor="middle" fill="#2C2C2A">2N2222</text>
-    <text x="9.4" y="10" font-size="1" text-anchor="middle" fill="#555">E B C</text>
+    <use href="#res" x="0" y="0"/><use href="#res" x="2.54" y="0"/>
+    <text x="0" y="-3.6" font-size="1.1" text-anchor="middle" fill="#2C2C2A">1k</text><text x="2.54" y="-3.6" font-size="1.1" text-anchor="middle" fill="#2C2C2A">10k</text>
+    <path d="M5.6,1.2 a2.4,2.4 0 1,1 4.8,0 z" fill="#333" stroke="#000"/>
+    <text x="11.4" y="0.2" font-size="1.1" fill="#2C2C2A">2N2222</text><text x="11.4" y="1.9" font-size="1" fill="#555">E B C</text>
   </g>
-
   <g id="relay">
     <rect x="0" y="0" width="19" height="15.5" rx="0.6" fill="#2E5CB8" stroke="#1B3A78"/>
-    <text x="9.5" y="6.5" font-size="1.8" font-weight="bold" text-anchor="middle" fill="#FFF">SONGLE</text>
-    <text x="9.5" y="9" font-size="1.5" text-anchor="middle" fill="#DCE6F8">SRD-05VDC-SL-C</text>
-    <text x="9.5" y="11.4" font-size="1.3" text-anchor="middle" fill="#DCE6F8">10 A / 250 VAC</text>
-    <text x="3.5" y="2.4" font-size="1.1" fill="#DCE6F8">coil</text><text x="15.5" y="2.4" font-size="1.1" fill="#DCE6F8" text-anchor="end">coil</text>
-    <text x="1.5" y="14.5" font-size="1.1" fill="#DCE6F8">NC</text><text x="9.5" y="14.5" font-size="1.1" fill="#DCE6F8" text-anchor="middle">COM</text><text x="17.5" y="14.5" font-size="1.1" fill="#DCE6F8" text-anchor="end">NO</text>
-    <!-- diode across coil -->
-    <rect x="6" y="-2.6" width="7" height="1.6" rx="0.3" fill="#222" stroke="#000"/><rect x="11.8" y="-2.6" width="0.7" height="1.6" fill="#DDD"/>
+    <text x="9.5" y="6.2" font-size="1.7" font-weight="bold" text-anchor="middle" fill="#FFF">SONGLE</text>
+    <text x="9.5" y="8.5" font-size="1.4" text-anchor="middle" fill="#DCE6F8">SRD-05VDC-SL-C</text>
+    <text x="4" y="2.6" font-size="1.1" fill="#DCE6F8">coil</text><text x="15" y="2.6" font-size="1.1" fill="#DCE6F8" text-anchor="end">coil</text>
+    <text x="9.5" y="14.2" font-size="1.05" fill="#F8DCDC" text-anchor="middle">contacts NC · COM · NO (per datasheet)</text>
   </g>
-
-  <g id="tbm"><rect x="0" y="0" width="10.2" height="8" rx="0.4" fill="#7A2626" stroke="#4A1414"/><circle cx="2.55" cy="3.5" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle cx="7.65" cy="3.5" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
 </defs>
-<rect width="1100" height="760" fill="#FFFFFF"/>
-<text x="20" y="26" font-size="14" font-weight="bold" fill="#2C2C2A">Desiccant dryer controller — protoboard layout (proposal, scale 6 px/mm, 2.54 mm hole grid)</text>
+<rect width="1100" height="780" fill="#FFFFFF"/>
+<text x="20" y="26" font-size="14" font-weight="bold" fill="#2C2C2A">Desiccant dryer controller — protoboard layout (proposal, scale 6 px/mm, all pins on the 2.54 mm hole grid)</text>
 <text x="20" y="44" font-size="11" fill="#555">Left: logic + 24 V board, 70×90 mm.  Right: mains relay board, 50×70 mm.  Only a 4-wire logic-level harness links them.</text>
 
-<!-- ===================== LOGIC BOARD 90 x 70 mm ===================== -->
 <g transform="translate(30,80) scale(6)" stroke-width="0.15">
-  <rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
-  <rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
-  <!-- mounting holes -->
-  <g fill="#FFFFFF" stroke="#8A8677" stroke-width="0.2"><circle cx="2.5" cy="2.5" r="1.3"/><circle cx="87.5" cy="2.5" r="1.3"/><circle cx="2.5" cy="67.5" r="1.3"/><circle cx="87.5" cy="67.5" r="1.3"/></g>
-
-  <!-- ESP32-S2 Thing Plus, socketed, USB-C at left edge, Qwiic at right end -->
-  <rect x="1" y="4" width="51" height="23" rx="1" fill="#B03A3A" stroke="#7A2626"/>
-  <rect x="-1.5" y="12.5" width="4" height="6" rx="0.6" fill="#666" stroke="#333"/>
-  <text x="-0.9" y="9.6" font-size="1.7" fill="#2C2C2A" transform="rotate(-90 -0.9 9.6)" text-anchor="start">USB-C (flash)</text>
-  <rect x="51.5" y="12" width="3.2" height="7" rx="0.5" fill="#222" stroke="#000"/>
-  <text x="53" y="21.8" font-size="1.6" fill="#2C2C2A">Qwiic → SHT45</text>
-  <text x="26.5" y="14" text-anchor="middle" font-size="2.6" font-weight="bold" fill="#FFF">ESP32-S2 Thing Plus</text>
-  <text x="26.5" y="17.5" text-anchor="middle" font-size="1.8" fill="#F2D6D6">on 16 + 12 pin female headers</text>
-  <!-- 16-pin row (top) -->
-  <g fill="#E6E6E6" stroke="#555" stroke-width="0.1">
-    <rect x="5.5" y="4.8" width="41.6" height="2.4" fill="#222" stroke="#000"/>
-  </g>
-  <g font-size="1.15" fill="#FFF" text-anchor="middle">
-    <text x="7.5" y="9.6">EN</text><text x="10" y="9.6">3V3</text><text x="12.6" y="9.6">NC</text><text x="15.1" y="9.6">GND</text><text x="17.7" y="9.6">17</text><text x="20.2" y="9.6">18</text><text x="22.7" y="9.6">14</text><text x="25.3" y="9.6">9</text><text x="27.8" y="9.6">7</text><text x="30.3" y="9.6">5</text><text x="32.9" y="9.6">36</text><text x="35.4" y="9.6">35</text><text x="38" y="9.6">37</text><text x="40.5" y="9.6">33</text><text x="43" y="9.6">34</text><text x="45.6" y="9.6">3</text>
-  </g>
-  <!-- 12-pin row (bottom) -->
-  <rect x="5.5" y="23.8" width="31.5" height="2.4" fill="#222" stroke="#000"/>
-  <g font-size="1.15" fill="#FFF" text-anchor="middle">
-    <text x="7.5" y="22.6">BAT</text><text x="10" y="22.6">EN</text><text x="12.6" y="22.6">USB</text><text x="15.1" y="22.6">13</text><text x="17.7" y="22.6">12</text><text x="20.2" y="22.6">11</text><text x="22.7" y="22.6">10</text><text x="25.3" y="22.6">8</text><text x="27.8" y="22.6">6</text><text x="30.3" y="22.6">4</text><text x="32.9" y="22.6">SCL</text><text x="35.4" y="22.6">SDA</text>
-  </g>
-
-  <!-- Display header, top edge, right of ESP -->
-  <rect x="60" y="1.2" width="20.3" height="2.5" fill="#222" stroke="#000"/>
-  <g font-size="1.05" fill="#2C2C2A" text-anchor="middle">
-    <text x="61.3" y="5.6">GND</text><text x="63.8" y="5.6">VCC</text><text x="66.4" y="5.6">SCL</text><text x="68.9" y="5.6">SDA</text><text x="71.4" y="5.6">RES</text><text x="74" y="5.6">DC</text><text x="76.5" y="5.6">CS</text><text x="79" y="5.6">BLK</text>
-  </g>
-  <text x="70" y="8.2" font-size="1.6" text-anchor="middle" fill="#2C2C2A">DISPLAY (8-pin, cable to ST7789 on panel)</text>
-  <text x="70" y="10.4" font-size="1.4" text-anchor="middle" fill="#555">→ 3V3, GND, 36, 35, 14, 9, 5, 17</text>
-
-  <!-- 1-wire terminal block, right edge -->
-  <rect x="81.5" y="18" width="7.5" height="45.7" rx="0.4" fill="#2D6A4F" stroke="#1B4332"/>
-  <g fill="#DDD" stroke="#222" stroke-width="0.1">
-    <circle cx="85.2" cy="20.5" r="1.1"/><circle cx="85.2" cy="25.6" r="1.1"/><circle cx="85.2" cy="30.7" r="1.1"/>
-    <circle cx="85.2" cy="35.8" r="1.1"/><circle cx="85.2" cy="40.8" r="1.1"/><circle cx="85.2" cy="45.9" r="1.1"/>
-    <circle cx="85.2" cy="51" r="1.1"/><circle cx="85.2" cy="56.1" r="1.1"/><circle cx="85.2" cy="61.2" r="1.1"/>
-  </g>
-  <g font-size="1.3" fill="#2C2C2A" text-anchor="end">
-    <text x="80.5" y="21">3V3</text><text x="80.5" y="26.1">DQ</text><text x="80.5" y="31.2">GND</text>
-    <text x="80.5" y="36.3">3V3</text><text x="80.5" y="41.3">DQ</text><text x="80.5" y="46.4">GND</text>
-    <text x="80.5" y="51.5">3V3</text><text x="80.5" y="56.6">DQ</text><text x="80.5" y="61.7">GND</text>
-  </g>
-  <g font-size="1.4" fill="#1B4332" font-weight="bold" text-anchor="end">
-    <text x="73" y="26.1">PACK A</text><text x="73" y="41.3">PACK B</text><text x="73" y="56.6">CASE</text>
-  </g>
-  <text x="88" y="13.5" font-size="1.4" text-anchor="end" fill="#2C2C2A">DS18B20 ×3, 9-pos 5.08 mm</text>
-  <!-- pullup -->
-  <rect x="57" y="24" width="6" height="2" rx="0.5" fill="#D8C9A0" stroke="#8A7A4A"/>
-  <text x="60" y="28.3" font-size="1.3" text-anchor="middle" fill="#2C2C2A">4.7 kΩ DQ→3V3</text>
-  <text x="77" y="16" font-size="1.3" text-anchor="end" fill="#555">all DQ → GPIO37</text>
-
-  <!-- Buck -->
-  <rect x="2" y="33" width="22" height="17" rx="0.8" fill="#1E5A8A" stroke="#123A5A"/>
-  <text x="13" y="40" text-anchor="middle" font-size="2" font-weight="bold" fill="#FFF">BUCK 24→5 V</text>
-  <text x="13" y="43" text-anchor="middle" font-size="1.5" fill="#CFE3F5">MP1584 mini, 22×17</text>
-  <text x="13" y="45.8" text-anchor="middle" font-size="1.5" fill="#CFE3F5">(LM2596 = 43×21, still fits)</text>
-  <text x="3" y="35.5" font-size="1.3" fill="#CFE3F5">IN+ IN−</text><text x="23" y="35.5" font-size="1.3" fill="#CFE3F5" text-anchor="end">OUT+ OUT−</text>
-  <!-- bulk cap -->
-  <circle cx="28" cy="36" r="2.2" fill="#333" stroke="#000"/>
-  <text x="28" y="41" text-anchor="middle" font-size="1.3" fill="#2C2C2A">100 µF</text>
-  <text x="28" y="43" text-anchor="middle" font-size="1.3" fill="#2C2C2A">on 5 V</text>
-  <!-- USB jumper -->
-  <rect x="26" y="45.5" width="5.2" height="2.5" fill="#222" stroke="#000"/>
-  <rect x="26.4" y="45.9" width="4.4" height="1.7" fill="#D64545"/>
-  <text x="28.6" y="50.8" text-anchor="middle" font-size="1.4" font-weight="bold" fill="#B03A3A">J-USB</text>
-  <text x="28.6" y="52.8" text-anchor="middle" font-size="1.25" fill="#B03A3A">pull before USB-C</text>
-  <text x="28.6" y="54.6" text-anchor="middle" font-size="1.25" fill="#B03A3A">5 V → ESP USB pin</text>
-
-  <!-- Relay harness header -->
-  <rect x="2" y="55" width="10.2" height="2.5" fill="#222" stroke="#000"/>
-  <g font-size="1.3" fill="#2C2C2A" text-anchor="middle"><text x="3.3" y="59.5">5V</text><text x="5.8" y="59.5">GND</text><text x="8.4" y="59.5">13</text><text x="10.9" y="59.5">12</text></g>
-  <text x="7" y="62.2" text-anchor="middle" font-size="1.5" font-weight="bold" fill="#2C2C2A">TO RELAY BOARD</text>
-  <text x="7" y="64.2" text-anchor="middle" font-size="1.3" fill="#555">4-pin, logic level</text>
-
-  <!-- MOSFET channels -->
-  <use href="#fet" x="38" y="34"/><use href="#fet" x="52" y="34"/><use href="#fet" x="66" y="34"/>
-  <text x="42" y="31.5" font-size="1.7" font-weight="bold" text-anchor="middle" fill="#2C2C2A">VALVE A ← 11</text>
-  <text x="56" y="31.5" font-size="1.7" font-weight="bold" text-anchor="middle" fill="#2C2C2A">VALVE B ← 10</text>
-  <text x="70" y="31.5" font-size="1.7" font-weight="bold" text-anchor="middle" fill="#2C2C2A">FAN ← 6</text>
-
-  <!-- Bottom edge terminal blocks (24 V) -->
-  <use href="#tb2" x="14" y="61"/><use href="#tb2" x="37" y="61"/><use href="#tb2" x="51" y="61"/><use href="#tb2" x="65" y="61"/>
-  <g font-size="1.3" fill="#FFF" text-anchor="middle">
-    <text x="16.5" y="67.6">24+</text><text x="21.7" y="67.6">0V</text>
-    <text x="39.5" y="67.6">24+</text><text x="44.7" y="67.6">SW</text>
-    <text x="53.5" y="67.6">24+</text><text x="58.7" y="67.6">SW</text>
-    <text x="67.5" y="67.6">24+</text><text x="72.7" y="67.6">SW</text>
-  </g>
-  <g font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">
-    <text x="19.1" y="59.8">24 V IN</text><text x="42.1" y="59.8">VALVE A</text><text x="56.1" y="59.8">VALVE B</text><text x="70.1" y="59.8">FAN</text>
-  </g>
-  <!-- 24V+ bus hint -->
-  <line x1="24.5" y1="58.2" x2="79" y2="58.2" stroke="#2A5D8F" stroke-width="0.5" stroke-dasharray="1 0.6"/>
-  <text x="79.5" y="58.7" font-size="1.2" fill="#2A5D8F">24V+ bus</text>
-  <text x="45" y="4" font-size="1.4" fill="#555" text-anchor="middle"></text>
+<rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/><rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
+<g fill="#FFF" stroke="#8A8677" stroke-width="0.2"><circle cx="2.5" cy="2.5" r="1.3"/><circle cx="87.5" cy="2.5" r="1.3"/><circle cx="2.5" cy="67.5" r="1.3"/><circle cx="87.5" cy="67.5" r="1.3"/></g>
+<rect x="3.55" y="7.280000000000001" width="58.4" height="22.9" rx="1" fill="#B03A3A" stroke="#7A2626"/>
+<rect x="1.8" y="15.5" width="3.8" height="6" rx="0.6" fill="#666" stroke="#333"/><text x="1.2" y="14.8" font-size="1.5" fill="#2C2C2A" transform="rotate(-90 1.2 14.8)">USB-C</text>
+<rect x="57.949999999999996" y="15" width="3.5" height="7" rx="0.5" fill="#222" stroke="#000"/><text x="56.05" y="24.6" font-size="1.4" fill="#F2D6D6" text-anchor="middle">Qwiic</text>
+<text x="32.55" y="16.5" text-anchor="middle" font-size="2.6" font-weight="bold" fill="#FFF">ESP32-S2 Thing Plus</text><text x="32.55" y="19.8" text-anchor="middle" font-size="1.7" fill="#F2D6D6">58.4 × 22.9 mm, on 16 + 12 pin female headers</text>
+<rect x="7.280000000000001" y="7.3500000000000005" width="40.64" height="2.4" fill="#222" stroke="#000"/>
+<g font-size="1.15" fill="#FFF" text-anchor="middle"><text x="8.55" y="11.850000000000001">EN</text><text x="11.09" y="11.850000000000001">3V3</text><text x="13.63" y="11.850000000000001">NC</text><text x="16.17" y="11.850000000000001">GND</text><text x="18.71" y="11.850000000000001">17</text><text x="21.25" y="11.850000000000001">18</text><text x="23.79" y="11.850000000000001">14</text><text x="26.33" y="11.850000000000001">9</text><text x="28.87" y="11.850000000000001">7</text><text x="31.41" y="11.850000000000001">5</text><text x="33.95" y="11.850000000000001">36</text><text x="36.49" y="11.850000000000001">35</text><text x="39.03" y="11.850000000000001">37</text><text x="41.57" y="11.850000000000001">33</text><text x="44.11" y="11.850000000000001">34</text><text x="46.65" y="11.850000000000001">3</text></g>
+<rect x="17.44" y="27.67" width="30.48" height="2.4" fill="#222" stroke="#000"/>
+<g font-size="1.15" fill="#FFF" text-anchor="middle"><text x="18.71" y="26.67">BAT</text><text x="21.25" y="26.67">EN</text><text x="23.79" y="26.67">USB</text><text x="26.33" y="26.67">13</text><text x="28.87" y="26.67">12</text><text x="31.41" y="26.67">11</text><text x="33.95" y="26.67">10</text><text x="36.49" y="26.67">8</text><text x="39.03" y="26.67">6</text><text x="41.57" y="26.67">4</text><text x="44.11" y="26.67">SCL</text><text x="46.65" y="26.67">SDA</text></g>
+<text x="63.05" y="19" font-size="1.4" fill="#2C2C2A">→ SHT45</text>
+<rect x="63.160000000000004" y="2.22" width="20.32" height="2.5" fill="#222" stroke="#000"/>
+<g font-size="1.05" fill="#2C2C2A" text-anchor="middle"><text x="64.43" y="6.87">GND</text><text x="66.97" y="6.87">3V3</text><text x="69.51" y="6.87">SCL</text><text x="72.05" y="6.87">SDA</text><text x="74.59" y="6.87">RES</text><text x="77.13" y="6.87">DC</text><text x="79.67" y="6.87">CS</text><text x="82.21" y="6.87">BLK</text></g>
+<text x="73.32" y="9.77" font-size="1.5" text-anchor="middle" fill="#2C2C2A">DISPLAY (8-pin, cable to ST7789 on panel)</text><text x="73.32" y="11.97" font-size="1.3" text-anchor="middle" fill="#555">GND, 3V3, 36, 35, 14, 9, 5, 17</text>
+<rect x="81.5" y="16.11" width="7.5" height="45.84" rx="0.4" fill="#2D6A4F" stroke="#1B4332"/>
+<g fill="#DDD" stroke="#222" stroke-width="0.1"><circle cx="85.2" cy="18.71" r="1.1"/><circle cx="85.2" cy="23.79" r="1.1"/><circle cx="85.2" cy="28.87" r="1.1"/><circle cx="85.2" cy="33.95" r="1.1"/><circle cx="85.2" cy="39.03" r="1.1"/><circle cx="85.2" cy="44.11" r="1.1"/><circle cx="85.2" cy="49.19" r="1.1"/><circle cx="85.2" cy="54.27" r="1.1"/><circle cx="85.2" cy="59.35" r="1.1"/></g>
+<g font-size="1.3" fill="#2C2C2A" text-anchor="end"><text x="80.5" y="19.21">3V3</text><text x="80.5" y="24.29">DQ</text><text x="80.5" y="29.37">GND</text><text x="80.5" y="34.45">3V3</text><text x="80.5" y="39.53">DQ</text><text x="80.5" y="44.61">GND</text><text x="80.5" y="49.69">3V3</text><text x="80.5" y="54.77">DQ</text><text x="80.5" y="59.85">GND</text></g>
+<g font-size="1.4" fill="#1B4332" font-weight="bold" text-anchor="end"><text x="80.5" y="21.89">PACK A</text><text x="80.5" y="37.13">PACK B</text><text x="80.5" y="52.370000000000005">CASE</text></g>
+<text x="88" y="15.110000000000001" font-size="1.4" text-anchor="end" fill="#2C2C2A">DS18B20 ×3, 9-pos 5.08 mm</text>
+<use href="#res" x="69.51" y="23.79" transform="rotate(90 69.51 23.79)"/><text x="69.51" y="27.59" font-size="1.3" text-anchor="middle" fill="#2C2C2A">4.7 kΩ DQ→3V3</text><text x="69.51" y="29.59" font-size="1.2" text-anchor="middle" fill="#555">all DQ → GPIO37</text>
+<rect x="2" y="33" width="22" height="17" rx="0.8" fill="#1E5A8A" stroke="#123A5A"/><text x="13" y="39.5" text-anchor="middle" font-size="2" font-weight="bold" fill="#FFF">BUCK 24→5 V</text><text x="13" y="42.5" text-anchor="middle" font-size="1.5" fill="#CFE3F5">MP1584 mini, 22×17 (unverified)</text>
+<text x="3" y="48.8" font-size="1.3" fill="#CFE3F5">IN</text><text x="23" y="46.6" font-size="1.3" fill="#CFE3F5" text-anchor="end">OUT</text><text x="3" y="35.5" font-size="1.2" fill="#CFE3F5">24 V from block below</text>
+<circle cx="28.87" cy="36.49" r="2.2" fill="#333" stroke="#000"/><text x="28.87" y="40.79" text-anchor="middle" font-size="1.3" fill="#2C2C2A">100 µF on 5 V</text>
+<rect x="25.029999999999998" y="42.86" width="5.2" height="2.5" fill="#222" stroke="#000"/><rect x="25.43" y="43.26" width="4.4" height="1.7" fill="#D64545"/>
+<text x="27.6" y="47.71" text-anchor="middle" font-size="1.4" font-weight="bold" fill="#B03A3A">J-USB</text><text x="27.6" y="49.41" text-anchor="middle" font-size="0.95" fill="#B03A3A">pull before USB-C</text>
+<rect x="17.44" y="53.02" width="10.16" height="2.5" fill="#222" stroke="#000"/>
+<g font-size="1.2" fill="#2C2C2A" text-anchor="middle"><text x="18.71" y="52.07">5V</text><text x="21.25" y="52.07">GND</text><text x="23.79" y="52.07">13</text><text x="26.33" y="52.07">12</text></g>
+<text x="22.52" y="49.870000000000005" text-anchor="middle" font-size="1.3" font-weight="bold" fill="#2C2C2A">TO RELAY BOARD</text>
+<use href="#tb2" x="8.55" y="64.5"/><text x="8.55" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">0V</text><text x="13.63" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="11.09" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">24 V IN</text>
+<use href="#fet" x="33.95" y="36.5"/>
+<text x="36.49" y="31.6" font-size="1.6" font-weight="bold" text-anchor="middle" fill="#2C2C2A">VALVE A ← 11</text>
+<use href="#tb2" x="33.95" y="64.5"/><text x="33.95" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="39.03" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">SW</text>
+<text x="36.49" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">VALVE A</text>
+<use href="#fet" x="49.19" y="36.5"/>
+<text x="51.73" y="31.6" font-size="1.6" font-weight="bold" text-anchor="middle" fill="#2C2C2A">VALVE B ← 10</text>
+<use href="#tb2" x="49.19" y="64.5"/><text x="49.19" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="54.269999999999996" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">SW</text>
+<text x="51.73" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">VALVE B</text>
+<use href="#fet" x="64.43" y="36.5"/>
+<text x="66.97000000000001" y="31.6" font-size="1.6" font-weight="bold" text-anchor="middle" fill="#2C2C2A">FAN ← 6</text>
+<use href="#tb2" x="64.43" y="64.5"/><text x="64.43" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="69.51" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">SW</text>
+<text x="66.97000000000001" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">FAN</text>
+<line x1="13.63" y1="57.2" x2="64.43" y2="57.2" stroke="#2A5D8F" stroke-width="0.5" stroke-dasharray="1 0.6"/><text x="65.43" y="57.7" font-size="1.2" fill="#2A5D8F">24V+ bus</text>
 </g>
-
-<!-- ===================== RELAY BOARD 70 x 50 mm ===================== -->
 <g transform="translate(620,80) scale(6)" stroke-width="0.15">
-  <rect x="0" y="0" width="70" height="50" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
-  <rect x="2.2" y="2.2" width="65.6" height="45.6" fill="url(#holes)"/>
-  <g fill="#FFFFFF" stroke="#8A8677" stroke-width="0.2"><circle cx="2.5" cy="2.5" r="1.3"/><circle cx="67.5" cy="2.5" r="1.3"/><circle cx="2.5" cy="47.5" r="1.3"/><circle cx="67.5" cy="47.5" r="1.3"/></g>
-
-  <!-- harness header -->
-  <rect x="2" y="1.2" width="10.2" height="2.5" fill="#222" stroke="#000"/>
-  <g font-size="1.3" fill="#2C2C2A" text-anchor="middle"><text x="3.3" y="5.6">5V</text><text x="5.8" y="5.6">GND</text><text x="8.4" y="5.6">13</text><text x="10.9" y="5.6">12</text></g>
-  <text x="7" y="8" text-anchor="middle" font-size="1.4" fill="#2C2C2A">FROM LOGIC BOARD</text>
-
-  <!-- transistor stages -->
-  <use href="#npn" x="17" y="3"/><use href="#npn" x="43" y="3"/>
-  <text x="23" y="1.6" font-size="1.5" font-weight="bold" fill="#2C2C2A">HEATER A ← 13</text>
-  <text x="49" y="1.6" font-size="1.5" font-weight="bold" fill="#2C2C2A">HEATER B ← 12</text>
-
-  <!-- relays -->
-  <use href="#relay" x="7" y="16"/><use href="#relay" x="44" y="16"/>
-  <text x="16.5" y="34.8" font-size="1.2" text-anchor="middle" fill="#2C2C2A">1N4007, band → 5 V</text>
-  <text x="53.5" y="34.8" font-size="1.2" text-anchor="middle" fill="#2C2C2A">1N4007, band → 5 V</text>
-
-  <!-- isolation line -->
-  <line x1="1.5" y1="38.2" x2="68.5" y2="38.2" stroke="#B03A3A" stroke-width="0.35" stroke-dasharray="1.2 0.8"/>
-  <text x="35" y="37.5" font-size="1.25" text-anchor="middle" fill="#B03A3A">no copper crosses this line · cut strips · ≥ 4 mm to any low-voltage pad</text>
-
-  <!-- mains terminals -->
-  <use href="#tbm" x="2" y="41"/><use href="#tbm" x="18" y="41"/><use href="#tbm" x="44" y="41"/>
-  <g font-size="1.3" fill="#FFF" text-anchor="middle">
-    <text x="4.5" y="47.6">L</text><text x="9.7" y="47.6">N</text>
-    <text x="20.5" y="47.6">L sw</text><text x="25.7" y="47.6">N</text>
-    <text x="46.5" y="47.6">L sw</text><text x="51.7" y="47.6">N</text>
-  </g>
-  <g font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">
-    <text x="7.1" y="40.2">120 VAC IN</text><text x="23.1" y="40.2">HEATER A</text><text x="49.1" y="40.2">HEATER B</text>
-  </g>
-  <text x="35" y="45.5" font-size="1.3" fill="#7A2626" text-anchor="middle">L→COM · NO→L sw</text>
-  <text x="62" y="43.5" font-size="1.2" fill="#7A2626" text-anchor="middle">fuse 3 A</text>
-  <text x="62" y="45.3" font-size="1.2" fill="#7A2626" text-anchor="middle">upstream, in</text>
-  <text x="62" y="47.1" font-size="1.2" fill="#7A2626" text-anchor="middle">panel holder</text>
+<rect x="0" y="0" width="70" height="50" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/><rect x="2.2" y="2.2" width="65.6" height="45.6" fill="url(#holes)"/>
+<g fill="#FFF" stroke="#8A8677" stroke-width="0.2"><circle cx="2.5" cy="2.5" r="1.3"/><circle cx="67.5" cy="2.5" r="1.3"/><circle cx="2.5" cy="47.5" r="1.3"/><circle cx="67.5" cy="47.5" r="1.3"/></g>
+<rect x="7.280000000000001" y="2.22" width="10.16" height="2.5" fill="#222" stroke="#000"/>
+<g font-size="1.2" fill="#2C2C2A" text-anchor="middle"><text x="8.55" y="6.77">5V</text><text x="11.09" y="6.77">GND</text><text x="13.63" y="6.77">13</text><text x="16.17" y="6.77">12</text></g>
+<text x="19.71" y="3.97" font-size="1.3" fill="#2C2C2A">FROM LOGIC BOARD (4-pin)</text>
+<circle cx="64.43" cy="23.79" r="2.2" fill="#333" stroke="#000"/><text x="64.43" y="28.09" text-anchor="middle" font-size="1.2" fill="#2C2C2A">100 µF on 5 V</text>
+<text x="15.5" y="9.6" font-size="1.5" font-weight="bold" fill="#2C2C2A" text-anchor="middle">HEATER A ← 13</text>
+<use href="#npn" x="11.09" y="15"/>
+<use href="#dio" x="15.5" y="19.8"/><text x="19.0" y="20.3" font-size="1.1" fill="#2C2C2A">1N4007 → 5 V</text>
+<use href="#relay" x="6" y="22"/>
+<text x="51.0" y="9.6" font-size="1.5" font-weight="bold" fill="#2C2C2A" text-anchor="middle">HEATER B ← 12</text>
+<use href="#npn" x="46.65" y="15"/>
+<use href="#dio" x="51.0" y="19.8"/><text x="54.5" y="20.3" font-size="1.1" fill="#2C2C2A">1N4007 → 5 V</text>
+<use href="#relay" x="41.5" y="22"/>
+<line x1="1.5" y1="31.2" x2="68.5" y2="31.2" stroke="#B03A3A" stroke-width="0.35" stroke-dasharray="1.2 0.8"/>
+<text x="35" y="39.3" font-size="1.1" text-anchor="middle" fill="#B03A3A">mains only below the dashed line · ≥ 2 empty hole rows (≥ 6 mm) between any mains pad and any low-voltage pad · drill out unused pads in the gap</text>
+<use href="#tbm" x="8.55" y="45"/><text x="8.55" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">L</text><text x="13.63" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">N</text><text x="11.09" y="40.9" font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">120 VAC IN</text>
+<use href="#tbm" x="23.79" y="45"/><text x="23.79" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">L sw</text><text x="28.869999999999997" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">N</text><text x="26.33" y="40.9" font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">HEATER A</text>
+<use href="#tbm" x="46.65" y="45"/><text x="46.65" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">L sw</text><text x="51.73" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">N</text><text x="49.19" y="40.9" font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">HEATER B</text>
+<text x="61.5" y="42.5" font-size="1.15" fill="#7A2626" text-anchor="middle">L → COM, NO → L sw</text><text x="61.5" y="44.4" font-size="1.15" fill="#7A2626" text-anchor="middle">fuse 3 A upstream</text><text x="61.5" y="46.3" font-size="1.15" fill="#7A2626" text-anchor="middle">PE passes straight</text><text x="61.5" y="48.2" font-size="1.15" fill="#7A2626" text-anchor="middle">to the heaters</text>
 </g>
-
-<!-- Harness / notes -->
 <g transform="translate(30,540)" font-size="11" fill="#2C2C2A">
   <text y="0" font-size="12" font-weight="bold">Inter-board harness (4 wires)</text>
   <text y="18">5 V and GND from the buck; GPIO13 → heater A, GPIO12 → heater B. About 3 mA per signal.</text>
@@ -205,11 +107,12 @@
   <text y="94">24 V PSU → 24 V IN. Valves and fan → their own blocks; the negative lead is the switched one.</text>
   <text y="110">Three DS18B20 cables → the green 9-pos block; each probe gets its own 3V3 / DQ / GND triple.</text>
   <text y="136" font-size="12" font-weight="bold">Caveats</text>
-  <text y="154">Songle SRD pins sit on a 6 mm / 12 mm pattern, not 2.54 mm: expect to splay pins or ream holes. Check the datasheet drawing first.</text>
+  <text y="154">Songle SRD pins sit on a 6 mm / 12 mm pattern, not 2.54 mm; expect to splay pins or ream holes, and mark COM/NO from the datasheet before wiring L.</text>
   <text y="170">Buck footprint is drawn as an MP1584 mini and is unverified. Don't cut metal from this drawing.</text>
-  <text y="186">ESP overhangs the left edge ~2 mm so USB-C is reachable. Pull J-USB before plugging in: the USB pin and VBUS are one net.</text>
+  <text y="186">ESP PCB sits 3.5 mm in from the left edge; the USB-C shell protrudes past it. J-USB feeds buck 5 V to the USB pin: pull it before plugging in (USB pin and VBUS are one net).</text>
+  <text y="202">Alternative to J-USB: a Schottky from buck 5 V to the USB pin makes USB-C safe at any time, if the module's 3.3 V LDO tolerates the extra drop (unverified).</text>
 </g>
-<g transform="translate(640,540)" font-size="11" fill="#2C2C2A">
+<g transform="translate(700,540)" font-size="11" fill="#2C2C2A">
   <text y="0" font-size="12" font-weight="bold">Legend</text>
   <rect x="0" y="8" width="12" height="10" fill="#2A5D8F"/><text x="18" y="17">24 V terminals</text>
   <rect x="0" y="26" width="12" height="10" fill="#7A2626"/><text x="18" y="35">120 VAC terminals</text>
