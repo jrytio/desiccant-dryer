@@ -212,10 +212,10 @@ address once it exists.
 
 1. `esphome config` and `esphome compile` pass for both device builds.
 2. Flash the bench board over the air:
-   `esphome run esphome/desiccant-dryer-virtual.yaml --device <board>`.
+   `esphome run esphome/desiccant-dryer-virtual.yaml --device "<board>"`.
    The boot log shows the component's `dump_config` line with the path
    and 240x240.
-3. `curl -s http://<board>/screen.png -o screen.png`: 58,688 bytes,
+3. `curl -s "http://<board>/screen.png" -o screen.png`: 58,688 bytes,
    `Content-Type: image/png`. Decoded with ESPHome's own Python (Pillow and
    zlib): PIL reports the format as `png`, which is what Home Assistant
    checks; every chunk CRC and the zlib stream verify; size 240x240, mode

@@ -3,7 +3,7 @@
 Both device builds serve the panel's frame buffer as an image:
 
 ```bash
-curl -o screen.png http://<board>/screen.png     # <board>: the board's IP address
+curl -o screen.png "http://<board>/screen.png"     # <board>: the board's IP address
 ```
 
 It is a 240x240 8-bit indexed PNG, 58,688 bytes (uncompressed, so it

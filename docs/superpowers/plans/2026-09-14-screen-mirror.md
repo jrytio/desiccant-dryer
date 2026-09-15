@@ -384,7 +384,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>" && git log --oneline -
 - [ ] **Step 1: Confirm the board is up and does not serve the image yet**
 
 ```bash
-cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && curl -s -m 5 -o /dev/null -w "root %{http_code}\n" http://<board>/ && curl -s -m 5 -o /dev/null -w "screen %{http_code}\n" http://<board>/screen.bmp
+cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && curl -s -m 5 -o /dev/null -w "root %{http_code}\n" "http://<board>/" && curl -s -m 5 -o /dev/null -w "screen %{http_code}\n" "http://<board>/screen.bmp"
 ```
 
 Expected: `root 200` and `screen 000` (no handler and no not-found page yet, so the server closes the connection without a status line). If root does not answer, stop and report BLOCKED: the board is off or moved.
@@ -392,7 +392,7 @@ Expected: `root 200` and `screen 000` (no handler and no not-found page yet, so 
 - [ ] **Step 2: Upload over the air**
 
 ```bash
-cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && esphome upload esphome/desiccant-dryer-virtual.yaml --device <board> > .superpowers/run/upload.txt 2>&1; tail -4 .superpowers/run/upload.txt
+cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && esphome upload esphome/desiccant-dryer-virtual.yaml --device "<board>" > .superpowers/run/upload.txt 2>&1; tail -4 .superpowers/run/upload.txt
 ```
 
 Use a 300000 ms timeout. Expected: the tail shows the OTA progress reaching 100 % and `INFO Upload took ...` / `OTA successful`. The board reboots.
@@ -402,10 +402,10 @@ Use a 300000 ms timeout. Expected: the tail shows the OTA progress reaching 100 
 Wait for the board to be back (poll until the root answers), then fetch:
 
 ```bash
-cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && for i in $(seq 1 30); do curl -s -m 2 -o /dev/null http://<board>/ && break; perl -e 'select(undef,undef,undef,1)'; done; curl -s -m 10 -D .superpowers/run/screen-headers.txt -o .superpowers/run/screen.bmp http://<board>/screen.bmp; grep -iE "^HTTP|content-type|cache-control|transfer-encoding" .superpowers/run/screen-headers.txt; ls -l .superpowers/run/screen.bmp | awk '{print $5, $9}'
+cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && for i in $(seq 1 30); do curl -s -m 2 -o /dev/null "http://<board>/" && break; perl -e 'select(undef,undef,undef,1)'; done; curl -s -m 10 -D .superpowers/run/screen-headers.txt -o .superpowers/run/screen.bmp "http://<board>/screen.bmp"; grep -iE "^HTTP|content-type|cache-control|transfer-encoding" .superpowers/run/screen-headers.txt; ls -l .superpowers/run/screen.bmp | awk '{print $5, $9}'
 ```
 
-Expected: `HTTP/1.1 200 OK`, `Content-Type: image/bmp`, `Cache-Control: no-store`, `Transfer-Encoding: chunked`, and a file of exactly `58678` bytes. A `500` here means the buffer check failed; the board log (`esphome logs esphome/desiccant-dryer-virtual.yaml --device <board>`, run for a few seconds) shows the warning.
+Expected: `HTTP/1.1 200 OK`, `Content-Type: image/bmp`, `Cache-Control: no-store`, `Transfer-Encoding: chunked`, and a file of exactly `58678` bytes. A `500` here means the buffer check failed; the board log (`esphome logs esphome/desiccant-dryer-virtual.yaml --device "<board>"`, run for a few seconds) shows the warning.
 
 - [ ] **Step 4: Decode and check the frame**
 
@@ -431,7 +431,7 @@ Expected: `size (240, 240) mode P`, `p(0,0) 0`, `p(231,200)` one of 146, 89 or 2
 - [ ] **Step 5: Two fetches a second apart, and the board is unaffected**
 
 ```bash
-cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && for i in 1 2; do curl -s -m 10 -o /dev/null -w "fetch $i: %{http_code} %{size_download} bytes in %{time_total}s\n" http://<board>/screen.bmp; perl -e 'select(undef,undef,undef,1)'; done; perl -e 'alarm 12; exec @ARGV' esphome logs esphome/desiccant-dryer-virtual.yaml --device <board> > .superpowers/run/board-log.txt 2>&1; grep -cE "took a long time|\[E\]" .superpowers/run/board-log.txt
+cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && for i in 1 2; do curl -s -m 10 -o /dev/null -w "fetch $i: %{http_code} %{size_download} bytes in %{time_total}s\n" "http://<board>/screen.bmp"; perl -e 'select(undef,undef,undef,1)'; done; perl -e 'alarm 12; exec @ARGV' esphome logs esphome/desiccant-dryer-virtual.yaml --device "<board>" > .superpowers/run/board-log.txt 2>&1; grep -cE "took a long time|\[E\]" .superpowers/run/board-log.txt
 ```
 
 Expected: two lines `200 58678 bytes` each well under a second, and `0` matching log lines during the 12 s window. Nothing to commit in this task; record the outputs in the report.
@@ -452,7 +452,7 @@ Expected: two lines `200 58678 bytes` each well under a second, and `0` matching
 Both device builds serve the panel's frame buffer as an image:
 
 ```bash
-curl -o screen.bmp http://<board>/screen.bmp     # bench board
+curl -o screen.bmp "http://<board>/screen.bmp"     # bench board
 ```
 
 It is a 240x240 8-bit BMP, 58,678 bytes, exactly what the ST7789 is
@@ -587,7 +587,7 @@ Expected: a PR URL. The controller then binds it and watches CI and the Copilot 
 - [ ] **Step 1: Reproduce the rejection (the failing test)**
 
 ```bash
-cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && curl -s -m 10 -o .superpowers/run/before.img http://<board>/screen.bmp && "$(dirname "$(readlink -f "$(which esphome)")")/python" -c "
+cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && curl -s -m 10 -o .superpowers/run/before.img "http://<board>/screen.bmp" && "$(dirname "$(readlink -f "$(which esphome)")")/python" -c "
 from PIL import Image
 im = Image.open('.superpowers/run/before.img'); fmt = im.format.lower()
 print('format', fmt, '-> accepted by Home Assistant:', fmt in {'png','jpeg','gif','svg+xml','webp'})"
@@ -831,7 +831,7 @@ cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop
 Use a 600000 ms timeout. Expected: both VALID with `1 png path(s)`, `[SUCCESS]`, no errors. A constexpr evaluation error names `PlteChunk` or `Crc32Table`; report it verbatim rather than restructuring.
 
 ```bash
-cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && esphome upload esphome/desiccant-dryer-virtual.yaml --device <board> > .superpowers/run/upload-png.txt 2>&1; tail -2 .superpowers/run/upload-png.txt; for i in $(seq 1 30); do curl -s -m 2 -o /dev/null http://<board>/ && break; perl -e 'select(undef,undef,undef,1)'; done; curl -s -m 10 -D .superpowers/run/png-headers.txt -o .superpowers/run/screen.png "http://<board>/screen.png?t=2"; grep -iE "^HTTP|content-type" .superpowers/run/png-headers.txt; ls -l .superpowers/run/screen.png | awk '{print $5}'; curl -s -m 5 -o /dev/null -w "old bmp path now: %{http_code}\n" http://<board>/screen.bmp
+cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && esphome upload esphome/desiccant-dryer-virtual.yaml --device "<board>" > .superpowers/run/upload-png.txt 2>&1; tail -2 .superpowers/run/upload-png.txt; for i in $(seq 1 30); do curl -s -m 2 -o /dev/null "http://<board>/" && break; perl -e 'select(undef,undef,undef,1)'; done; curl -s -m 10 -D .superpowers/run/png-headers.txt -o .superpowers/run/screen.png "http://<board>/screen.png?t=2"; grep -iE "^HTTP|content-type" .superpowers/run/png-headers.txt; ls -l .superpowers/run/screen.png | awk '{print $5}'; curl -s -m 5 -o /dev/null -w "old bmp path now: %{http_code}\n" "http://<board>/screen.bmp"
 ```
 
 Expected: OTA success, `HTTP/1.1 200 OK`, `Content-Type: image/png`, `58688`, and the old path `000` or `404`.
