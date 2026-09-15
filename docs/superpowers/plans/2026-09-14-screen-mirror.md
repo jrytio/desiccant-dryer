@@ -387,7 +387,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>" && git log --oneline -
 cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop-c13ab1 && curl -s -m 5 -o /dev/null -w "root %{http_code}\n" http://10.42.14.100/ && curl -s -m 5 -o /dev/null -w "screen %{http_code}\n" http://10.42.14.100/screen.bmp
 ```
 
-Expected: `root 200` and `screen 404`. If root does not answer, stop and report BLOCKED: the board is off or moved.
+Expected: `root 200` and `screen 000` (no handler and no not-found page yet, so the server closes the connection without a status line). If root does not answer, stop and report BLOCKED: the board is off or moved.
 
 - [ ] **Step 2: Upload over the air**
 
@@ -426,7 +426,7 @@ print("wrote .superpowers/run/screen.png")
 EOF
 ```
 
-Expected: `size (240, 240) mode P`, `p(0,0) 0`, `p(231,200)` one of 146, 89 or 244, at least 2 distinct values on row 200, and a few thousand non-black pixels. Then the controller views `.superpowers/run/screen.png` and confirms it shows the dryer screen: "AIR: A" (or B) at the top, the humidity and temperature lines, the bar, the IP at the bottom.
+Expected: `size (240, 240) mode P`, `p(0,0) 0`, `p(231,200)` one of 146, 89 or 244, at least 2 distinct values on row 200 (a single value if the humidity bar is completely full), and a few thousand non-black pixels. Then the controller views `.superpowers/run/screen.png` and confirms it shows the dryer screen: "AIR: A" (or B) at the top, the humidity and temperature lines, the bar, the IP at the bottom.
 
 - [ ] **Step 5: Two fetches a second apart, and the board is unaffected**
 

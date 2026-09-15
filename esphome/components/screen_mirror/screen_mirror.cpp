@@ -58,13 +58,8 @@ void ScreenMirror::dump_config() {
 }
 
 bool ScreenMirror::canHandle(AsyncWebServerRequest *request) const {
-  if (request->method() != HTTP_GET)
-    return false;
-  std::string url = request->url();
-  const auto q = url.find('?');
-  if (q != std::string::npos)
-    url.erase(q);
-  return url == this->path_;
+  // url() already strips any ?query, so a cache-busting suffix still matches.
+  return request->method() == HTTP_GET && request->url() == this->path_;
 }
 
 void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
@@ -73,8 +68,10 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
   const bool usable = buf != nullptr && Peek::mode(this->display_) == ili9xxx::BITS_8 &&
                       this->display_->get_rotation() == display::DISPLAY_ROTATION_0_DEGREES;
   if (!usable) {
-    if (!this->warned_) {
-      ESP_LOGW(TAG, "Frame buffer not usable: needs color_palette 8BIT, rotation 0 and an allocated buffer");
+    if (buf == nullptr) {
+      ESP_LOGD(TAG, "Frame buffer not allocated yet");
+    } else if (!this->warned_) {
+      ESP_LOGW(TAG, "Frame buffer not usable: needs color_palette 8BIT and rotation 0");
       this->warned_ = true;
     }
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen_mirror: needs an 8-bit, unrotated frame buffer");

@@ -98,13 +98,14 @@ device jobs compile the component.
 
 ### Python (`__init__.py`)
 
-- `DEPENDENCIES = ["web_server_base", "display"]`, `AUTO_LOAD = ["web_server_base"]`.
+- `DEPENDENCIES = ["display"]`, `AUTO_LOAD = ["web_server_base"]`.
 - Schema: `id` (`ScreenMirror`), `web_server_base_id` (generated,
   `cv.use_id(web_server_base.WebServerBase)`), `display_id`
   (`cv.use_id(ILI9XXXDisplay)` from `esphome.components.ili9xxx.display`,
   required), `path` (string, default `/screen.bmp`, must start with `/`).
-  Wrapped in `cv.only_with_esp_idf`, because the handler uses the IDF
-  `esp_http_server` API directly.
+  Wrapped in `cv.only_on_esp32`, because the handler uses the ESP32 httpd
+  backend (`esp_http_server`) directly, which ESPHome loads for every ESP32
+  build.
 - `to_code`: `new_Pvariable(id, base)`, `set_display(display)`,
   `set_path(path)`, `register_component`.
 
@@ -116,9 +117,7 @@ device jobs compile the component.
 - `setup()`: `base_->init()` then `base_->add_handler(this)`.
   `get_setup_priority()` returns `setup_priority::LATE`.
 - `dump_config()`: logs the path and the frame size.
-- `canHandle(request)`: `request->method() == HTTP_GET` and `request->url()`
-  with any `?query` stripped equals `path_` (browsers and Home Assistant
-  may append a cache-busting query).
+- `canHandle(request)`: `request->method() == HTTP_GET && request->url() == path_`; ESPHome's `url()` already strips any `?query`, so a cache-busting suffix still matches.
 - `handleRequest(request)`:
   1. `httpd_req_t *req = *request;`
   2. Read the buffer pointer and colour mode through the helper
@@ -213,7 +212,9 @@ address once it exists.
    there); pixel (231, 200), the right end of the humidity bar, is one of
    146 (grey outline, `909090`), 89 (green fill) or 244 (orange fill),
    depending on how far the board's simulated humidity has climbed; and
-   row y=200 holds at least two distinct values between x=8 and x=231. Converted to PNG and viewed,
+   row y=200 holds at least two distinct values between x=8 and x=231
+   unless RH is at or above the swap threshold, when the full bar leaves
+   a single fill colour. Converted to PNG and viewed,
    the image matches the panel: "AIR: A" at the top, the sensor lines,
    the bar, the IP at the bottom.
 4. Two polls one second apart both succeed; the board's log shows no
@@ -244,3 +245,6 @@ address once it exists.
   the LAN today).
 - A Home Assistant `image` entity via the native API if ESPHome ever
   supports one, which would remove the web server dependency.
+- A top-down BMP (negative height) would let the whole 57,600-byte buffer go
+  as one chunk instead of 240 row chunks (about 4 socket sends instead of
+  roughly 720); bottom-up was chosen for maximum decoder compatibility.

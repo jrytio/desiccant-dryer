@@ -6,10 +6,10 @@ import esphome.config_validation as cv
 from esphome.const import CONF_DISPLAY_ID, CONF_ID, CONF_PATH
 
 # Serves an ili9xxx display's 8-bit frame buffer as a BMP on the web server.
-# ESP-IDF only: the handler streams with esp_http_server directly so the
+# ESP32 only: the handler streams with esp_http_server directly so the
 # 58 KB image never has to sit in RAM.
 
-DEPENDENCIES = ["web_server_base", "display"]
+DEPENDENCIES = ["display"]
 AUTO_LOAD = ["web_server_base"]
 
 screen_mirror_ns = cg.esphome_ns.namespace("screen_mirror")
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PATH, default="/screen.bmp"): _validate_path,
         }
     ).extend(cv.COMPONENT_SCHEMA),
-    cv.only_with_esp_idf,
+    cv.only_on_esp32,
 )
 
 
