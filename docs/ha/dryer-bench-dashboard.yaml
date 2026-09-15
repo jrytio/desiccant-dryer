@@ -75,14 +75,14 @@ views:
             entity: binary_sensor.desiccant_dryer_virtual_fault
             state: "on"
       - type: entity
-        entity: switch.desiccant_dryer_virtual_simulate_humidity
-        name: Simulating humidity
+        entity: switch.desiccant_dryer_virtual_override_humidity
+        name: Humidity overridden
         show_name: true
         show_state: false
         color: amber
         visibility:
           - condition: state
-            entity: switch.desiccant_dryer_virtual_simulate_humidity
+            entity: switch.desiccant_dryer_virtual_override_humidity
             state: "on"
       - type: entity
         entity: switch.desiccant_dryer_virtual_sim_manual_temps
@@ -151,13 +151,13 @@ views:
             icon: mdi:air-filter
           - type: markdown
             content: >-
-              **Simulate humidity is on.** The controller is acting on the
-              Simulated humidity slider instead of the humidity sensor, and
-              the screen shows SIM. It turns itself off whenever the unit
+              **Override humidity is on.** The controller is acting on the
+              Override value slider instead of the humidity sensor, and the
+              screen shows OVR. It turns itself off whenever the unit
               restarts.
             visibility:
               - condition: state
-                entity: switch.desiccant_dryer_virtual_simulate_humidity
+                entity: switch.desiccant_dryer_virtual_override_humidity
                 state: "on"
           - type: tile
             entity: sensor.desiccant_dryer_virtual_dryer_status
@@ -330,16 +330,16 @@ views:
                             square: false
                             cards:
                               - type: tile
-                                entity: switch.desiccant_dryer_virtual_simulate_humidity
-                                name: Simulate humidity
+                                entity: switch.desiccant_dryer_virtual_override_humidity
+                                name: Override humidity
                                 icon: mdi:test-tube
                                 color: amber
                                 features_position: inline
                                 features:
                                   - type: toggle
                               - type: tile
-                                entity: number.desiccant_dryer_virtual_simulated_rh
-                                name: Simulated humidity
+                                entity: number.desiccant_dryer_virtual_override_rh
+                                name: Override value
                                 color: amber
                                 features:
                                   - type: numeric-input
@@ -347,7 +347,7 @@ views:
                           - type: markdown
                             text_only: true
                             content: |-
-                              - **Simulate humidity** makes the controller act on the **Simulated humidity** slider instead of the humidity sensor. The screen shows SIM.
+                              - **Override humidity** makes the controller act on the **Override value** slider instead of the humidity sensor. The screen shows OVR.
                               - With the default settings, 5 % or more starts recharging a wet spare, and 10 % or more switches packs once the spare is ready.
                               - This is part of the controller, so a real dryer has it too. Every restart turns it off and puts the slider back to 2 %.
 
@@ -627,7 +627,7 @@ views:
 
                     | Test | Do this | You should see | Afterwards |
                     |---|---|---|---|
-                    | Step through by hand | Simulation speed 10. Turn on **Simulate humidity** with **Simulated humidity** at 2 | "Air via A, B wet". Slide to 6: "B heating" and pack B glows on the Screen. After about 3 minutes: "B cooling", then "B ready". Slide to 12: "Air via B", and A starts recharging at once because 12 % is above 5 % | Slide back to 2, then **Restart** (Diagnostics tab): Simulate humidity is off again. Speed back to 1 |
+                    | Step through by hand | Simulation speed 10. Turn on **Override humidity** with **Override value** at 2 | "Air via A, B wet". Slide to 6: "B heating" and pack B glows on the Screen. After about 3 minutes: "B cooling", then "B ready". Slide to 12: "Air via B", and A starts recharging at once because 12 % is above 5 % | Slide back to 2, then **Restart** (Diagnostics tab): Override humidity is off again. Speed back to 1 |
                     | Hands-free cycle | Simulation speed 60, then watch | After about a minute Outlet humidity rises from 1 %. At 5 %: "B heating", pack B climbs on the chart. After 15 dryer-minutes above 90 °C: "B cooling". At 40 °C: "B ready". At 10 %: "Air via B, A wet", humidity back to 1 %, Pack in use for back to 0. Keep watching and it repeats the other way | Speed back to 1 |
                     | Spare not ready in time | **Then gets damper by** 1, speed 60 | Humidity passes 10 % while B is still heating and Status ends "(waiting)". Within about 5 seconds of "B ready", the air switches to B | Then gets damper by back to 0.1, speed back to 1 |
                     | Switch by hand | Speed 10. When Status shows "Air via A, B heating", tap **Switch packs now** and confirm | B's glow goes off, then "Air via B, A wet". B is in use without finishing its recharge. No fault | Speed back to 1 |
@@ -709,7 +709,7 @@ views:
                             What the simulated sensors report. **Outlet
                             humidity** on the top row is what the controller
                             acts on: the same as Humidity sensor unless
-                            Simulate humidity is on. Unknown means no reading.
+                            Override humidity is on. Unknown means no reading.
                             Outlet air temp is shown for information; the
                             controller does not use it.
 
@@ -749,7 +749,7 @@ views:
                                     are off until it is running again, then it
                                     carries on from the same point in the cycle.
                                     A recharge that was heating starts its
-                                    heater and hold timers over. Simulate
+                                    heater and hold timers over. Override
                                     humidity turns off; simulator settings are
                                     kept.
                               icon_tap_action: *restart
