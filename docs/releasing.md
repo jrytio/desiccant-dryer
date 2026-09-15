@@ -12,10 +12,11 @@ through this.
 - `esphome/packages/release.yaml` gives the firmware a project name and
   that version, adds ESPHome's `update` entity
   (`update.desiccant_dryer_firmware`), an HTTP OTA backend, Improv serial
-  provisioning, safe mode and diagnostics (free heap,
+  provisioning, safe mode and diagnostics (free heap, largest free block,
   loop time, reset reason, running version). The update entity polls
-  `https://github.com/jrytio/desiccant-dryer/releases/latest/download/manifest.json`
-  every six hours and whenever Home Assistant asks it to check.
+  `https://jrytio.github.io/desiccant-dryer/firmware/manifest.json`
+  every six hours, shortly after boot, and whenever Home Assistant asks it
+  to check.
 - **The release image carries no secrets.** WiFi credentials, the API
   encryption key and the OTA password live in `packages/dev-secrets.yaml`,
   which only the test builds include. A released dryer gets its WiFi from
@@ -30,9 +31,17 @@ through this.
 - Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`, which
   refuses to build unless the tag equals the version in `version.yaml`,
   compiles the production yaml, writes the manifest with
-  `scripts/make-manifest.sh` and attaches everything to a GitHub Release.
-  Nothing else is needed: the repository is public, so the device reads
-  the "latest" release anonymously.
+  `scripts/make-manifest.sh`, attaches everything to a GitHub Release and
+  copies the same files to `firmware/` on the `gh-pages` branch, which
+  GitHub Pages serves. The repository is public, so the device reads it
+  anonymously.
+- Why Pages and not the release download URL: that URL redirects to
+  `release-assets.githubusercontent.com` through a ~900-byte signed URL
+  and an RSA certificate chain. With the display, web server and API up,
+  the S2 has a 12–16 KB largest free block, and that second TLS handshake
+  failed for lack of memory (1.0.0 could never check for updates). Pages
+  answers directly. `platform-esp32.yaml` also trims the mbedTLS and WiFi
+  buffers; `Largest Free Block` shows the remaining headroom.
 - When the manifest's version differs from the running one, Home
   Assistant shows the update under Settings → Updates with the release
   notes and an Install button. Installing downloads the `.ota.bin` over
@@ -83,8 +92,11 @@ service.
   so the unit can be brought up and tested remotely through `esphome logs`,
   the web server on port 80 and Home Assistant; a later release lowers it.
 - The manifest's relative `ota.path` resolves next to the manifest, so
-  `releases/latest/download/` serves the matching binary through the same
-  redirect. Filenames carry the version so nothing caches stale.
+  `firmware/` on Pages serves the matching binary. Filenames carry the
+  version so nothing caches stale. Pages can take a minute after the
+  workflow before it serves the new files.
+- 1.0.0 cannot update itself (see above); a unit on 1.0.0 needs one USB
+  flash of 1.0.1 or later.
 - To dry-run the packaging locally:
 
   ```bash

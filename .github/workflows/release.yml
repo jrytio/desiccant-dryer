@@ -71,3 +71,23 @@ jobs:
           gh release create "$GITHUB_REF_NAME" site/*.bin site/manifest.json \
             --title "Desiccant Dryer ${{ steps.ver.outputs.version }}" \
             --generate-notes
+
+      # The device reads the manifest from GitHub Pages, not from the
+      # release: the release download URL redirects to an RSA-certificate
+      # host through a ~900-byte signed URL, which the S2's heap cannot
+      # handle. Pages serves the gh-pages branch; firmware/ holds only the
+      # latest release.
+      - name: Publish to GitHub Pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git worktree add pages origin/gh-pages
+          rm -rf pages/firmware
+          mkdir -p pages/firmware
+          cp site/*.bin site/manifest.json pages/firmware/
+          touch pages/.nojekyll
+          cd pages
+          git add -A
+          git commit -m "Publish ${{ github.ref_name }}"
+          git push origin HEAD:gh-pages

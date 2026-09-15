@@ -139,8 +139,9 @@ service 180 min) are untested guesses meant to get first cycles logging.
   control logic when either changes.
 - The production selector alone includes `esphome/version.yaml` (semver,
   bumped in the PR) and `packages/release.yaml` (project version, Improv
-  and captive-portal provisioning, HA update entity polling the latest
-  GitHub Release's manifest, safe mode, debug sensors). It has no ESPHome
+  and captive-portal provisioning, HA update entity polling the manifest
+  the release workflow publishes to GitHub Pages (not the Release download
+  URL: its redirect and RSA host exhaust the S2's heap), safe mode, debug sensors). It has no ESPHome
   OTA server and the web server's upload page is off (unauthenticated
   reflash of a mains controller); the API reboot watchdog is off; `api:
   encryption: {}` in base.yaml must stay so HA can hand the released unit
