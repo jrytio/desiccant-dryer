@@ -11,8 +11,11 @@ streams without a compressor), exactly what the ST7789 is showing,
 palette rounding included. Home Assistant's Generic Camera accepts only
 PNG, JPEG, GIF, SVG and WebP stills, which is why it is not a BMP. The
 board streams it straight from the display buffer, so a request never
-copies the frame or allocates a buffer; the display keeps redrawing every
-2 s while you fetch, so a frame can occasionally mix two updates.
+copies the frame or allocates a buffer. Each redraw clears the buffer and
+repaints it over a few hundred milliseconds, so fetches and redraws take
+turns: a fetch waits for a redraw in progress to finish, and a redraw that
+falls due during a fetch (about 0.6 s) runs as soon as the fetch ends. The
+panel can therefore lag by up to one fetch while something is watching.
 
 ## Image entity
 
@@ -50,16 +53,24 @@ actions:
 
 Each re-render changes the `?t=` value (the board ignores the query
 string), which drops Home Assistant's cached copy and changes the entity's
-state, and a **Picture Entity** card on the entity then loads the new
-still:
+state, so the dashboard loads the new still.
+
+Show it with the Dryer Screen card, `docs/ha/dryer-screen-card.js`. Register
+the file's contents as a dashboard resource (JavaScript module; the dev
+instance has it inline), then:
 
 ```yaml
-type: picture-entity
+type: custom:dryer-screen-card
 entity: image.dryer_screen
-fit_mode: cover
-show_name: false
-show_state: false
 ```
+
+The card downloads and decodes each new frame off-screen and swaps it in
+only when it is complete, skipping to the newest frame if it falls behind
+and keeping the current one if a load fails. The built-in **Picture
+Entity** card points its image at each new URL straight away, so through
+the Cloudflare tunnel it blinks on every refresh while the frame arrives;
+on the LAN it is usable. Tapping the card opens the entity's more-info
+dialog.
 
 Home Assistant fetches the board only when someone is viewing, and viewers
 share one fetch per refresh. The cost is a recorded state change every 2 s

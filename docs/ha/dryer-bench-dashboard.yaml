@@ -11,7 +11,10 @@
 # Prerequisites on the HA side (not part of the dashboard config):
 #   - HACS card Tabdeck Card (tempus2016/tabdeck-card, v1.0.0), resource
 #     /hacsfiles/tabdeck-card/tabdeck-card.js (JavaScript module; HACS
-#     registers it on install). Everything else is a built-in card.
+#     registers it on install).
+#   - Dryer Screen card (docs/ha/dryer-screen-card.js), registered as an
+#     inline dashboard resource (JavaScript module). Everything else is a
+#     built-in card.
 #   - Display unit overridden to °C on the four dryer temperature sensors
 #     (Pack A, Pack B, Case, Outlet Air). The threshold numbers have no
 #     device class and stay in °C; history-graph draws one chart per unit,
@@ -132,15 +135,10 @@ views:
           - type: heading
             heading: Screen
             icon: mdi:monitor
-          - type: picture-entity
+          - type: custom:dryer-screen-card
             entity: image.dryer_screen
-            # With an aspect ratio the card paints the last fully loaded
-            # frame as its background, so each 2 s refresh loads over the
-            # previous picture instead of over nothing.
-            aspect_ratio: "1"
-            fit_mode: cover
-            show_name: false
-            show_state: false
+            # Swaps in each 2 s frame only once it has fully loaded; the
+            # built-in Picture Entity card blinks through the tunnel.
             grid_options:
               columns: full
 
