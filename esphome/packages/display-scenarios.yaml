@@ -1,0 +1,201 @@
+# Screen scenarios: host-only stand-ins for everything the ui_draw script
+# reads, under the same ids as base.yaml and the platform/hardware packages.
+# No controller runs here (that is desiccant-dryer-host.yaml): on boot a
+# scenario table sets every input directly, so any screen state, including
+# faults and a missing probe, can be shown at will. Pick one with SCENARIO=n
+# (1..12, default 3) in the environment of the built binary. Rows match
+# docs/display/mockup-states.html. With SHOT=<file.ppm> also set, the frame
+# is rendered through the panel's 3-3-2 palette into that file and the
+# program exits (scripts/scenario-shots.sh).
+
+globals:
+  - id: active_pack
+    type: int
+    initial_value: "0"
+  - id: standby_state
+    type: int
+    initial_value: "0"
+  - id: fault_code
+    type: int
+    initial_value: "0"
+  - id: service_elapsed_s
+    type: float
+    initial_value: "0"
+  - id: standby_elapsed_s
+    type: float
+    initial_value: "0"
+
+switch:
+  - platform: template
+    name: "Dryer Enabled"
+    id: dryer_enabled
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Simulate Humidity"
+    id: sim_enabled
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Case Fan"
+    id: case_fan
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Heater A"
+    id: heater_a
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Heater B"
+    id: heater_b
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Valve A"
+    id: valve_a
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+  - platform: template
+    name: "Valve B"
+    id: valve_b
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+
+number:
+  - platform: template
+    name: "Arm RH"
+    id: arm_rh
+    min_value: 0.5
+    max_value: 50
+    step: 0.5
+    initial_value: 5
+    optimistic: true
+  - platform: template
+    name: "Swap RH"
+    id: swap_rh
+    min_value: 1
+    max_value: 60
+    step: 0.5
+    initial_value: 10
+    optimistic: true
+  - platform: template
+    name: "Cooldown temp"
+    id: cooldown_temp
+    min_value: 20
+    max_value: 80
+    step: 1
+    initial_value: 40
+    optimistic: true
+  - platform: template
+    name: "Regen temp"
+    id: regen_temp
+    min_value: 40
+    max_value: 120
+    step: 1
+    initial_value: 90
+    optimistic: true
+  - platform: template
+    name: "Pack overtemp limit"
+    id: overtemp
+    min_value: 60
+    max_value: 125
+    step: 1
+    initial_value: 120
+    optimistic: true
+
+sensor:
+  - platform: template
+    name: "Control Humidity"
+    id: ctrl_rh
+    update_interval: never
+  - platform: template
+    name: "Pack A Temperature"
+    id: pack_a_temp
+    update_interval: never
+  - platform: template
+    name: "Pack B Temperature"
+    id: pack_b_temp
+    update_interval: never
+  - platform: template
+    name: "Case Temperature"
+    id: case_temp
+    update_interval: never
+
+text_sensor:
+  - platform: template
+    name: "Dryer Status"
+    id: status_text
+    update_interval: never
+  - platform: template
+    name: "Fault Message"
+    id: fault_message
+    update_interval: never
+  - platform: template
+    name: "IP Address"
+    id: ip_addr
+    update_interval: never
+
+esphome:
+  includes:
+    - packages/preview_capture.h
+  on_boot:
+    # After every component above exists; the numbers have published their
+    # initial values by then.
+    priority: -100
+    then:
+      - lambda: |-
+          struct Sc {
+            int active, sb, fault;
+            bool enabled, sim, fan, ha, hb, va, vb;
+            float ta, tb, tc, rh, service_s, standby_s;
+            const char *status, *fault_msg, *ip;
+          };
+          // Same twelve rows as docs/display/mockup-states.html.
+          static const Sc SC[12] = {
+            {0, 0, 0, true,  false, false, false, false, false, false, 24,  24,  24, 1.1f,     0,    0, "Starting", "", ""},
+            {1, 0, 0, true,  false, false, false, false, true,  false, 26,  25,  27, 2.4f,  3720, 3720, "Air via A, B wet", "", ""},
+            {1, 1, 0, true,  false, true,  false, true,  true,  false, 31,  87,  31, 6.8f,  8040,  720, "Air via A, B heating", "", ""},
+            {1, 2, 0, true,  false, true,  false, false, true,  false, 33,  62,  33, 7.9f,  9660,  540, "Air via A, B cooling", "", ""},
+            {1, 3, 0, true,  false, true,  false, false, true,  false, 34,  38,  32, 8.6f, 10680,  360, "Air via A, B ready", "", ""},
+            {1, 1, 0, true,  false, true,  false, true,  true,  false, 35,  71,  32, 11.2f, 11100,  480, "Air via A, B heating (waiting)", "", ""},
+            {1, 2, 0, true,  false, true,  false, false, true,  false, 35,  48,  32, 9.1f, 11100,  840, "Air via A, B cooling", "", ""},
+            {2, 1, 0, true,  false, true,  true,  false, false, true,  94,  29,  30, 5.6f,  6000,  900, "Air via B, A heating", "", ""},
+            {1, 2, 2, true,  false, true,  false, false, true,  false, 33, 124,  36, 6.1f,  8400, 1080, "Air via A, B cooling", "Standby pack overtemp", ""},
+            {0, 0, 0, false, false, false, false, false, false, false, 28,  45,  26, 3.0f,     0,    0, "Disabled", "", ""},
+            {1, 0, 0, true,  false, false, false, false, true,  false, 25,  25,  25, 2.0f,     0,    0, "Air via A, B wet", "", "10.42.14.100"},
+            {1, 1, 0, true,  true,  false, false, false, true,  false, 30, NAN,  29, 6.0f,  2640,  180, "Air via A, B heating", "", ""},
+          };
+          int n = 3;
+          if (const char *e = std::getenv("SCENARIO")) n = atoi(e);
+          if (n < 1 || n > 12) n = 3;
+          const Sc &c = SC[n - 1];
+          ESP_LOGI("scenario", "Scenario %d: %s", n, c.status);
+          id(active_pack) = c.active;
+          id(standby_state) = c.sb;
+          id(fault_code) = c.fault;
+          id(service_elapsed_s) = c.service_s;
+          id(standby_elapsed_s) = c.standby_s;
+          auto set = [](esphome::switch_::Switch *sw, bool on) { if (on) sw->turn_on(); else sw->turn_off(); };
+          set(id(dryer_enabled), c.enabled);
+          set(id(sim_enabled), c.sim);
+          set(id(case_fan), c.fan);
+          set(id(heater_a), c.ha);
+          set(id(heater_b), c.hb);
+          set(id(valve_a), c.va);
+          set(id(valve_b), c.vb);
+          id(pack_a_temp).publish_state(c.ta);
+          id(pack_b_temp).publish_state(c.tb);
+          id(case_temp).publish_state(c.tc);
+          id(ctrl_rh).publish_state(c.rh);
+          id(status_text).publish_state(c.status);
+          id(fault_message).publish_state(c.fault_msg);
+          id(ip_addr).publish_state(c.ip);
+          if (const char *shot = std::getenv("SHOT")) {
+            id(ui_draw).execute();   // gathers last_state()/last_assets() and draws the window
+            preview::CaptureDisplay cap(240, 240);
+            dryer_ui::draw_ui(cap, dryer_ui::last_state(), dryer_ui::last_assets());
+            const bool ok = cap.save_ppm(shot);
+            ESP_LOGI("scenario", "Capture %s: %s", shot, ok ? "written" : "FAILED");
+            exit(ok ? 0 : 1);
+          }

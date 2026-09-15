@@ -30,18 +30,26 @@ jobs:
           ghcr.io/esphome/esphome:2026.1.4
           compile ${{ matrix.yaml }}
 
-  # The host preview build compiles natively inside the same image. The
-  # sdl display validates by running sdl2-config, so SDL2 must be installed
+  # The two host builds compile natively inside the same image. The sdl
+  # display validates by running sdl2-config, so SDL2 must be installed
   # before even `esphome config` would pass.
   compile-host:
-    name: compile host
+    name: compile ${{ matrix.variant }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: host
+            yaml: esphome/desiccant-dryer-host.yaml
+          - variant: scenarios
+            yaml: esphome/desiccant-dryer-scenarios.yaml
     steps:
       - uses: actions/checkout@v7
       - name: Provide dummy secrets
         run: cp esphome/secrets.ci.yaml esphome/secrets.yaml
-      - name: Compile host preview
+      - name: Compile ${{ matrix.variant }}
         run: >
           docker run --rm -v "$PWD:/config" -w /config --entrypoint bash
           ghcr.io/esphome/esphome:2026.1.4
-          -c "apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null && esphome compile esphome/desiccant-dryer-host.yaml"
+          -c "apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null && esphome compile ${{ matrix.yaml }}"

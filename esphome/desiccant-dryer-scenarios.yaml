@@ -1,0 +1,24 @@
+# Screen scenarios: the display drawing code on the Mac with a fixed-state
+# table instead of the controller, so every screen state (faults, disabled,
+# a missing probe, the boot IP) can be shown or captured on demand. For the
+# live screen driven by the real controller use desiccant-dryer-host.yaml.
+#   esphome compile esphome/desiccant-dryer-scenarios.yaml
+#   SCENARIO=9 esphome/.esphome/build/desiccant-dryer-scenarios/.pioenvs/desiccant-dryer-scenarios/program
+# All twelve as palette-accurate PNGs: scripts/scenario-shots.sh. Needs sdl2.
+substitutions:
+  name: desiccant-dryer-scenarios
+  friendly_name: Desiccant Dryer Scenarios
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+host:
+
+logger:
+  level: INFO
+
+packages:
+  draw: !include packages/display-draw.yaml
+  display: !include packages/display-sdl.yaml
+  scenarios: !include packages/display-scenarios.yaml
