@@ -17,8 +17,11 @@
 #     device class and stay in °C; history-graph draws one chart per unit,
 #     so without the override the recharge/ready lines would not overlay
 #     the pack temperatures on an imperial install.
-#   - camera.10_42_14_100: Generic Camera on http://10.42.14.100/screen.png
-#     at 0.5 Hz (docs/screen-in-ha.md).
+#   - image.dryer_screen: template image helper, URL
+#     http://10.42.14.100/screen.png?t={{ now().timestamp() | int }} with
+#     verify_ssl off, re-rendered every 2 s by automation.dryer_screen_refresh
+#     (time_pattern /2 s -> homeassistant.update_entity). A still image works
+#     through the Cloudflare tunnel; a live camera stream does not.
 #
 # Entity ids are the ones ESPHome gives the virtual build on the dev
 # instance. The production unit would be desiccant_dryer_* and has no
@@ -130,11 +133,11 @@ views:
             heading: Screen
             icon: mdi:monitor
           - type: picture-entity
-            entity: camera.10_42_14_100
-            camera_image: camera.10_42_14_100
-            # live follows the camera's frame rate (0.5 Hz, one frame
-            # every 2 s); auto would refresh only about every 10 s.
-            camera_view: live
+            entity: image.dryer_screen
+            # With an aspect ratio the card paints the last fully loaded
+            # frame as its background, so each 2 s refresh loads over the
+            # previous picture instead of over nothing.
+            aspect_ratio: "1"
             fit_mode: cover
             show_name: false
             show_state: false

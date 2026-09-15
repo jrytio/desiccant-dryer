@@ -115,7 +115,8 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - The bench Home Assistant dashboard (virtual board) is
   `docs/ha/dryer-bench-dashboard.yaml`; its header lists what it needs on
   the HA side (HACS Tabdeck Card, °C display units on the temperature
-  sensors, the camera at 0.5 Hz). Keep it in step with the dashboard
+  sensors, the `image.dryer_screen` template image and its 2 s refresh
+  automation). Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
 - To prove a refactor changed nothing, dump `esphome config` before and
