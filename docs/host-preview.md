@@ -47,9 +47,9 @@ Useful screen states and how to reach them:
 
 | Screen | How |
 |---|---|
-| A IN USE (solid green), B WET (solid pink), green chevrons into the top of A, air path lit down the A branch | Fresh start |
-| B turns solid orange, HEATING, amber heat waves rising from the top of B | Sim Speed 60, wait about a minute |
-| B turns cyan (COOLING), then blue (READY), then the path moves to B | Keep waiting |
+| A IN USE (solid green), B WET (solid yellow), green chevrons into the top of A, air path lit down the A branch | Fresh start |
+| B turns solid orange, HEATING, orange heat waves rising from the top of B | Sim Speed 60, wait about a minute |
+| B turns blue (COOLING), then purple (READY), then the path moves to B | Keep waiting |
 | Gauge word RISING / HIGH / OVER, OVR badge top right | Override Humidity on, Override RH 6 / 9 / 12 |
 | OFF on both packs, nothing lit, strip "Disabled" | Dryer Enabled off |
 | Red strip "FAULT · ...", the faulted pack solid red | Sim Heater Max Temp 130, wait for heating |

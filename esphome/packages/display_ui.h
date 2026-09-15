@@ -5,7 +5,8 @@
 // (packages/display-scenarios.yaml). The ui_draw script in
 // packages/display-draw.yaml gathers the state. Geometry and rules follow
 // docs/superpowers/specs/2026-09-14-display-ui-design.md sections 2, 4, 5,
-// with the cylinder colours of 2026-09-14-cylinder-state-colours-design.md.
+// with the cylinder colours of 2026-09-14-cylinder-state-colours-design.md
+// and the palette of 2026-09-15-semantic-palette-design.md.
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -63,11 +64,16 @@ inline uint32_t uptime_since_first_frame(uint32_t now) {
 // RGB 3-3-2 grid colours (display UI spec section 5; cylinder colours spec
 // section 1).
 static const Color BLACK(0, 0, 0), WHITE(255, 255, 255);
-static const Color GREEN(36, 219, 85), ORANGE(255, 146, 0), AMBER(255, 182, 0), CYAN(0, 219, 255);
-static const Color BLUE(36, 109, 255), PINK(255, 146, 170);
+// "Semantic" palette (2026-09-15-semantic-palette-design.md): GitHub's status
+// hues. GREEN success = in use, YELLOW attention = wet and the gauge's
+// RISING/HIGH, ORANGE severe = heating, CYAN info = cooling, PURPLE done =
+// ready, RED danger = fault.
+static const Color GREEN(73, 182, 85), YELLOW(219, 182, 0), ORANGE(219, 109, 85), CYAN(73, 182, 255);
+static const Color PURPLE(146, 109, 255), RED(255, 73, 85);
+static const Color AMBER = YELLOW;  // gauge attention zones and the OVR badge
 static const Color SHELL(73, 73, 85), DIM(146, 146, 170), STRIP_TXT(182, 182, 170);
-static const Color RED_STRIP(219, 36, 36), RED(255, 36, 36);
-static const Color DRY_DIM(36, 109, 36), AMBER_DIM(109, 73, 0), RED_DIM(109, 0, 0);
+static const Color RED_STRIP(219, 73, 85);
+static const Color DRY_DIM(36, 73, 36), AMBER_DIM(109, 73, 0), RED_DIM(109, 36, 36);
 
 static const float HIGH_FRACTION = 1.0f / 3.0f;  // top third of the arm..swap band reads HIGH
 static const uint32_t BOOT_IP_MS = 60000;        // the strip shows the IP this long after boot
@@ -106,7 +112,7 @@ inline void rounded_rect(Display &it, int x, int y, int w, int h, int r, Color c
 
 inline void pack_roles(const UiState &s, PackView &a, PackView &b) {
   static const char *const SB_NAMES[] = {"WET", "HEATING", "COOLING", "READY"};
-  static const Color SB_COLORS[] = {PINK, ORANGE, CYAN, BLUE};
+  static const Color SB_COLORS[] = {YELLOW, ORANGE, CYAN, PURPLE};
   a = PackView{};
   b = PackView{};
   a.cx = CX_A;
