@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "esphome/core/component.h"
 #include "esphome/components/ili9xxx/ili9xxx_display.h"
@@ -9,10 +10,10 @@
 namespace esphome {
 namespace screen_mirror {
 
-// Answers GET <path> with the display's frame buffer as an 8-bit BMP. The
-// rows are streamed straight out of the driver's buffer with chunked sends,
-// so nothing is allocated; the only copies are the 54-byte header on the
-// stack and the 1 KB palette in flash.
+// Answers GET <path> with the display's frame buffer as an 8-bit indexed PNG
+// (stored deflate blocks, so no compressor and no frame copy). Rows are
+// streamed with chunked sends; the only RAM is one scanline allocated at
+// setup, and the palette and CRC table live in flash.
 class ScreenMirror : public Component, public AsyncWebHandler {
  public:
   explicit ScreenMirror(web_server_base::WebServerBase *base) : base_(base) {}
@@ -31,6 +32,7 @@ class ScreenMirror : public Component, public AsyncWebHandler {
   web_server_base::WebServerBase *base_;
   ili9xxx::ILI9XXXDisplay *display_{nullptr};
   std::string path_;
+  std::vector<uint8_t> row_;
   bool warned_{false};
 };
 

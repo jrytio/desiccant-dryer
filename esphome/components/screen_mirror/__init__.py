@@ -5,7 +5,7 @@ from esphome.components.web_server_base import CONF_WEB_SERVER_BASE_ID
 import esphome.config_validation as cv
 from esphome.const import CONF_DISPLAY_ID, CONF_ID, CONF_PATH
 
-# Serves an ili9xxx display's 8-bit frame buffer as a BMP on the web server.
+# Serves an ili9xxx display's 8-bit frame buffer as a PNG on the web server.
 # ESP32 only: the handler streams with esp_http_server directly so the
 # 58 KB image never has to sit in RAM.
 
@@ -31,7 +31,7 @@ CONFIG_SCHEMA = cv.All(
                 web_server_base.WebServerBase
             ),
             cv.Required(CONF_DISPLAY_ID): cv.use_id(ILI9XXXDisplay),
-            cv.Optional(CONF_PATH, default="/screen.bmp"): _validate_path,
+            cv.Optional(CONF_PATH, default="/screen.png"): _validate_path,
         }
     ).extend(cv.COMPONENT_SCHEMA),
     cv.only_on_esp32,

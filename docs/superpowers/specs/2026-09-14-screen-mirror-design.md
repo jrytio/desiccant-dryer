@@ -56,7 +56,7 @@ entity on a dashboard card.
 |---|---|
 | What is mirrored | The real device's frame buffer, not a re-implementation of the layout in a Lovelace card |
 | Transport | A GET endpoint on the existing ESPHome web server, streamed in chunks from the raw IDF request handle |
-| Image format | 8-bit indexed BMP, bottom-up rows, 256-entry RGB332 palette; 58,678 bytes; no compression, no PNG |
+| Image format | 8-bit indexed PNG with stored deflate blocks, 58,688 bytes. BMP was the first choice; Home Assistant's Generic Camera validates stills with PIL and accepts only PNG, JPEG, GIF, SVG and WebP |
 | Where it lives | A local external component `screen_mirror` under `esphome/components/`, wired by `packages/screen-mirror.yaml` |
 | Which builds | Both device builds (production and virtual). Not the host build, which has no web server |
 | Home Assistant side | Generic Camera entity with content type `image/bmp`, shown in a Picture Entity card |
@@ -102,7 +102,7 @@ device jobs compile the component.
 - Schema: `id` (`ScreenMirror`), `web_server_base_id` (generated,
   `cv.use_id(web_server_base.WebServerBase)`), `display_id`
   (`cv.use_id(ILI9XXXDisplay)` from `esphome.components.ili9xxx.display`,
-  required), `path` (string, default `/screen.bmp`, must start with `/`).
+  required), `path` (string, default `/screen.png`, must start with `/`).
   Wrapped in `cv.only_on_esp32`, because the handler uses the ESP32 httpd
   backend (`esp_http_server`) directly, which ESPHome loads for every ESP32
   build.
@@ -149,12 +149,19 @@ device jobs compile the component.
 Nothing is allocated on the heap; the largest stack object is the 54-byte
 header. The palette is 1 KB of flash. One request moves 58,678 bytes.
 
+**Amended during execution:** the endpoint serves PNG, not BMP. Structure:
+signature, IHDR (8-bit, colour type 3), a PLTE chunk built at compile
+time, one IDAT chunk whose zlib stream is stored deflate blocks of whole
+scanlines (filter byte 0 plus the row, which is already the palette
+index), Adler-32 and CRC-32 computed while streaming, IEND. See plan
+Task 6.
+
 ## 3. Configuration
 
 `esphome/packages/screen-mirror.yaml`:
 
 ```yaml
-# Serves the panel's frame buffer as /screen.bmp on the web server so Home
+# Serves the panel's frame buffer as /screen.png on the web server so Home
 # Assistant's Generic Camera can show the live screen. Device builds only:
 # the host build has no web server. See docs/screen-in-ha.md.
 
@@ -179,7 +186,7 @@ Settings, Devices & services, Add integration, Generic Camera:
 
 | Field | Value |
 |---|---|
-| Still Image URL | `http://10.42.14.100/screen.bmp` (the board's address, or `http://desiccant-dryer-virtual.local/screen.bmp` if mDNS resolves from Home Assistant) |
+| Still Image URL | `http://10.42.14.100/screen.png` (the board's address, or `http://desiccant-dryer-virtual.local/screen.png` if mDNS resolves from Home Assistant) |
 | Content Type | `image/bmp` |
 | Frame Rate (Hz) | 0.5 (the display redraws every 2 s) |
 | Verify SSL certificate | off (plain HTTP) |
@@ -197,7 +204,7 @@ address once it exists.
 - `README.md`: one sentence pointing at the doc.
 - `CLAUDE.md`: the layout paragraph lists `screen-mirror.yaml` and
   `components/screen_mirror`; the conventions gain one line saying the
-  frame endpoint is `/screen.bmp` on the device builds.
+  frame endpoint is `/screen.png` on the device builds.
 
 ## 6. Verification
 
@@ -206,7 +213,7 @@ address once it exists.
    `esphome run esphome/desiccant-dryer-virtual.yaml --device 10.42.14.100`.
    The boot log shows the component's `dump_config` line with the path
    and 240x240.
-3. `curl -s http://10.42.14.100/screen.bmp -o screen.bmp`: 58,678 bytes,
+3. `curl -s http://10.42.14.100/screen.png -o screen.bmp`: 58,678 bytes,
    `Content-Type: image/bmp`. Decoded with ESPHome's own Python (Pillow):
    size 240x240, mode `P`; pixel (0, 0) is index 0 (nothing draws
    there); pixel (231, 200), the right end of the humidity bar, is one of

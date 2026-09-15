@@ -3,14 +3,16 @@
 Both device builds serve the panel's frame buffer as an image:
 
 ```bash
-curl -o screen.bmp http://10.42.14.100/screen.bmp     # bench board
+curl -o screen.png http://10.42.14.100/screen.png     # bench board
 ```
 
-It is a 240x240 8-bit BMP, 58,678 bytes, exactly what the ST7789 is
-showing, palette rounding included. The board streams it straight from the
-display buffer, so a request never copies the frame or allocates a buffer;
-the display keeps redrawing every 2 s while you fetch, so a frame can
-occasionally mix two updates.
+It is a 240x240 8-bit indexed PNG, 58,688 bytes (uncompressed, so it
+streams without a compressor), exactly what the ST7789 is showing,
+palette rounding included. Home Assistant's Generic Camera accepts only
+PNG, JPEG, GIF, SVG and WebP stills, which is why it is not a BMP. The
+board streams it straight from the display buffer, so a request never
+copies the frame or allocates a buffer; the display keeps redrawing every
+2 s while you fetch, so a frame can occasionally mix two updates.
 
 ## Camera entity
 
@@ -18,9 +20,9 @@ Settings, Devices & services, Add integration, **Generic Camera**:
 
 | Field | Value |
 |---|---|
-| Still Image URL | `http://10.42.14.100/screen.bmp` (the board's address; `desiccant-dryer-virtual.local` if mDNS resolves from Home Assistant) |
+| Still Image URL | `http://10.42.14.100/screen.png` (the board's address; `desiccant-dryer-virtual.local` if mDNS resolves from Home Assistant) |
 | Stream Source URL | leave empty |
-| Content Type | `image/bmp` |
+| Content Type | `image/png` |
 | Frame Rate (Hz) | `0.5` (the display redraws every 2 s) |
 | Verify SSL certificate | off (plain HTTP) |
 
