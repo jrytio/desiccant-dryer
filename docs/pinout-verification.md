@@ -49,7 +49,7 @@ All GPIO numbers in `esphome/packages/hw-real.yaml` (sensors), `base.yaml`
 |---|---|---|---|
 | 1 | BAT | — | |
 | 2 | EN | — | |
-| 3 | USB | — | 5 V in from buck |
+| 3 | USB | — | 5 V in from buck (same net as USB-C VBUS) |
 | 4 | 13 | 13 | heater A relay (also lights on-board LED) |
 | 5 | 12 | 12 | heater B relay |
 | 6 | 11 | 11 | valve A |
@@ -79,6 +79,11 @@ Qwiic (J3): GND, 3.3 V, SDA=GPIO1, SCL=GPIO2. SHT45 plugs in here.
    used, but available.
 5. **GPIO45/46 (strapping) and GPIO21/26/38/41 are on the back pads (J7)**
    only. Not used.
+6. **The 12-pin USB pin is the USB-C connector's VBUS.** J2 pin 3 and J5
+   VBUS are one net, `V_USB`. The Schottky D2 sits after it (V_USB to VIN),
+   so nothing separates the two sources. Never connect the breadboard 5 V
+   rail to the USB pin and a USB-C cable at the same time: pull the USB-pin
+   wire before flashing over USB, or flash over the air.
 
 ## Chip-level constraints (TRM)
 

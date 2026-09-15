@@ -74,7 +74,10 @@ IRLZ44N TO-220 tab at back, legs down: G D S. Tab is tied to drain.
 - Top rails: 3.3 V and GND from the board's 3V3/GND pins.
 - Bottom rails: 5 V and GND from the buck converter. 24 V supply negative
   ties to the same ground.
-- Board USB pin ← bottom 5 V rail.
+- Board USB pin ← bottom 5 V rail. That pin and the USB-C connector's VBUS
+  are one net with no diode between them, so never connect both: pull the
+  USB-pin wire before plugging in a USB-C cable, or flash over the air.
+  Otherwise the buck and the computer's USB port back-feed each other.
 - Display: GND/VCC to top rails; SCL→36, SDA→35, RES→14, DC→9, CS→5, BLK→17.
 - DS18B20 ×3: all GND to top GND, all VDD to top 3.3 V, all DQ tied together
   → GPIO37 with one 4.7 kΩ to 3.3 V. Three-wire hookup; do not use parasitic

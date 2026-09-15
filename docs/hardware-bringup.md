@@ -13,8 +13,10 @@ bases only; GPIO13 also lights the on-board blue LED.
 
 ## 1. Flash
 
-1. Plug the hardware board in. Two boards on USB show two ports; pick the new
-   one:
+1. First pull the wire from the board's USB pin to the breadboard 5 V rail.
+   That pin is the same net as the USB-C connector's VBUS, with no diode, so
+   leaving it in ties the buck to the computer's USB port. Then plug the
+   hardware board in. Two boards on USB show two ports; pick the new one:
 
    ```bash
    ls /dev/cu.usbserial* /dev/cu.SLAB*

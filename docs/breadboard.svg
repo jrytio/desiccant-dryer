@@ -1,6 +1,6 @@
-<svg width="680" height="656" viewBox="0 0 680 656" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<svg width="680" height="672" viewBox="0 0 680 672" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
 <title>Desiccant dryer breadboard layout (pins verified against SparkFun schematic)</title>
-<rect x="0" y="0" width="680" height="656" fill="#FFFFFF"/>
+<rect x="0" y="0" width="680" height="672" fill="#FFFFFF"/>
 <rect x="20" y="40" width="640" height="580" rx="6" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="1"/>
 <text x="20" y="26" font-size="13" font-weight="bold" fill="#2C2C2A">Desiccant dryer controller — breadboard layout (SparkFun ESP32-S2 Thing Plus)</text>
 <line x1="56" y1="56" x2="620" y2="56" stroke="#E08A2E" stroke-width="2"/>
@@ -101,5 +101,6 @@
 <g font-size="11" fill="#2C2C2A" text-anchor="middle" dominant-baseline="central">
 <text x="144" y="545">coil A</text><text x="260" y="545">coil B</text><text x="376" y="545">valve A</text><text x="492" y="545">valve B</text><text x="608" y="545">fan</text>
 <text x="340" y="638">green leads go off-board to the load negative; load positive to 5 V (coils) or 24 V (valves, fan); flyback diode across each load</text>
+<text x="340" y="654" font-weight="bold" fill="#B03A3A">USB pin is the same net as USB-C VBUS (no diode): pull the USB-pin wire before plugging in USB-C</text>
 </g>
 </svg>
