@@ -32,15 +32,21 @@ based on measured outlet humidity and measured pack temperatures instead.
 
 ## Layout and pin map
 
-Two builds share one logic file via ESPHome packages: `esphome/packages/base.yaml`
-(platform, globals, tunables, GPIO outputs, state machine, derived entities),
+Three builds share one logic file via ESPHome packages. `esphome/packages/base.yaml`
+is the controller (globals, tunables, GPIO outputs, state machine, derived
+entities). Platform: `packages/platform-esp32.yaml` (board, WiFi, OTA, web
+server) or `packages/platform-host.yaml` (native build on the Mac). Hardware:
 `packages/hw-real.yaml` (buses and real sensors; the hardware side edits only
-this), `packages/hw-virtual.yaml` (plant model and sim knobs), and
-`packages/display.yaml`. `desiccant-dryer.yaml` and `desiccant-dryer-virtual.yaml`
-are ten-line selectors. Base must only reference the five sensor ids
-`air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`, `case_temp` from the
-hardware package. `hw-real.yaml` is the pin-map source of truth for sensors,
-`base.yaml` for outputs, `display.yaml` for the display.
+this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
+`packages/display-draw.yaml` (fonts, colours and the drawing lambda as the
+`display_lambda` substitution; edit this to change the screen) plus a driver,
+`packages/display-st7789.yaml` (real panel) or `packages/display-sdl.yaml`
+(window on the Mac). `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
+and `desiccant-dryer-host.yaml` are short selectors. Base must only reference
+the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
+`case_temp` from the hardware package; `display-draw.yaml` additionally
+reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source of truth for sensors,
+`base.yaml` for outputs, `display-st7789.yaml` for the display.
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 6. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
@@ -85,6 +91,11 @@ service 180 min) are untested guesses meant to get first cycles logging.
   `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Copy
   `secrets.yaml.example` to `secrets.yaml` first; for a compile-only check,
   `cp esphome/secrets.ci.yaml esphome/secrets.yaml` works.
+- To see the screen without a board, `esphome run esphome/desiccant-dryer-host.yaml`
+  compiles natively and opens an SDL window (needs `brew install sdl2`); see
+  docs/host-preview.md. Nothing WiFi, OTA, SPI or LEDC related may be added
+  to `base.yaml` or `display-draw.yaml`, because the host build has none of
+  those; it goes in the platform or driver package.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the

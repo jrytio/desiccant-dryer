@@ -1,0 +1,41 @@
+# ST7789 1.54" 240x240 display on SPI, shared by both device builds. On the
+# virtual build nothing is attached; the driver still runs so the frame
+# buffer allocation on the S2 gets exercised. The drawing itself is
+# ${display_lambda} from packages/display-draw.yaml.
+#   GPIO36/35 SPI SCK/MOSI, GPIO5 CS, GPIO9 DC, GPIO14 RST, GPIO17 backlight
+
+spi:
+  clk_pin: GPIO36
+  mosi_pin: GPIO35
+
+output:
+  - platform: ledc
+    pin: GPIO17
+    id: backlight_pwm
+    frequency: 1000Hz
+
+light:
+  - platform: monochromatic
+    name: "Display Backlight"
+    output: backlight_pwm
+    restore_mode: RESTORE_DEFAULT_ON
+    default_transition_length: 0s
+
+display:
+  - platform: ili9xxx
+    model: ST7789V
+    dimensions:
+      height: 240
+      width: 240
+      offset_height: 0     # try 80 if the image is shifted / cropped
+      offset_width: 0
+    cs_pin: GPIO5
+    dc_pin: GPIO9
+    reset_pin: GPIO14
+    invert_colors: true    # most 1.54" IPS modules need this
+    # 8-bit palette halves the frame buffer to ~58 KB. The full 16-bit buffer
+    # (~115 KB) failed to allocate on the S2 with WiFi, API and web server up
+    # (seen on the first virtual-build flash: "Could not allocate buffer").
+    color_palette: 8BIT
+    update_interval: 2s
+    lambda: ${display_lambda}

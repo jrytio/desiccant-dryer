@@ -65,10 +65,10 @@ itself worth watching once.
 
 ## 4. Display
 
-Confirm the layout matches `display.yaml`: "AIR: A" at the top, the
+Confirm the layout matches `display-draw.yaml`: "AIR: A" at the top, the
 humidity line reads "nan %RH" until simulation is on, the three temperature
 lines, the humidity bar, the IP at the bottom. If the image is shifted or
-cropped, try `offset_height: 80` as the comment in `display.yaml` says. Note
+cropped, try `offset_height: 80` as the comment in `display-st7789.yaml` says. Note
 the backlight level and colours.
 
 ## 5. Cycle with simulated humidity and real probes

@@ -1,0 +1,16 @@
+# Host preview build: the firmware compiled natively for the Mac, with the
+# display rendered into an SDL window. Same controller and plant model as
+# the virtual build; no WiFi, OTA or web server. Home Assistant connects
+# over the API like any other ESPHome device. Needs SDL2: brew install sdl2
+# Run:    esphome run esphome/desiccant-dryer-host.yaml
+# Guide:  docs/host-preview.md
+substitutions:
+  name: desiccant-dryer-host
+  friendly_name: Desiccant Dryer (Host)
+
+packages:
+  base: !include packages/base.yaml
+  platform: !include packages/platform-host.yaml
+  hardware: !include packages/hw-virtual.yaml
+  draw: !include packages/display-draw.yaml
+  display: !include packages/display-sdl.yaml

@@ -6,6 +6,10 @@ from an on-device plant model driven by the real heater switch states, in
 time scaled by "Sim Speed". It appears in Home Assistant as
 **Desiccant Dryer (Virtual)**, a separate device from the real unit.
 
+The same checklist runs on the Mac with no board at all through the host
+preview build, with the display visible in a window; see
+`docs/host-preview.md`.
+
 ## One-time setup
 
 1. Secrets (gitignored). From the repo root:

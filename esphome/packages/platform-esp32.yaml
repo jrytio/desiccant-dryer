@@ -1,0 +1,47 @@
+# ESP32-S2 platform: board, serial logging, OTA, WiFi, captive portal and
+# the web server. Shared by the production and virtual builds; the host
+# preview build uses packages/platform-host.yaml instead. No control logic
+# lives here.
+
+esp32:
+  board: sparkfun_esp32s2_thing_plus   # if rejected, esp32-s2-saola-1 works (same module)
+  variant: esp32s2
+  framework:
+    type: esp-idf
+
+logger:
+  # The S2 Thing Plus's USB port is a CP2102 on UART0. ESPHome's S2 default
+  # is USB_CDC, which is the bare native-USB pins on this board, so nothing
+  # would ever reach `esphome logs` over the cable. The log level is set in
+  # base.yaml; ESPHome merges the two logger blocks.
+  hardware_uart: UART0
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${friendly_name} Setup"
+    password: !secret ap_password
+  on_connect:
+    - delay: 2s
+    - lambda: ESP_LOGI("wifi", "IP %s", id(ip_addr).state.c_str());
+
+captive_portal:
+
+web_server:
+  port: 80
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      id: ip_addr

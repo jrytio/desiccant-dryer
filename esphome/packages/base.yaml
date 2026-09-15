@@ -1,9 +1,12 @@
-# Shared base for both builds. The top-level file supplies ${name} and
-# ${friendly_name} and picks a hardware package (hw-real or hw-virtual)
-# plus display. This file must only reference these sensor ids from the
-# hardware package: air_rh, air_temp, pack_a_temp, pack_b_temp, case_temp.
+# Shared controller for every build. The top-level file supplies ${name}
+# and ${friendly_name} and picks a platform package (platform-esp32 or
+# platform-host), a hardware package (hw-real or hw-virtual) and the
+# display packages. This file must only reference these sensor ids from
+# the hardware package: air_rh, air_temp, pack_a_temp, pack_b_temp,
+# case_temp. Board, WiFi, OTA and the web server live in the platform
+# package, not here.
 #
-# Outputs (12-pin header), identical on both builds:
+# Outputs (12-pin header), identical on every build (the host build drives no pins):
 #   GPIO13  Heater A relay coil (5 V, low-side NPN)     interlocked with B
 #   GPIO12  Heater B relay coil                          interlocked with A
 #   GPIO11  Valve A  (24 V solenoid, low-side MOSFET)   interlocked with B
@@ -66,41 +69,12 @@ esphome:
                    id(active_pack), id(standby_state), id(fault_code));
           id(boot_done) = true;
 
-esp32:
-  board: sparkfun_esp32s2_thing_plus   # if rejected, esp32-s2-saola-1 works (same module)
-  variant: esp32s2
-  framework:
-    type: esp-idf
-
 logger:
   level: INFO
-  # The S2 Thing Plus's USB port is a CP2102 on UART0. ESPHome's S2 default
-  # is USB_CDC, which is the bare native-USB pins on this board, so nothing
-  # would ever reach `esphome logs` over the cable.
-  hardware_uart: UART0
 
 api:
   encryption:
     key: !secret api_key
-
-ota:
-  - platform: esphome
-    password: !secret ota_password
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  ap:
-    ssid: "${friendly_name} Setup"
-    password: !secret ap_password
-  on_connect:
-    - delay: 2s
-    - lambda: ESP_LOGI("wifi", "IP %s", id(ip_addr).state.c_str());
-
-captive_portal:
-
-web_server:
-  port: 80
 
 # ---------------------------------------------------------------- globals
 globals:
@@ -403,9 +377,6 @@ sensor:
       return id(hold_elapsed_s) / 60.0f;
     update_interval: 10s
 
-  - platform: wifi_signal
-    name: "WiFi Signal"
-    update_interval: 60s
   - platform: uptime
     name: "Uptime"
 
@@ -416,10 +387,6 @@ binary_sensor:
     lambda: return id(fault_code) != 0;
 
 text_sensor:
-  - platform: wifi_info
-    ip_address:
-      name: "IP Address"
-      id: ip_addr
   # Single place the fault code becomes text; the display reads this too.
   - platform: template
     name: "Fault Message"

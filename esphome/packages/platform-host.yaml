@@ -1,0 +1,23 @@
+# Host platform: the firmware compiled natively for the Mac. No WiFi, OTA,
+# captive portal or web server exist on host, so this file only provides
+# the host block and the one entity the display reads that would otherwise
+# come from WiFi. Home Assistant reaches the process over the API.
+
+host:
+
+text_sensor:
+  # The display's bottom line prints ip_addr. On host it just says so.
+  # Internal: Home Assistant does not need a fixed-string entity.
+  - platform: template
+    name: "IP Address"
+    id: ip_addr
+    internal: true
+    update_interval: 60s
+    lambda: return std::string("host");
+
+api:
+  # base.yaml's api block keeps ESPHome's default 15 min reboot_timeout: no
+  # client for that long calls App.reboot(), which on host is exit(0), so the
+  # window would close on its own. Also removes the "api set Warning flag"
+  # line at boot, which is the same no-client state.
+  reboot_timeout: 0s

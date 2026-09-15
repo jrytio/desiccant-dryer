@@ -1,0 +1,16 @@
+# The screen as an SDL window on the Mac, for the host preview build. Same
+# size and refresh as the ST7789 and the same ${display_lambda} from
+# packages/display-draw.yaml. Resizable so it can be scaled up on a
+# Retina screen; SDL scales the 240x240 logical frame to the window.
+# Not reproduced here: the 8-bit palette, invert_colors, the panel offset
+# and the backlight.
+
+display:
+  - platform: sdl
+    dimensions:
+      width: 240
+      height: 240
+    update_interval: 2s
+    window_options:
+      resizable: true
+    lambda: ${display_lambda}
