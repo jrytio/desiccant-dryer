@@ -680,7 +680,7 @@ allow it so Home Assistant can reach the API.
 
 ## Drive it from Home Assistant
 
-The process behaves like a fourth ESPHome device, **Desiccant Dryer
+The process behaves like any other ESPHome device, **Desiccant Dryer
 (Host)**. Home Assistant may discover it by mDNS on the same subnet;
 otherwise add the ESPHome integration manually with the Mac's LAN address,
 port 6053, and the `api_key` from `secrets.yaml`. Every Sim knob and
