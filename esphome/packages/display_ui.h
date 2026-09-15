@@ -73,7 +73,9 @@ static const Color PURPLE(146, 109, 255), RED(255, 73, 85);
 static const Color AMBER = YELLOW;  // gauge attention zones and the OVR badge
 static const Color SHELL(73, 73, 85), DIM(146, 146, 170), STRIP_TXT(182, 182, 170);
 static const Color RED_STRIP(219, 73, 85);
-static const Color DRY_DIM(36, 73, 36), AMBER_DIM(109, 73, 0), RED_DIM(109, 36, 36);
+// Gauge zones at rest: the same three hues at roughly half brightness, so the
+// bar reads as a dimmed copy of the palette rather than a different one.
+static const Color DRY_DIM(36, 73, 0), AMBER_DIM(109, 109, 0), RED_DIM(109, 36, 0);
 
 static const float HIGH_FRACTION = 1.0f / 3.0f;  // top third of the arm..swap band reads HIGH
 static const uint32_t BOOT_IP_MS = 60000;        // the strip shows the IP this long after boot
