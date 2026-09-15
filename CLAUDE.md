@@ -113,6 +113,12 @@ service 180 min) are untested guesses meant to get first cycles logging.
   for Home Assistant's Generic Camera (docs/screen-in-ha.md). It streams
   from the ST7789's 8-bit buffer; keep `color_palette: 8BIT` and rotation
   0 or the endpoint returns 500.
+- The bench Home Assistant dashboard (virtual board) is
+  `docs/ha/dryer-bench-dashboard.yaml`; its header lists what it needs on
+  the HA side (HACS Tabdeck Card, °C display units on the temperature
+  sensors, the camera at 0.5 Hz). Keep it in step with the dashboard
+  published on the dev instance, and keep its help text in step with the
+  control logic when either changes.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the
