@@ -102,8 +102,10 @@ service 180 min) are untested guesses meant to get first cycles logging.
 ## Working conventions
 
 - Flash with `esphome run esphome/desiccant-dryer.yaml` (real hardware) or
-  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). For the
-  virtual and host builds copy `secrets.yaml.example` to `secrets.yaml`
+  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Bench
+  testing on real hardware uses `esphome/desiccant-dryer-hw-test.yaml`
+  (production controller plus dev secrets, so it takes OTA; see
+  docs/hardware-bringup.md). For the virtual, host and hw-test builds copy `secrets.yaml.example` to `secrets.yaml`
   first (compile-only check: `cp esphome/secrets.ci.yaml esphome/secrets.yaml`);
   the production build reads no secrets.
 - WiFi is a `networks:` list in `packages/dev-secrets.yaml`, one secret
