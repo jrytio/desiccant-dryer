@@ -8,19 +8,22 @@ on:
 env:
   ESPHOME_VERSION: 2026.8.2
   # Workspace-relative so it needs no home-directory assumptions on the runner.
-  PIO_CACHE: .ci-cache/platformio
+  TOOL_CACHE: .ci-cache/tools
 
 # Compiles every build with the official ESPHome image at the same version as
 # the local install. (esphome/build-action pins its own minimum ESPHome
 # version, which drifted past ours.)
 #
-# Two caches keep repeat builds incremental; a cold ESP build spends ~70 s
-# installing toolchains and ~4 min compiling, ~700 objects of it ESP-IDF.
-# - toolchains: PlatformIO platforms/packages (under /cache, via the image's
-#   entrypoint) plus pioarduino's tools/ and penv/, which ignore that and
-#   live in /root/.platformio. Only those two are mounted, because the image
-#   ships its PlatformIO settings and libraries in the same directory.
-# - build: esphome/.esphome, so unchanged objects are not recompiled.
+# Two caches keep repeat builds incremental; a cold ESP build spends minutes
+# installing toolchains and compiling ~700 ESP-IDF objects.
+# - toolchains: everything the image's entrypoint puts under /cache when that
+#   directory is mounted. Since ESPHome 2026.8 the ESP-IDF builds are native
+#   (no PlatformIO): the IDF frameworks, compilers, Python env and a ccache
+#   all live in /cache/idf (~1.9 GB), so this one mount covers them. The
+#   ccache means even a stale build directory recompiles quickly.
+# - build: esphome/.esphome, so unchanged objects are not recompiled. Any
+#   config change that touches sdkconfig (a new component, TLS, ...) still
+#   rebuilds ESP-IDF; that is expected, and the ccache absorbs most of it.
 # The container writes both as root; they are chowned back before saving.
 jobs:
   compile:
@@ -56,7 +59,7 @@ jobs:
         id: toolchains
         uses: actions/cache/restore@v6
         with:
-          path: ${{ env.PIO_CACHE }}
+          path: ${{ env.TOOL_CACHE }}
           key: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-${{ hashFiles('esphome/packages/platform-*.yaml') }}
           restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-
       - name: Restore build directory
@@ -69,21 +72,19 @@ jobs:
 
       - name: Compile ${{ matrix.variant }}
         run: |
-          mkdir -p "$PIO_CACHE/cache" "$PIO_CACHE/tools" "$PIO_CACHE/penv"
+          mkdir -p "$TOOL_CACHE"
           docker run --rm -v "$PWD:/config" -w /config \
-            -v "$PWD/$PIO_CACHE/cache:/cache" \
-            -v "$PWD/$PIO_CACHE/tools:/root/.platformio/tools" \
-            -v "$PWD/$PIO_CACHE/penv:/root/.platformio/penv" \
+            -v "$PWD/$TOOL_CACHE:/cache" \
             --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
             -c '${{ matrix.prepare }} exec /entrypoint.sh compile ${{ matrix.yaml }}'
 
       - name: Hand caches back to the runner user
-        run: sudo chown -R "$(id -u):$(id -g)" "$PIO_CACHE" esphome/.esphome
+        run: sudo chown -R "$(id -u):$(id -g)" "$TOOL_CACHE" esphome/.esphome
       - name: Save toolchains
         if: steps.toolchains.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
-          path: ${{ env.PIO_CACHE }}
+          path: ${{ env.TOOL_CACHE }}
           key: ${{ steps.toolchains.outputs.cache-primary-key }}
       - name: Save build directory
         if: steps.build.outputs.cache-hit != 'true'

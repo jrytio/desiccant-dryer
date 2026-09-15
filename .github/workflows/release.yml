@@ -11,7 +11,7 @@ on:
 
 env:
   ESPHOME_VERSION: 2026.8.2
-  PIO_CACHE: .ci-cache/platformio
+  TOOL_CACHE: .ci-cache/tools
 
 permissions:
   contents: write   # create the release
@@ -39,7 +39,7 @@ jobs:
       - name: Restore toolchains
         uses: actions/cache/restore@v6
         with:
-          path: ${{ env.PIO_CACHE }}
+          path: ${{ env.TOOL_CACHE }}
           key: toolchains-${{ env.ESPHOME_VERSION }}-esp32-${{ hashFiles('esphome/packages/platform-*.yaml') }}
           restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-esp32-
       - name: Restore build directory
@@ -51,11 +51,9 @@ jobs:
 
       - name: Compile
         run: |
-          mkdir -p "$PIO_CACHE/cache" "$PIO_CACHE/tools" "$PIO_CACHE/penv"
+          mkdir -p "$TOOL_CACHE"
           docker run --rm -v "$PWD:/config" -w /config \
-            -v "$PWD/$PIO_CACHE/cache:/cache" \
-            -v "$PWD/$PIO_CACHE/tools:/root/.platformio/tools" \
-            -v "$PWD/$PIO_CACHE/penv:/root/.platformio/penv" \
+            -v "$PWD/$TOOL_CACHE:/cache" \
             "ghcr.io/esphome/esphome:$ESPHOME_VERSION" compile esphome/desiccant-dryer.yaml
           sudo chown -R "$(id -u):$(id -g)" esphome/.esphome
 
