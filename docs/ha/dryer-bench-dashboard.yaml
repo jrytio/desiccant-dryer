@@ -179,10 +179,11 @@ views:
                 text: >-
                   Clear the fault and let the cycle carry on? If the cause is
                   still there, such as a pack still above the overheat limit,
-                  the fault comes straight back. A spare pack the fault sent
-                  to cooling is marked ready once it is cool, even if its
-                  recharge never finished; a spare that was heating starts
-                  its recharge over. On a real dryer, fix the cause first.
+                  the fault comes straight back. A spare that overheated is
+                  marked ready once it is cool; a spare whose heater failed is
+                  back to wet and must recharge before it can be used; a spare
+                  that was heating starts its recharge over. On a real dryer,
+                  fix the cause first.
             icon_tap_action: *clear_fault
             visibility:
               - condition: state
@@ -497,7 +498,7 @@ views:
                               Simulator only, to fake problems and see how the controller protects the dryer. **Remembered after a restart**, so turn them off when you are done.
 
                               - **Set pack temps by hand**: both packs read the Pack A and Pack B temp values that appear here, and the heaters stop having any effect. Raise the heating spare's value by 5 °C or more, or after 5 dryer-minutes it faults as "not heating".
-                              - **Fake heater failure**: the heater switches on but the pack does not warm; 5 dryer-minutes later, fault "Standby heater not heating".
+                              - **Fake heater failure**: the heater switches on but the pack does not warm; 5 dryer-minutes later, fault "Standby heater not heating" and the spare goes back to *wet*. After you clear the fault it has to recharge from the start before it can be ready.
                               - **Sensor lost**: that pack reads Unknown. For the spare, the cycle pauses; a heater stays on for up to 25 real seconds, then turns off, and that recharge starts over when the reading returns. No fault. For the pack in use, only its overheat check stops.
 
               # ---------------------------------------------------- Settings
@@ -633,7 +634,7 @@ views:
                     | Switch by hand | Speed 10. When Status shows "Air via A, B heating", tap **Switch packs now** and confirm | B's glow goes off, then "Air via B, A wet". B is in use without finishing its recharge. No fault | Speed back to 1 |
                     | Turn the dryer off | Turn **Dryer on** off | "Disabled". The Screen shows both valves closed and nothing heating. Timers go to 0 | Turn it back on: "Air via A, B wet" within 5 seconds |
                     | Spare overheats | **Heater top temp** 130, speed 60, wait for "B heating" | Once pack B passes 120 °C: Fault badge and "Standby pack overtemp", Spare pack "cooling", air still via A, Pack in use for keeps counting | Heater top temp back to 110, then clear the fault. B cools, shows ready and the cycle carries on. Speed back to 1 |
-                    | Heater failure | **Fake heater failure** on, speed 60, wait for humidity to reach 5 % | A few seconds after "B heating" (5 dryer-minutes): fault "Standby heater not heating", Spare pack "cooling" | Fake heater failure off, clear the fault, speed back to 1. B shows ready at once because it never got hot, even though it was not recharged |
+                    | Heater failure | **Fake heater failure** on, speed 60, wait for humidity to reach 5 % | A few seconds after "B heating" (5 dryer-minutes): fault "Standby heater not heating", Spare pack "wet" | Fake heater failure off, then clear the fault. B heats again (humidity is past 5 %), recharges, cools, then shows ready. If you clear it with the failure still on, it faults again 5 dryer-minutes after "B heating" and never shows ready. Speed back to 1 |
                     | Pack in use overheats | At speed 1, turn on **Set pack temps by hand**, then set **Pack A temp** to 125 | Within 5 seconds: fault "Active pack overtemp", heaters off, air still via A | Pack A temp back to 25 first (or it faults again), then clear the fault, then Set pack temps by hand off |
                     | Case fan | **Room temp** 40, speed 60 | Case temp (Diagnostics tab) passes 36.5 °C and the FAN icon on the Screen turns green | Room temp back to 25: the fan stops once the case is below 33.5 °C and it has run at least 60 seconds. Speed back to 1 |
                     | Short sensor loss | Speed 10. During "B heating", turn **Sensor B lost** on for about 15 seconds, then off | Pack B temp reads Unknown, B keeps glowing, Spare pack stays "heating", no fault, the recharge finishes normally | Speed back to 1 |
