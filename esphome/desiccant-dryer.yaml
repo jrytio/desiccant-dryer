@@ -1,29 +1,13 @@
-# Production build: real sensors on the SparkFun ESP32-S2 Thing Plus.
+# Production build: real sensors on the SparkFun ESP32-S2 Thing Plus, with
+# the screen's drawing code and art from this checkout. CI compiles it and
+# the release workflow builds the published images from it.
 # Flash:  esphome run esphome/desiccant-dryer.yaml
-# Logic:  packages/base.yaml           (shared with the virtual and host builds)
-# Board:  packages/platform-esp32.yaml (board, WiFi, OTA, web server)
-# Wiring: packages/hw-real.yaml        (the only file the hardware side needs)
-# Screen: packages/screen-mirror.yaml  (/screen.png for Home Assistant)
-# Release: version.yaml + packages/release.yaml (version, provisioning, HA
-#         update entity, diagnostics). No secrets: the owner sets WiFi at
-#         flash time. Tagged builds are published by the release workflow;
-#         see docs/releasing.md.
+# Contents: packages/production.yaml (shared with desiccant-dryer-adopt.yaml,
+#           the Device Builder entry point). See docs/releasing.md.
 substitutions:
   name: desiccant-dryer
   friendly_name: Desiccant Dryer
 
 packages:
-  version: !include version.yaml
-  base: !include packages/base.yaml
-  platform: !include packages/platform-esp32.yaml
-  hardware: !include packages/hw-real.yaml
-  draw: !include packages/display-draw.yaml
-  display: !include packages/display-st7789.yaml
-  mirror: !include packages/screen-mirror.yaml
-  release: !include packages/release.yaml
-
-# 1.x releases log at DEBUG so the unit can be brought up and tested
-# remotely through `esphome logs`, the web server and Home Assistant.
-# Drop this back to base.yaml's INFO in a later release.
-logger:
-  level: DEBUG
+  production: !include packages/production.yaml
+  ui: !include packages/ui-code-local.yaml

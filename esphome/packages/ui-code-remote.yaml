@@ -1,0 +1,14 @@
+# The screen's drawing code (components/dryer_ui) fetched from GitHub at
+# ${ui_ref}, for builds that pull the production YAML as a remote package
+# (ESPHome Device Builder adoption), where a local component path would
+# resolve next to the owner's YAML instead of inside this repository.
+external_components:
+  - source:
+      type: git
+      url: https://github.com/jrytio/desiccant-dryer
+      ref: ${ui_ref}
+      path: esphome/components
+    components: [dryer_ui]
+    refresh: 1d
+
+dryer_ui:

@@ -1,0 +1,10 @@
+# The screen's drawing code (components/dryer_ui) from this checkout. Every
+# checked-in selector uses this; esphome/desiccant-dryer-adopt.yaml swaps in
+# packages/ui-code-remote.yaml.
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [dryer_ui]
+
+dryer_ui:

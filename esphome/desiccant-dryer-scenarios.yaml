@@ -20,5 +20,6 @@ logger:
 
 packages:
   draw: !include packages/display-draw.yaml
+  ui: !include packages/ui-code-local.yaml
   display: !include packages/display-sdl.yaml
   scenarios: !include packages/display-scenarios.yaml

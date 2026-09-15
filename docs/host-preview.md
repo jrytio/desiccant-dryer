@@ -3,7 +3,7 @@
 The host build compiles the firmware natively for the Mac and draws the
 display into a window. It runs the production controller, the virtual
 plant model from `packages/hw-virtual.yaml`, and the exact drawing code
-the ST7789 uses (`packages/display_ui.h`, fed by the `ui_draw` script in
+the ST7789 uses (`components/dryer_ui/display_ui.h`, fed by the `ui_draw` script in
 `packages/display-draw.yaml`), so layout, text and positions match the
 real screen pixel for pixel. Use it to work on the screen without flashing
 a board. For a fixed state on demand (a fault, a missing probe, the boot
@@ -27,7 +27,7 @@ esphome run esphome/desiccant-dryer-host.yaml
 ESPHome compiles natively (about a minute the first time, seconds after),
 opens a 240x240 window titled `desiccant-dryer-host`, and streams the log
 in the terminal. Drag the window corner to scale it up. Ctrl-C stops it.
-The edit loop is: change `display_ui.h` or an SVG under
+The edit loop is: change `components/dryer_ui/display_ui.h` or an SVG under
 `esphome/assets/display/`, Ctrl-C, run again.
 
 macOS may ask once whether the program may accept incoming connections;

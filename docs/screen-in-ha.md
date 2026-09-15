@@ -1,6 +1,7 @@
 # The dryer screen in Home Assistant
 
-Both device builds serve the panel's frame buffer as an image:
+The hw-test and virtual builds serve the panel's frame buffer as an image
+(the production build does not):
 
 ```bash
 curl -o screen.png "http://<board>/screen.png"     # <board>: the board's IP address

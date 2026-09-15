@@ -1,26 +1,18 @@
-# Production-only: version identity, first-time provisioning, the Home
-# Assistant update entity and the diagnostics a remote operator needs.
-# See docs/releasing.md.
+# Production-only: version identity, first-time provisioning and the
+# diagnostics a remote operator needs. See docs/releasing.md.
 #
 # The release image carries no credentials (packages/dev-secrets.yaml is
 # only in the test builds). The owner sets WiFi through Improv on the USB
-# serial port (web.esphome.io does this) or the fallback access point, and
-# Home Assistant adopts the device and sets its API encryption key. There
-# is deliberately no ESPHome OTA server: without a password it would let
-# any host on the LAN upload firmware to a mains controller. Firmware
-# arrives only through the signed-off release below or the USB port.
+# serial port (web.esphome.io does this) or the fallback access point, then
+# adopts the unit in ESPHome Device Builder. The adopted YAML holds the
+# owner's API key and OTA password, and Device Builder pushes updates with
+# ESPHome's native OTA.
 #
-# The device polls ${update_manifest_url}, the esp-web-tools manifest on
-# the repository's GitHub Pages site, and reports an update to Home
-# Assistant when the manifest's version differs from ${version}.
-# Installing pulls the .ota.bin over HTTPS (the relative path in the
-# manifest resolves next to it) and checks its md5. Pages, not the GitHub
-# Release download URL: that one redirects to an RSA-certificate host
-# with a ~900-byte signed URL, and the S2 has too little free heap for the
-# second handshake (see the sdkconfig notes in platform-esp32.yaml).
-
-substitutions:
-  update_manifest_url: https://jrytio.github.io/desiccant-dryer/firmware/manifest.json
+# The released image itself has no OTA server: without a password it would
+# let any host on the LAN upload firmware to a mains controller. It also
+# has no on-device HTTP updater. 1.0.x tried one: the S2 (no PSRAM, 58 KB
+# display buffer) never had the ~17 KB contiguous block a TLS firmware
+# download needs, with dynamic or static mbedTLS buffers.
 
 esphome:
   project:
@@ -35,29 +27,10 @@ api:
 
 improv_serial:
 
-http_request:
-  verify_ssl: true
-  timeout: 10s
-  # GitHub Pages answers directly, with no redirect, so the request and
-  # response headers stay short. (The old releases/latest/download URL
-  # redirected twice, the second time to a ~900-byte signed URL on an RSA
-  # host, which neither the default buffers nor the S2's free heap could
-  # take.) Kept a little above the 512-byte default for header headroom.
-  buffer_size_rx: 1024
-
-ota:
-  - platform: http_request
-
 # The web server's own firmware-upload page is the same unauthenticated
 # LAN reflash path; the status pages and controls stay.
 web_server:
   ota: false
-
-update:
-  - platform: http_request
-    name: "Firmware"
-    source: ${update_manifest_url}
-    update_interval: 6h
 
 safe_mode:
 
@@ -83,8 +56,6 @@ sensor:
   - platform: debug
     free:
       name: "Free Heap"
-    # TLS needs contiguous blocks; total free heap alone hid 1.0.0's
-    # failed manifest fetch.
     block:
       name: "Largest Free Block"
     loop_time:

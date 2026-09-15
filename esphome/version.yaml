@@ -3,4 +3,4 @@
 # tags main with the same number and the release workflow builds it.
 # Only esphome/desiccant-dryer.yaml includes this file.
 substitutions:
-  version: "1.0.2"
+  version: "1.1.0"

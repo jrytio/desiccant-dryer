@@ -13,4 +13,5 @@ packages:
   platform: !include packages/platform-host.yaml
   hardware: !include packages/hw-virtual.yaml
   draw: !include packages/display-draw.yaml
+  ui: !include packages/ui-code-local.yaml
   display: !include packages/display-sdl.yaml
