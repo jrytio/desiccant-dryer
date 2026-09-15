@@ -1,7 +1,7 @@
 # Control logic
 
 Runs every 5 s in the `interval:` lambda in `esphome/packages/base.yaml`.
-Both builds share it unchanged; only the sensor sources differ. See
+All three builds share it unchanged; only the sensor sources differ. See
 `docs/virtual-testing.md` for exercising it with no hardware attached.
 
 ## Roles
@@ -133,7 +133,7 @@ Hold Time` hold their final value through COOLING and READY so a regen's
 duration stays visible in HA history; the swap resets them. Transitions are
 logged under the `cycle` tag at INFO, faults at ERROR.
 
-## Humidity simulation (both builds)
+## Humidity simulation (all builds)
 
 `Simulate Humidity` switch + `Simulated RH` number. `Control Humidity`
 (`ctrl_rh`) is what the logic and display read; it mirrors the outlet sensor

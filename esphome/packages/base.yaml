@@ -6,7 +6,7 @@
 # case_temp. Board, WiFi, OTA and the web server live in the platform
 # package, not here.
 #
-# Outputs (12-pin header), identical on both builds:
+# Outputs (12-pin header), identical on every build (the host build drives no pins):
 #   GPIO13  Heater A relay coil (5 V, low-side NPN)     interlocked with B
 #   GPIO12  Heater B relay coil                          interlocked with A
 #   GPIO11  Valve A  (24 V solenoid, low-side MOSFET)   interlocked with B
