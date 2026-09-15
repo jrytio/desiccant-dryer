@@ -51,7 +51,8 @@ twelve screen states (`packages/display-scenarios.yaml`) so
 into `docs/display/`. The screen design is in
 `docs/superpowers/specs/2026-09-14-display-ui-design.md`, with the cylinders
 coloured by state per `docs/superpowers/specs/2026-09-14-cylinder-state-colours-design.md`
-and airflow in/out of the pack tops per `docs/superpowers/specs/2026-09-15-airflow-indicators-design.md`.
+airflow in/out of the pack tops per `docs/superpowers/specs/2026-09-15-airflow-indicators-design.md`,
+and the colours themselves per `docs/superpowers/specs/2026-09-15-semantic-palette-design.md`.
 Base must only reference the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
 `case_temp` from the hardware package; `display-draw.yaml` additionally
 reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source of truth for sensors,

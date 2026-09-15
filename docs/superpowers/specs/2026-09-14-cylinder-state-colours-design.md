@@ -3,7 +3,9 @@
 Date: 2026-09-14
 Status: approved in conversation
 Amends: `2026-09-14-display-ui-design.md` (the display UI spec)
-Amended by: `2026-09-15-airflow-indicators-design.md` (heater glow and top
+Amended by: `2026-09-15-semantic-palette-design.md` (the six colours
+themselves were replaced by the customer's chosen palette) and
+`2026-09-15-airflow-indicators-design.md` (heater glow and top
 pipes replaced by airflow indicators; `heater_on_a/b` assets renamed)
 
 ## Goal

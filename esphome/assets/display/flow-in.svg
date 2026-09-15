@@ -2,5 +2,5 @@
   <!-- Air in: three chevrons pointing down into the top of a pack whose valve
        is open. Drawn centred on the cylinder at (cx - 8, 3). -->
   <path d="M1.5 3L8.5 9L15.5 3 M1.5 11L8.5 17L15.5 11 M1.5 19L8.5 25L15.5 19"
-        stroke="#24DB55" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+        stroke="#49B655" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>
