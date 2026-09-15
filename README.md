@@ -27,3 +27,15 @@ esphome run esphome/desiccant-dryer-host.yaml          # no board; brew install 
 CI compiles all four on every pull request. Pushing a `vX.Y.Z` tag
 (`scripts/release.sh`) publishes the production build so Home Assistant
 offers it as an update; see `docs/releasing.md`.
+
+## License
+
+Copyright (C) 2026 jrytio. Released under the GNU Affero General Public
+License v3.0; see [`LICENSE`](LICENSE). If you run a modified version where
+others interact with it over a network (the web server, `/screen.png`, the
+API), the AGPL requires you to offer them your source.
+
+Exceptions: the vendor documents in `docs/datasheets/` belong to their
+manufacturers and are not covered. Release firmware also contains ESPHome's
+C++ runtime (MIT), ESP-IDF (Apache 2.0) and the Barlow and Inter fonts
+(SIL Open Font License 1.1), each under its own license.
