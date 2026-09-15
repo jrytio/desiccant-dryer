@@ -5,7 +5,8 @@ air dryer control board. Swaps packs on measured humidity and pack
 temperature instead of a fixed timer. See `CLAUDE.md` for decisions,
 `docs/hardware.md` for wiring and BOM, `docs/control-logic.md` for the
 state machine, `docs/virtual-testing.md` for testing without hardware,
-`docs/host-preview.md` for the display on your Mac, `docs/screen-in-ha.md` for the live screen in Home Assistant.
+`docs/host-preview.md` for the display on your Mac, `docs/screen-in-ha.md` for the live screen in Home Assistant,
+`docs/releasing.md` for numbered production releases and updates through Home Assistant.
 
 Three builds share `esphome/packages/base.yaml`:
 
@@ -23,4 +24,6 @@ esphome run esphome/desiccant-dryer.yaml               # real hardware
 esphome run esphome/desiccant-dryer-host.yaml          # no board; brew install sdl2 first
 ```
 
-CI compiles all four on every pull request.
+CI compiles all four on every pull request. Pushing a `vX.Y.Z` tag
+(`scripts/release.sh`) publishes the production build so Home Assistant
+offers it as an update; see `docs/releasing.md`.

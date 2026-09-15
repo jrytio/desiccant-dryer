@@ -1,0 +1,57 @@
+# Production-only: version identity, Home Assistant update entity and the
+# diagnostics a remote operator needs. See docs/releasing.md.
+#
+# The device polls ${update_manifest_url} (an esp-web-tools style
+# manifest published by .github/workflows/release.yml) and reports an
+# update to Home Assistant when the manifest's version differs from
+# ${version}. Installing pulls the .ota.bin over HTTPS and checks its md5.
+# Test builds never include this file: they are flashed by hand.
+
+substitutions:
+  update_manifest_url: https://jrytio.github.io/desiccant-dryer/manifest.json
+
+esphome:
+  project:
+    name: jrytio.desiccant-dryer
+    version: "${version}"
+
+http_request:
+  verify_ssl: true
+  timeout: 10s
+
+ota:
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: "Firmware"
+    source: ${update_manifest_url}
+    update_interval: 6h
+
+safe_mode:
+
+# Diagnostics for remote bring-up: what image is running, why it last
+# rebooted and how much RAM is left (the S2 has none to spare).
+debug:
+  update_interval: 60s
+
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"
+    hide_timestamp: true
+  - platform: template
+    name: "Firmware Version"
+    entity_category: diagnostic
+    icon: mdi:tag
+    update_interval: never
+    lambda: return {"${version}"};
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"
+
+sensor:
+  - platform: debug
+    free:
+      name: "Free Heap"
+    loop_time:
+      name: "Loop Time"

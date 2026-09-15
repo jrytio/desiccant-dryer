@@ -134,6 +134,13 @@ service 180 min) are untested guesses meant to get first cycles logging.
   automation). Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
+- The production selector alone includes `esphome/version.yaml` (semver,
+  bumped in the PR) and `packages/release.yaml` (project version, HA update
+  entity polling the GitHub Pages manifest, safe mode, debug sensors). Tags
+  `vX.Y.Z` pushed by `scripts/release.sh` run the release workflow, which
+  builds with the `ESPHOME_SECRETS_YAML` repository secret; see
+  docs/releasing.md. Test builds are flashed by hand and carry no update
+  entity. The 1.x production builds log at DEBUG on purpose.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the

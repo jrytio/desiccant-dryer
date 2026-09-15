@@ -4,14 +4,25 @@
 # Board:  packages/platform-esp32.yaml (board, WiFi, OTA, web server)
 # Wiring: packages/hw-real.yaml        (the only file the hardware side needs)
 # Screen: packages/screen-mirror.yaml  (/screen.png for Home Assistant)
+# Release: version.yaml + packages/release.yaml (version, HA update entity,
+#         diagnostics). Tagged builds are published by the release workflow;
+#         see docs/releasing.md.
 substitutions:
   name: desiccant-dryer
   friendly_name: Desiccant Dryer
 
 packages:
+  version: !include version.yaml
   base: !include packages/base.yaml
   platform: !include packages/platform-esp32.yaml
   hardware: !include packages/hw-real.yaml
   draw: !include packages/display-draw.yaml
   display: !include packages/display-st7789.yaml
   mirror: !include packages/screen-mirror.yaml
+  release: !include packages/release.yaml
+
+# 1.x releases log at DEBUG so the unit can be brought up and tested
+# remotely through `esphome logs`, the web server and Home Assistant.
+# Drop this back to base.yaml's INFO in a later release.
+logger:
+  level: DEBUG

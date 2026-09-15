@@ -1,0 +1,106 @@
+name: release
+
+# Builds the production firmware for a version tag and publishes it two
+# ways: as a GitHub Release (the record) and to GitHub Pages (what the
+# dryer reads). The device's update entity polls
+# https://jrytio.github.io/desiccant-dryer/manifest.json and Home Assistant
+# offers the new version. Procedure and one-time setup: docs/releasing.md.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+env:
+  ESPHOME_VERSION: 2026.1.4
+  PIO_CACHE: .ci-cache/platformio
+
+permissions:
+  contents: write   # create the release
+  pages: write      # deploy the manifest
+  id-token: write   # deploy-pages OIDC
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the tag matches esphome/version.yaml
+        id: ver
+        run: |
+          tag=${GITHUB_REF_NAME#v}
+          file=$(sed -n 's/^  version: "\(.*\)"/\1/p' esphome/version.yaml)
+          if [ "$tag" != "$file" ]; then
+            echo "::error::tag v$tag but esphome/version.yaml says $file"; exit 1
+          fi
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+
+      # The real WiFi, API and OTA secrets, so the released image joins the
+      # network and talks to Home Assistant. CI compile checks use the dummy
+      # esphome/secrets.ci.yaml instead; a release built with those would be
+      # unreachable.
+      - name: Write the real secrets
+        env:
+          SECRETS_YAML: ${{ secrets.ESPHOME_SECRETS_YAML }}
+        run: |
+          if [ -z "$SECRETS_YAML" ]; then
+            echo "::error::repository secret ESPHOME_SECRETS_YAML is not set (the full esphome/secrets.yaml)"; exit 1
+          fi
+          printf '%s\n' "$SECRETS_YAML" > esphome/secrets.yaml
+
+      - name: Restore toolchains
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.PIO_CACHE }}
+          key: toolchains-${{ env.ESPHOME_VERSION }}-esp32-${{ hashFiles('esphome/packages/platform-*.yaml') }}
+          restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-esp32-
+      - name: Restore build directory
+        uses: actions/cache/restore@v6
+        with:
+          path: esphome/.esphome
+          key: build-${{ env.ESPHOME_VERSION }}-production-${{ hashFiles('esphome/**') }}
+          restore-keys: build-${{ env.ESPHOME_VERSION }}-production-
+
+      - name: Compile
+        run: |
+          mkdir -p "$PIO_CACHE/cache" "$PIO_CACHE/tools" "$PIO_CACHE/penv"
+          docker run --rm -v "$PWD:/config" -w /config \
+            -v "$PWD/$PIO_CACHE/cache:/cache" \
+            -v "$PWD/$PIO_CACHE/tools:/root/.platformio/tools" \
+            -v "$PWD/$PIO_CACHE/penv:/root/.platformio/penv" \
+            "ghcr.io/esphome/esphome:$ESPHOME_VERSION" compile esphome/desiccant-dryer.yaml
+          sudo chown -R "$(id -u):$(id -g)" esphome/.esphome
+
+      - name: Assemble manifest and binaries
+        run: |
+          scripts/make-manifest.sh "${{ steps.ver.outputs.version }}" \
+            esphome/.esphome/build/desiccant-dryer/.pioenvs/desiccant-dryer \
+            site "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          cat site/manifest.json
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" site/*.bin site/manifest.json \
+            --title "Desiccant Dryer ${{ steps.ver.outputs.version }}" \
+            --generate-notes
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
