@@ -49,8 +49,9 @@ is a fourth, host-only build that swaps the controller for a fixed table of
 twelve screen states (`packages/display-scenarios.yaml`) so
 `scripts/scenario-shots.sh` can render them all through the panel's palette
 into `docs/display/`. The screen design is in
-`docs/superpowers/specs/2026-09-14-display-ui-design.md`. Base must only reference
-the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
+`docs/superpowers/specs/2026-09-14-display-ui-design.md`, with the cylinders
+coloured by state per `docs/superpowers/specs/2026-09-14-cylinder-state-colours-design.md`.
+Base must only reference the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
 `case_temp` from the hardware package; `display-draw.yaml` additionally
 reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source of truth for sensors,
 `base.yaml` for outputs, `display-st7789.yaml` for the display.

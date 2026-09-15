@@ -5,7 +5,8 @@
 # dryer_ui::UiState and hands it to draw_ui() in packages/display_ui.h, which
 # draws into the display with id `panel`. Edit display_ui.h (geometry, rules)
 # and assets/display/*.svg (art) to change the screen; see
-# docs/superpowers/specs/2026-09-14-display-ui-design.md for the design.
+# docs/superpowers/specs/2026-09-14-display-ui-design.md for the design and
+# 2026-09-14-cylinder-state-colours-design.md for the cylinder colours.
 #
 # Assets under assets/display are SVG, rasterised at compile time by ESPHome
 # (resvg) into flash. Fonts come from Google Fonts at compile time. Every
@@ -94,26 +95,6 @@ image:
     type: RGB565
     transparency: alpha_channel
     resize: 76x42
-  - file: assets/display/fault-ring.svg
-    id: img_fault_ring
-    type: RGB565
-    transparency: alpha_channel
-    resize: 57x122
-  - file: assets/display/cap-blue.svg
-    id: img_cap_blue
-    type: RGB565
-    transparency: alpha_channel
-    resize: 51x12
-  - file: assets/display/cap-amber.svg
-    id: img_cap_amber
-    type: RGB565
-    transparency: alpha_channel
-    resize: 51x12
-  - file: assets/display/cap-gold.svg
-    id: img_cap_gold
-    type: RGB565
-    transparency: alpha_channel
-    resize: 51x12
   # Tinted at draw time: green when the fan runs, shell grey otherwise.
   - file: mdi:fan
     id: img_fan
@@ -143,9 +124,6 @@ script:
           s.rh = id(ctrl_rh).state;
           s.arm_rh = id(arm_rh).state;
           s.swap_rh = id(swap_rh).state;
-          s.cooldown = id(cooldown_temp).state;
-          s.regen = id(regen_temp).state;
-          s.overtemp = id(overtemp).state;
           s.service_s = id(service_elapsed_s);
           s.standby_s = id(standby_elapsed_s);
           s.status = id(status_text).state;
@@ -156,6 +134,5 @@ script:
                                                        id(f_status), id(f_status_b),
                                                        id(img_bg), id(img_valve_open), id(img_valve_closed),
                                                        id(img_heater_on_a), id(img_heater_on_b), id(img_lit_a), id(img_lit_b),
-                                                       id(img_fault_ring), id(img_cap_blue), id(img_cap_amber), id(img_cap_gold),
                                                        id(img_fan)};
           dryer_ui::draw_ui(*id(panel), s, dryer_ui::last_assets());

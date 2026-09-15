@@ -3,6 +3,13 @@
 Date: 2026-09-14
 Status: approved in conversation; awaiting spec review
 
+Amended by: `2026-09-14-cylinder-state-colours-design.md`. The cylinder
+temperature fill, threshold dashes, cap sprites (`img_cap_*`), fault ring
+(`img_fault_ring`), the `cooldown`/`regen`/`overtemp` inputs, and the phase
+colours and words below are superseded: each cylinder body is now one solid
+colour for its state (IN USE green, WET pink, HEATING orange, COOLING cyan,
+READY blue, FAULT red). The rest of this document stands.
+
 ## Goal
 
 Replace the placeholder text screen on the 1.54" ST7789 (240×240, 8-bit
