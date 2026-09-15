@@ -322,7 +322,7 @@ Open every PNG with the Read tool and check against the spec and `docs/display/m
 | 8 | A solid orange `HEATING` with heater glow left of A; B green `IN USE`; path lit down B |
 | 9 | A green `IN USE`; B solid red `FAULT` `124°`; red strip; no red ring |
 | 10 | Both bodies black, `OFF` in dim on both, no timers |
-| 11 | A green, B pink, strip `10.42.14.100` |
+| 11 | A green, B pink, strip `198.51.100.200` |
 | 12 | A green; B solid orange with `--°` in dim; SIM badge |
 
 In every filled cylinder also check: no fill colour above the grey top cap or outside the bottom cap curve; no leftover dashed lines; the black plate is intact. If anything is off, fix the header and re-run this step.

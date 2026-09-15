@@ -38,7 +38,7 @@ entity on a dashboard card.
   `esphome-display-screenshot` builds a 225 KB 16-bit BMP in PSRAM and is
   therefore not usable here, but it validates the pattern (BMP over the
   ESPHome web server, consumed by Home Assistant).
-- The bench test board runs the virtual build at 10.42.14.100 and answers
+- The bench test board runs the virtual build at `<board>` (its IP address) and answers
   on its web server (HTTP 200 in 0.14 s from the Mac).
 - Home Assistant's Generic Camera integration takes a still image URL, a
   content type (default `image/jpeg`) and a frame rate, is configured in the
@@ -188,7 +188,7 @@ Settings, Devices & services, Add integration, Generic Camera:
 
 | Field | Value |
 |---|---|
-| Still Image URL | `http://10.42.14.100/screen.png` (the board's address, or `http://desiccant-dryer-virtual.local/screen.png` if mDNS resolves from Home Assistant) |
+| Still Image URL | `http://<board>/screen.png` (the board's address, or `http://desiccant-dryer-virtual.local/screen.png` if mDNS resolves from Home Assistant) |
 | Content Type | `image/png` |
 | Frame Rate (Hz) | 0.5 (the display redraws every 2 s) |
 | Verify SSL certificate | off (plain HTTP) |
@@ -212,10 +212,10 @@ address once it exists.
 
 1. `esphome config` and `esphome compile` pass for both device builds.
 2. Flash the bench board over the air:
-   `esphome run esphome/desiccant-dryer-virtual.yaml --device 10.42.14.100`.
+   `esphome run esphome/desiccant-dryer-virtual.yaml --device "<board>"`.
    The boot log shows the component's `dump_config` line with the path
    and 240x240.
-3. `curl -s http://10.42.14.100/screen.png -o screen.png`: 58,688 bytes,
+3. `curl -s "http://<board>/screen.png" -o screen.png`: 58,688 bytes,
    `Content-Type: image/png`. Decoded with ESPHome's own Python (Pillow and
    zlib): PIL reports the format as `png`, which is what Home Assistant
    checks; every chunk CRC and the zlib stream verify; size 240x240, mode

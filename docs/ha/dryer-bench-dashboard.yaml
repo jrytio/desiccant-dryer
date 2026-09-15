@@ -21,7 +21,7 @@
 #     so without the override the recharge/ready lines would not overlay
 #     the pack temperatures on an imperial install.
 #   - image.dryer_screen: template image helper, URL
-#     http://10.42.14.100/screen.png?t={{ now().timestamp() | int }} with
+#     http://<board>/screen.png?t={{ now().timestamp() | int }} with
 #     verify_ssl off, re-rendered every 2 s by automation.dryer_screen_refresh
 #     (time_pattern /2 s -> homeassistant.update_entity). A still image works
 #     through the Cloudflare tunnel; a live camera stream does not.

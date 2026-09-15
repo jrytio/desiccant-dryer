@@ -34,10 +34,10 @@ Do not re-brainstorm or re-plan the bring-up; the plan is `docs/hardware-bringup
   user that it has the two-site keys (`wifi_home_ssid`/`_password` and
   `wifi_workshop_ssid`/`_password`) in place of the old `wifi_ssid`/`wifi_password`;
   otherwise the config fails to validate. The board got
-  `10.42.14.100` by DHCP both times; treat it as likely but read the real one
+  the same address by DHCP both times; treat it as likely but read the real one
   from the boot log, which prints `IP x.x.x.x` two seconds after WiFi connects.
   `.local` mDNS does not resolve from this Mac.
-- Home Assistant test instance: `http://10.42.14.102`. The virtual device is
+- Home Assistant test instance: the dev instance on the home network. The virtual device is
   paired there. The production build is a different device name
   (`desiccant-dryer`), so the user pairs it as a new device with the same
   `api_key` from `esphome/secrets.yaml`; ask them to do that after the flash.
