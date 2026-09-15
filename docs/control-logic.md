@@ -38,7 +38,7 @@ power loss costs at most a minute of each counter.
 
 | State | Enter when | Exit when |
 |---|---|---|
-| WET (0) | Just retired from service | outlet RH ≥ `arm_rh`, or service time ≥ `max_service_min − regen_max_min` → HEATING |
+| WET (0) | Just retired from service, or heater "not heating" fault (code 3) | outlet RH ≥ `arm_rh`, or service time ≥ `max_service_min − regen_max_min` → HEATING |
 | HEATING (1) | — | Pack temp ≥ `regen_temp` continuously for `regen_hold_min` → COOLING. Or heater time ≥ `regen_max_min` → COOLING (warning logged). |
 | COOLING (2) | — | Pack temp ≤ `cooldown_temp` → READY |
 | READY (3) | — | outlet RH ≥ `swap_rh` or service time ≥ `max_service_min` → **swap** |
@@ -95,13 +95,18 @@ pack A.
 |---|---|---|---|
 | 1 | Active pack overtemp | active pack > `overtemp` | heaters off |
 | 2 | Standby pack overtemp | standby pack > `overtemp` | heaters off, standby → COOLING |
-| 3 | Standby heater not heating | heater on 5 min with pack < start + 5 °C and still below `regen_temp` | heaters off, standby → COOLING |
+| 3 | Standby heater not heating | heater on 5 min with pack < start + 5 °C and still below `regen_temp` | heaters off, standby → WET |
 
 While a fault is latched the state machine does nothing. Valves stay as they
 were, so air keeps flowing through the active pack, and service time keeps
-counting. After clearing, a pack left in COOLING becomes READY once it
-cools; it is treated as regenerated because it reached at least regen
-temperature. This is a judgment call and is easy to change in the tick.
+counting. After clearing, what happens to the standby pack depends on the
+fault. A pack retired to COOLING by fault 2 becomes READY once it cools; it
+is treated as regenerated because it went past `overtemp`, above regen
+temperature. A pack sent back to WET by fault 3 never reached regen
+temperature, so it is not treated as regenerated: it re-arms by the normal
+WET rule and must complete a full regen before it can be READY. If the
+heater is still dead, fault 3 latches again 5 minutes after it turns on.
+`Standby Heater Time` keeps the failed attempt's value until then.
 
 Only one fault is recorded at a time: a second fault while one is latched is
 not logged or shown, though a standby pack that overheats is still retired
@@ -151,5 +156,8 @@ the real unit heat the probes, on the virtual build use the plant knobs.
 3. Warm probe B past `regen_temp` (lower it temporarily if needed), hold for
    `regen_hold_min` → heater off ("B cooling").
 4. Let probe B fall below `cooldown_temp` → "B ready".
-5. Slider to 12 % → valves swap, "Air via B, A wet".
-6. Slider back to 2 %, repeat toward A.
+5. Slider to 12 % → valves swap, air via B. RH is still above `arm_rh`, so
+   A skips WET on the next tick (it may show "A wet" for up to 5 s): expect
+   "Air via B, A heating (waiting)" with the heater A relay on.
+6. Slider back to 2 % ("(waiting)" clears), then repeat steps 3–5 with
+   probe A.

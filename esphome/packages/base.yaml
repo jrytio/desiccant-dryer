@@ -649,7 +649,9 @@ interval:
               if (id(heat_elapsed_s) >= 300.0f && t_sb < id(heat_start_temp) + 5.0f
                   && t_sb < id(regen_temp).state) {
                 id(fault_code) = 3;
-                id(standby_state) = 2;
+                // Back to WET, not COOLING: it never reached regen temp, so after
+                // Clear Fault it must re-arm and regenerate before it can be READY.
+                id(standby_state) = 0;
                 ESP_LOGE("cycle", "FAULT: standby heater not heating (%.1f C after %.0f min)", t_sb, heat_m);
                 break;
               }
