@@ -95,12 +95,10 @@ The device builds carry both sites' WiFi (`wifi: networks:` in
 `esphome/packages/platform-esp32.yaml`) and join whichever is in range,
 taking a new DHCP address there. Home Assistant does not follow the board:
 it learns a device's address only through mDNS or DHCP discovery on its
-own LAN, and mDNS does not cross the site-to-site VPN. The addresses on
-this page are the bench board at home. After a move:
+own LAN, and mDNS does not cross the site-to-site VPN. After a move:
 
 1. Find the new address: the boot log prints `IP x.x.x.x` two seconds
-   after WiFi connects, or look in the site router's DHCP leases (at the
-   workshop the router's DNS also answers `<name>.t3d.lan`).
+   after WiFi connects, or look in the site router's DHCP leases.
 2. Settings, Devices & services, ESPHome, the device's entry menu,
    **Reconfigure**: enter the new address, port 6053. Device and entity
    ids are kept.
