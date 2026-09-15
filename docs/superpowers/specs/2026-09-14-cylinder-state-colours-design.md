@@ -37,7 +37,8 @@ the new design; open in a browser).
 ## 1. Colours
 
 All on the panel's RGB 3-3-2 grid (R and G in steps of 255/7, B in steps of
-255/3).
+255/3), except FAULT red: its `RED` constant (255, 36, 36) predates this
+change and its blue 36 truncates to 0, so the panel shows it as `#FF2400`.
 
 | Body state | Word | Colour | Constant |
 |---|---|---|---|
@@ -140,3 +141,9 @@ pixel); estimated, not measured.
    both host builds.
 5. Not part of this change: flashing the bench board. That waits for the
    user.
+
+Unmeasured: both bodies are now painted full height every frame, about
+11.8k more pixel writes than a cool pack's few rows of fill before. Against
+the ~400 ms/frame measured on the S2 this is expected to be small;
+re-measure on the next bench flash, alongside the partial-redraw follow-up
+in the display UI spec §9.

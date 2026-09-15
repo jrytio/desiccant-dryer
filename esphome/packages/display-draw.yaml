@@ -5,7 +5,8 @@
 # dryer_ui::UiState and hands it to draw_ui() in packages/display_ui.h, which
 # draws into the display with id `panel`. Edit display_ui.h (geometry, rules)
 # and assets/display/*.svg (art) to change the screen; see
-# docs/superpowers/specs/2026-09-14-display-ui-design.md for the design.
+# docs/superpowers/specs/2026-09-14-display-ui-design.md for the design and
+# 2026-09-14-cylinder-state-colours-design.md for the cylinder colours.
 #
 # Assets under assets/display are SVG, rasterised at compile time by ESPHome
 # (resvg) into flash. Fonts come from Google Fonts at compile time. Every
