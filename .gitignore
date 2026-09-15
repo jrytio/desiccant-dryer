@@ -4,4 +4,4 @@ esphome/.esphome/
 .DS_Store
 .superpowers/
 esphome/.gitignore
-scripts/__pycache__/
+__pycache__/

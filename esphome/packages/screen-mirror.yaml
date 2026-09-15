@@ -1,0 +1,13 @@
+# Serves the panel's frame buffer as /screen.png on the web server so Home
+# Assistant's Generic Camera can show the live screen. Device builds only:
+# the host build has no web server. See docs/screen-in-ha.md.
+# `path` is relative to the config directory, so this is esphome/components.
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [screen_mirror]
+
+screen_mirror:
+  display_id: panel

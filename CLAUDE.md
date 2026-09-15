@@ -41,7 +41,7 @@ this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
 `packages/display-draw.yaml` (fonts, colours and the drawing lambda as the
 `display_lambda` substitution; edit this to change the screen) plus a driver,
 `packages/display-st7789.yaml` (real panel) or `packages/display-sdl.yaml`
-(window on the Mac). `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
+(window on the Mac). `packages/screen-mirror.yaml` (device builds only) serves the panel's frame buffer as `/screen.png` through the local component `esphome/components/screen_mirror`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
 and `desiccant-dryer-host.yaml` are short selectors. Base must only reference
 the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
 `case_temp` from the hardware package; `display-draw.yaml` additionally
@@ -96,6 +96,10 @@ service 180 min) are untested guesses meant to get first cycles logging.
   docs/host-preview.md. Nothing WiFi, OTA, SPI or LEDC related may be added
   to `base.yaml` or `display-draw.yaml`, because the host build has none of
   those; it goes in the platform or driver package.
+- The device builds serve the live screen at `http://<board>/screen.png`
+  for Home Assistant's Generic Camera (docs/screen-in-ha.md). It streams
+  from the ST7789's 8-bit buffer; keep `color_palette: 8BIT` and rotation
+  0 or the endpoint returns 500.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the

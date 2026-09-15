@@ -23,6 +23,7 @@ light:
 
 display:
   - platform: ili9xxx
+    id: panel
     model: ST7789V
     dimensions:
       height: 240
