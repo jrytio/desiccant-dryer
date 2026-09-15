@@ -3,6 +3,7 @@
 # Logic:  packages/base.yaml           (shared with the virtual and host builds)
 # Board:  packages/platform-esp32.yaml (board, WiFi, OTA, web server)
 # Wiring: packages/hw-real.yaml        (the only file the hardware side needs)
+# Screen: packages/screen-mirror.yaml  (/screen.bmp for Home Assistant)
 substitutions:
   name: desiccant-dryer
   friendly_name: Desiccant Dryer
@@ -13,3 +14,4 @@ packages:
   hardware: !include packages/hw-real.yaml
   draw: !include packages/display-draw.yaml
   display: !include packages/display-st7789.yaml
+  mirror: !include packages/screen-mirror.yaml

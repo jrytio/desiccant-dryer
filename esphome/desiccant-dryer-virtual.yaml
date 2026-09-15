@@ -14,3 +14,4 @@ packages:
   hardware: !include packages/hw-virtual.yaml
   draw: !include packages/display-draw.yaml
   display: !include packages/display-st7789.yaml
+  mirror: !include packages/screen-mirror.yaml
