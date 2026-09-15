@@ -14,6 +14,7 @@ Three builds share `esphome/packages/base.yaml`:
 | Production | `esphome/desiccant-dryer.yaml` | SHT45 + 3× DS18B20 (`packages/hw-real.yaml`) | ESP32-S2 |
 | Virtual | `esphome/desiccant-dryer-virtual.yaml` | On-device plant model (`packages/hw-virtual.yaml`) | ESP32-S2, nothing attached |
 | Host | `esphome/desiccant-dryer-host.yaml` | Same plant model | Your Mac, display in an SDL window |
+| Screen scenarios | `esphome/desiccant-dryer-scenarios.yaml` | Fixed table of twelve screen states, no controller | Your Mac; `scripts/scenario-shots.sh` renders them to `docs/display/` |
 
 ```
 cp esphome/secrets.yaml.example esphome/secrets.yaml   # fill in
@@ -22,4 +23,4 @@ esphome run esphome/desiccant-dryer.yaml               # real hardware
 esphome run esphome/desiccant-dryer-host.yaml          # no board; brew install sdl2 first
 ```
 
-CI compiles all three on every pull request.
+CI compiles all four on every pull request.

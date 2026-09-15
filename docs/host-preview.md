@@ -2,10 +2,12 @@
 
 The host build compiles the firmware natively for the Mac and draws the
 display into a window. It runs the production controller, the virtual
-plant model from `packages/hw-virtual.yaml`, and the exact drawing lambda
-the ST7789 uses, so layout, text and positions match the real screen
-pixel for pixel. Use it to work on `packages/display-draw.yaml` without
-flashing a board.
+plant model from `packages/hw-virtual.yaml`, and the exact drawing code
+the ST7789 uses (`packages/display_ui.h`, fed by the `ui_draw` script in
+`packages/display-draw.yaml`), so layout, text and positions match the
+real screen pixel for pixel. Use it to work on the screen without flashing
+a board. For a fixed state on demand (a fault, a missing probe, the boot
+IP) use the scenarios build instead; see "Fixed screen states" below.
 
 ## One-time setup
 
@@ -25,7 +27,8 @@ esphome run esphome/desiccant-dryer-host.yaml
 ESPHome compiles natively (about a minute the first time, seconds after),
 opens a 240x240 window titled `desiccant-dryer-host`, and streams the log
 in the terminal. Drag the window corner to scale it up. Ctrl-C stops it.
-The edit loop is: change `display-draw.yaml`, Ctrl-C, run again.
+The edit loop is: change `display_ui.h` or an SVG under
+`esphome/assets/display/`, Ctrl-C, run again.
 
 macOS may ask once whether the program may accept incoming connections;
 allow it so Home Assistant can reach the API.
@@ -44,12 +47,12 @@ Useful screen states and how to reach them:
 
 | Screen | How |
 |---|---|
-| "AIR: A" with "pack B wet" | Fresh start |
-| "pack B heating", "B ... HEAT" in orange | Sim Speed 60, wait about a minute |
-| "pack B ready" in green, then "AIR: B" | Keep waiting |
-| RH line orange with "SIM" | Simulate Humidity on, Simulated RH 12 |
-| "DISABLED" | Dryer Enabled off |
-| "FAULT" with the message in red | Sim Heater Max Temp 130, wait for heating |
+| A IN SERVICE (green), B WET, air path lit down the A branch | Fresh start |
+| B HEATING in orange, heater glow beside B, fill rising | Sim Speed 60, wait about a minute |
+| B COOLING (cyan), then READY (blue), then the path moves to B | Keep waiting |
+| Gauge word RISING / HIGH / OVER, SIM badge top right | Simulate Humidity on, Simulated RH 6 / 9 / 12 |
+| OFF on both packs, nothing lit, strip "Disabled" | Dryer Enabled off |
+| Red strip "FAULT · ...", red ring around the pack | Sim Heater Max Temp 130, wait for heating |
 
 ## Persisted state
 
@@ -59,10 +62,25 @@ knobs, plant temperatures) is kept in
 fresh boot. The Restart button exits the process; run it again to
 "reboot", and the state resumes from the file exactly as on the board.
 
+## Fixed screen states
+
+`esphome/desiccant-dryer-scenarios.yaml` is a second host build with no
+controller: a table of twelve screen states (`packages/display-scenarios.yaml`,
+matching `docs/display/mockup-states.html`) sets every input the screen
+reads. `scripts/scenario-shots.sh` builds it once and renders all twelve
+through the panel's RGB 3-3-2 palette into `docs/display/state-NN.png`, so
+those PNGs are what the ST7789 will show, rounding included. To watch one
+in a window:
+
+```bash
+esphome compile esphome/desiccant-dryer-scenarios.yaml
+SCENARIO=9 esphome/.esphome/build/desiccant-dryer-scenarios/.pioenvs/desiccant-dryer-scenarios/program
+```
+
 ## What the preview cannot show
 
 The window renders the drawing, not the panel. These only show on the
-real screen:
+real screen (or in the scenario PNGs, which apply the palette):
 
 - 8-bit palette rounding (`color_palette: 8BIT`), so colours are slightly
   richer in the window.

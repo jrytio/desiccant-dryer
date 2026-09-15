@@ -39,4 +39,5 @@ display:
     # (seen on the first virtual-build flash: "Could not allocate buffer").
     color_palette: 8BIT
     update_interval: 2s
+    auto_clear_enabled: false   # draw_ui() fills the frame itself
     lambda: ${display_lambda}

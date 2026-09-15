@@ -102,6 +102,18 @@ globals:
     type: float
     restore_value: true
     initial_value: "0"
+  # Time in the current standby phase (WET, HEATING, COOLING or READY). Reset
+  # whenever standby_state changes, wherever the change was made; the display
+  # shows it under the standby pack.
+  - id: standby_elapsed_s
+    type: float
+    restore_value: true
+    initial_value: "0"
+  # standby_state at the previous tick, to detect the change. -1 = never seen.
+  - id: standby_state_seen
+    type: int
+    restore_value: true
+    initial_value: "-1"
   # Standby temp when heating began. NAN = capture on the next valid tick.
   - id: heat_start_temp
     type: float
@@ -377,6 +389,16 @@ sensor:
       return id(hold_elapsed_s) / 60.0f;
     update_interval: 10s
 
+  - platform: template
+    name: "Standby Phase Time"
+    id: standby_phase_min
+    unit_of_measurement: "min"
+    accuracy_decimals: 1
+    entity_category: diagnostic
+    lambda: |-
+      return id(standby_elapsed_s) / 60.0f;
+    update_interval: 10s
+
   - platform: uptime
     name: "Uptime"
 
@@ -455,6 +477,7 @@ script:
       - lambda: |-
           id(heat_elapsed_s) = 0;
           id(hold_elapsed_s) = 0;
+          id(standby_elapsed_s) = 0;
           id(heat_start_temp) = NAN;
   - id: reset_cycle_counters
     mode: single
@@ -463,6 +486,17 @@ script:
           id(service_elapsed_s) = 0;
           id(waiting_for_standby) = false;
           id(reset_regen_counters).execute();
+  # A standby_state change made during this tick starts the phase timer at
+  # zero right away, so the display never pairs the new phase with the old
+  # phase's time and the next tick's dt is counted, not discarded.
+  - id: sync_standby_phase
+    mode: single
+    then:
+      - lambda: |-
+          if (id(standby_state) != id(standby_state_seen)) {
+            id(standby_state_seen) = id(standby_state);
+            id(standby_elapsed_s) = 0;
+          }
   # Outputs are a pure function of state. Runs at the end of every control
   # tick, so a reboot or a missed transition can never leave the active valve
   # closed or a heater in the wrong state. Each switch is written only when
@@ -524,6 +558,16 @@ interval:
           if (dt_real > 60.0f) dt_real = 60.0f;   // stalled-loop guard (OTA, long block)
           const float dt = dt_real * id(time_scale);
 
+          // --- standby phase timer. Transitions made inside a tick are caught
+          // by sync_standby_phase below; a change seen here happened between
+          // ticks (do_swap, disable), so this interval belongs to the new phase.
+          if (id(standby_state) != id(standby_state_seen)) {
+            id(standby_state_seen) = id(standby_state);
+            id(standby_elapsed_s) = dt;
+          } else {
+            id(standby_elapsed_s) += dt;
+          }
+
           // --- first run / after a disable: start on pack A
           if (id(active_pack) == 0) {
             id(active_pack) = 1;
@@ -573,7 +617,7 @@ interval:
               ESP_LOGE("cycle", "FAULT: standby pack overtemp (%.1f C)", t_sb);
             }
           }
-          if (id(fault_code) != 0) { id(apply_outputs).execute(); return; }   // hold until cleared
+          if (id(fault_code) != 0) { id(sync_standby_phase).execute(); id(apply_outputs).execute(); return; }   // hold until cleared
           if (isnan(rh) || isnan(t_sb)) { id(apply_outputs).execute(); return; }   // sensors not ready
 
           switch (id(standby_state)) {
@@ -639,4 +683,5 @@ interval:
           // Recompute after the state machine so a pack that just became READY
           // does not show "(waiting)" for one tick.
           id(waiting_for_standby) = (id(standby_state) != 3 && rh >= id(swap_rh).state);
+          id(sync_standby_phase).execute();
           id(apply_outputs).execute();
