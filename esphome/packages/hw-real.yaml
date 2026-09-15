@@ -27,19 +27,21 @@ sensor:
             send_every: 1
     update_interval: 10s
 
-  # Replace addresses with the ones printed in the log on first boot.
+  # Addresses from the first boot log on the production unit. The probes
+  # are labelled on the hardware to match these names (pack B checked by
+  # warming it; pack A and case assigned by label).
   - platform: dallas_temp
-    address: 0x0000000000000000
+    address: 0x8b00000071633028
     name: "Pack A Temperature"
     id: pack_a_temp
     update_interval: 10s
   - platform: dallas_temp
-    address: 0x0000000000000000
+    address: 0xc300000070605d28
     name: "Pack B Temperature"
     id: pack_b_temp
     update_interval: 10s
   - platform: dallas_temp
-    address: 0x0000000000000000
+    address: 0xdb0000006f9c0328
     name: "Case Temperature"
     id: case_temp
     update_interval: 10s
