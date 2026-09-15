@@ -41,8 +41,9 @@ entity on a dashboard card.
 - The bench test board runs the virtual build at 10.42.14.100 and answers
   on its web server (HTTP 200 in 0.14 s from the Mac).
 - Home Assistant's Generic Camera integration takes a still image URL, a
-  content type (default `image/jpeg`, settable to `image/bmp`) and a frame
-  rate; it is configured in the UI.
+  content type (default `image/jpeg`) and a frame rate, is configured in the
+  UI, and accepts only stills that PIL identifies as PNG, JPEG, GIF, SVG or
+  WebP.
 - This branch, `screen-mirror`, is stacked on `claude/display-mirroring-laptop-c13ab1`
   (PR #4, open) because it needs the split display packages from that
   branch. Its PR targets that branch until PR #4 merges, then `main`.
@@ -59,13 +60,14 @@ entity on a dashboard card.
 | Image format | 8-bit indexed PNG with stored deflate blocks, 58,688 bytes. BMP was the first choice; Home Assistant's Generic Camera validates stills with PIL and accepts only PNG, JPEG, GIF, SVG and WebP |
 | Where it lives | A local external component `screen_mirror` under `esphome/components/`, wired by `packages/screen-mirror.yaml` |
 | Which builds | Both device builds (production and virtual). Not the host build, which has no web server |
-| Home Assistant side | Generic Camera entity with content type `image/bmp`, shown in a Picture Entity card |
+| Home Assistant side | Generic Camera entity with content type `image/png`, shown in a Picture Entity card |
 | Concurrent redraw | Accepted: the handler reads while the main loop may draw; an occasional torn frame is fine for a preview |
 
 ## Non-goals
 
 - MJPEG or any push streaming; the camera polls.
-- PNG, JPEG or gzip; the board has no spare RAM for an encoder.
+- JPEG, WebP or real deflate compression; the board has no spare RAM for an
+  encoder, so the PNG uses stored blocks.
 - Authentication on the endpoint beyond what `web_server` already applies.
 - Any change to what the display draws.
 - Touch or control from the camera card.
@@ -79,7 +81,7 @@ esphome/
     screen_mirror/
       __init__.py          # schema: display_id, path; registers the component
       screen_mirror.h      # ScreenMirror: Component + AsyncWebHandler
-      screen_mirror.cpp    # handler, BMP header, palette, chunked streaming
+      screen_mirror.cpp    # handler, PNG chunks, palette, chunked streaming
   packages/
     screen-mirror.yaml     # external_components (local) + screen_mirror: block
     display-st7789.yaml    # the ili9xxx display gains id: panel
@@ -129,32 +131,32 @@ device jobs compile the component.
      `display_->get_rotation()` is not 0 degrees: reply
      `httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen_mirror: needs an 8-bit, unrotated frame buffer")`
      and log a warning once.
-  4. Otherwise `w = get_native_width()`, `h = get_native_height()`,
-     `stride = (w + 3) & ~3`, `pixels = stride * h`, `file = 54 + 1024 + pixels`.
-  5. `httpd_resp_set_type(req, "image/bmp")`,
+  4. Otherwise `w = get_native_width()`, `h = get_native_height()`; each
+     PNG scanline is `w + 1` bytes (filter byte 0 plus the row, whose RGB332
+     bytes are already the palette indices). Stored deflate blocks hold at
+     most 65,535 bytes, so whole scanlines are grouped into blocks.
+  5. `httpd_resp_set_type(req, "image/png")`,
      `httpd_resp_set_hdr(req, "Cache-Control", "no-store")`.
   6. Send, as chunks, stopping at the first send error:
-     - 14-byte file header: `'B','M'`, `file` (u32 LE), `0` (u32),
-       `1078` (u32, pixel offset).
-     - 40-byte info header: `40`, `w` (i32), `h` (i32, positive: bottom-up),
-       `1` (u16 planes), `8` (u16 bpp), `0` (compression), `pixels`,
-       `2835`, `2835` (pixels per metre), `256`, `256`.
-     - 1024-byte palette from a `constexpr` table in flash: entry `i` is
-       `B,G,R,0` with `R = ((i >> 5) & 7) * 255 / 7`,
-       `G = ((i >> 2) & 7) * 255 / 7`, `B = (i & 3) * 255 / 3`.
-     - Rows from `y = h - 1` down to `0`: `w` bytes from
-       `buffer + y * w`, then `stride - w` zero bytes if any.
-     - The terminating `httpd_resp_send_chunk(req, nullptr, 0)`.
+     - the PNG signature and the IHDR chunk (8-bit, colour type 3, no
+       interlace) with its CRC;
+     - the PLTE chunk, 256 entries of `R,G,B` with each channel stretched to
+       0..255, built at compile time with its CRC and kept in flash;
+     - the IDAT chunk header (length known in advance), the zlib header
+       `78 01`, then per block a 5-byte stored-block header and the
+       scanlines, each copied into the setup-time scanline buffer so the
+       filter byte travels with the row;
+     - the Adler-32 of the scanlines, the IDAT CRC-32 (both computed while
+       streaming), and the IEND chunk.
 
-Nothing is allocated on the heap; the largest stack object is the 54-byte
-header. The palette is 1 KB of flash. One request moves 58,678 bytes.
+The only RAM is one scanline (241 bytes for 240 pixels) allocated at setup;
+the palette chunk and the CRC table are compile-time constants in flash. One
+request moves 58,688 bytes.
 
-**Amended during execution:** the endpoint serves PNG, not BMP. Structure:
-signature, IHDR (8-bit, colour type 3), a PLTE chunk built at compile
-time, one IDAT chunk whose zlib stream is stored deflate blocks of whole
-scanlines (filter byte 0 plus the row, which is already the palette
-index), Adler-32 and CRC-32 computed while streaming, IEND. See plan
-Task 6.
+**History:** the first implementation served a bottom-up BMP of 58,678 bytes.
+Home Assistant's Generic Camera rejected it ("URL did not return a valid
+still image") because its still-image check accepts only PNG, JPEG, GIF, SVG
+and WebP, so the endpoint became PNG; see plan Task 6.
 
 ## 3. Configuration
 
@@ -187,7 +189,7 @@ Settings, Devices & services, Add integration, Generic Camera:
 | Field | Value |
 |---|---|
 | Still Image URL | `http://10.42.14.100/screen.png` (the board's address, or `http://desiccant-dryer-virtual.local/screen.png` if mDNS resolves from Home Assistant) |
-| Content Type | `image/bmp` |
+| Content Type | `image/png` |
 | Frame Rate (Hz) | 0.5 (the display redraws every 2 s) |
 | Verify SSL certificate | off (plain HTTP) |
 
@@ -213,15 +215,17 @@ address once it exists.
    `esphome run esphome/desiccant-dryer-virtual.yaml --device 10.42.14.100`.
    The boot log shows the component's `dump_config` line with the path
    and 240x240.
-3. `curl -s http://10.42.14.100/screen.png -o screen.bmp`: 58,678 bytes,
-   `Content-Type: image/bmp`. Decoded with ESPHome's own Python (Pillow):
-   size 240x240, mode `P`; pixel (0, 0) is index 0 (nothing draws
+3. `curl -s http://10.42.14.100/screen.png -o screen.png`: 58,688 bytes,
+   `Content-Type: image/png`. Decoded with ESPHome's own Python (Pillow and
+   zlib): PIL reports the format as `png`, which is what Home Assistant
+   checks; every chunk CRC and the zlib stream verify; size 240x240, mode
+   `P`; pixel (0, 0) is index 0 (nothing draws
    there); pixel (231, 200), the right end of the humidity bar, is one of
    146 (grey outline, `909090`), 89 (green fill) or 244 (orange fill),
    depending on how far the board's simulated humidity has climbed; and
    row y=200 holds at least two distinct values between x=8 and x=231
    unless RH is at or above the swap threshold, when the full bar leaves
-   a single fill colour. Converted to PNG and viewed,
+   a single fill colour. Viewed as an image,
    the image matches the panel: "AIR: A" at the top, the sensor lines,
    the bar, the IP at the bottom.
 4. Two polls one second apart both succeed; the board's log shows no
@@ -252,6 +256,6 @@ address once it exists.
   the LAN today).
 - A Home Assistant `image` entity via the native API if ESPHome ever
   supports one, which would remove the web server dependency.
-- A top-down BMP (negative height) would let the whole 57,600-byte buffer go
-  as one chunk instead of 240 row chunks (about 4 socket sends instead of
-  roughly 720); bottom-up was chosen for maximum decoder compatibility.
+- Real deflate compression would shrink the 58 KB to a few KB (Pillow gets
+  2.2 KB for a typical screen) but needs an encoder and RAM the board does
+  not have; the stored-block PNG is the compromise.

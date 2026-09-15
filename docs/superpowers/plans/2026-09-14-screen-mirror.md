@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Serve the ST7789's frame buffer from the board as `/screen.bmp` on its existing web server, with no RAM allocation, so Home Assistant's Generic Camera can show the live dryer screen on a dashboard.
+**Goal:** Serve the ST7789's frame buffer from the board as `/screen.png` on its existing web server, with no frame copy and no per-request allocation, so Home Assistant's Generic Camera can show the live dryer screen on a dashboard.
 
-**Architecture:** A local ESPHome external component `screen_mirror` (Python schema plus a C++ class that is both a `Component` and an `AsyncWebHandler`) registers one GET path on `web_server_base`. On request it reads the `ili9xxx` driver's 8-bit RGB332 buffer through a pointer-to-member helper and streams a bottom-up 8-bit indexed BMP (54-byte header, 1 KB palette from flash, 240 rows) with `httpd_resp_send_chunk` on the raw IDF request handle. A package `packages/screen-mirror.yaml` wires it into both device builds; the display gains `id: panel`.
+**Architecture:** A local ESPHome external component `screen_mirror` (Python schema plus a C++ class that is both a `Component` and an `AsyncWebHandler`) registers one GET path on `web_server_base`. On request it reads the `ili9xxx` driver's 8-bit RGB332 buffer through a pointer-to-member helper and streams an 8-bit indexed PNG (signature and IHDR, a 1 KB palette chunk from flash, stored deflate blocks of scanlines with CRC-32 and Adler-32 computed on the fly) with `httpd_resp_send_chunk` on the raw IDF request handle; the only RAM is one scanline allocated at setup. Tasks 1-5 describe the original BMP implementation as executed; Task 6 records the switch to PNG after Home Assistant rejected BMP stills. A package `packages/screen-mirror.yaml` wires it into both device builds; the display gains `id: panel`.
 
 **Tech Stack:** ESPHome 2026.1.4 on ESP-IDF (`web_server_idf`, `esp_http_server`), `ili9xxx` driver in `BITS_8` mode, Home Assistant Generic Camera, Pillow (from ESPHome's own Python) for verification.
 
