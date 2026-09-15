@@ -20,14 +20,23 @@
 
 ## Board pinout used
 
-16-pin header (sensors, display): 3V3, GND, A0=17 (backlight PWM),
-A2=14 (display RST), A3=9 (display DC), A5=5 (display CS), SCK=36, MOSI=35,
-MISO=37 (1-wire bus). Qwiic connector: SDA=1, SCL=2.
+From SparkFun's Eagle schematic (J4 = 16-pin, J2 = 12-pin); pin-by-pin
+tables and sources in [pinout-verification.md](pinout-verification.md).
 
-12-pin header (outputs): USB (5 V in), 13 (heater A), 12 (heater B),
-11 (valve A), 10 (valve B), 6 (fan).
+16-pin header, in order: EN, 3V3, NC, GND, A0=17, A1=18, A2=14, A3=9, A4=7,
+A5=5, SCK=36, COPI=35, CIPO=37, RX1=33, TX1=34, 3.
+Used: 3V3, GND, 17 (backlight PWM), 14 (display RST), 9 (display DC),
+5 (display CS), 36 (SCK), 35 (MOSI), 37 (1-wire bus).
 
-Avoid: GPIO0 (boot button), GPIO18 (hardware pullup), 45/46 (strapping).
+12-pin header, in order: BAT, EN, USB, 13, 12, 11, 10, 8, 6, 4, SCL=2, SDA=1.
+Used: USB (5 V in), 13 (heater A), 12 (heater B), 11 (valve A), 10 (valve B),
+6 (fan). Note the "9" and "5" Feather positions are GPIO8 and GPIO4 here.
+Qwiic connector: SDA=1, SCL=2, 3.3 V, GND.
+
+On-board blue LED: GPIO13 via 1 kΩ, active high (lights with heater A).
+Avoid: GPIO0 (boot button), GPIO19/20 (USB D-/D+), 45/46 (strapping, back
+pads only). GPIO18 has an optional pullup (solder jumper, open by default).
+GPIO33–37 are free on this quad-SPI module.
 
 ## Driver stages
 
@@ -59,6 +68,8 @@ Package pinouts: 2N2222 TO-92 flat face toward you, legs down: E B C.
 IRLZ44N TO-220 tab at back, legs down: G D S. Tab is tied to drain.
 
 ## Breadboard layout (bench build)
+
+![Breadboard layout](breadboard.svg)
 
 - Top rails: 3.3 V and GND from the board's 3V3/GND pins.
 - Bottom rails: 5 V and GND from the buck converter. 24 V supply negative

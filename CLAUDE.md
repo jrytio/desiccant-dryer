@@ -60,8 +60,12 @@ reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 6. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
 SPI 36/35, display CS 5 / DC 9 / RST 14 / BL 17, 1-wire 37.
-GPIO18 has a hardware pullup — never use it for a low-side driver.
-GPIO13 also drives the on-board blue LED (acceptable: shows heater A relay).
+GPIO13 also drives the on-board blue LED (1 kΩ, active high) — it shows heater
+A's relay state. GPIO18 (A1) has an optional 10 kΩ pullup behind a solder
+jumper (open by default); unused. The 12-pin header carries GPIO8 and GPIO4
+where a standard Feather has "9" and "5" — GPIO9/GPIO5 are A3/A5 on the
+16-pin header only. Pin map verified against SparkFun's Eagle schematic
+(docs/pinout-verification.md); wiring picture in docs/breadboard.svg.
 
 ## Control logic (see docs/control-logic.md for the full state machine)
 
@@ -136,7 +140,8 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Confirm real breakthrough curve and regen time; retune defaults.
 - Decide whether a proper dew-point transmitter (4–20 mA / Modbus) is needed
   once real data is in.
-- PCB design is a separate effort; the breadboard wiring is in docs/hardware.md.
+- PCB design is a separate effort; the breadboard wiring is in docs/hardware.md
+  and docs/breadboard.svg.
 - Before wiring real heaters: make the four heater/valve switches
   `internal: true` with read-only binary_sensor mirrors. A manual toggle from
   HA can currently turn on the active pack's heater for up to one 5 s tick.
