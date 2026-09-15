@@ -174,8 +174,9 @@ No backlight, no palette. The window title is the device name.
 - The same `secrets.yaml` is used because `api` keeps its encryption key;
   WiFi and OTA secrets are ignored on host.
 - Home Assistant pairs with the process at the Mac's LAN address on port
-  6053 with the `api_key`. mDNS is compiled in and may discover it on the
-  same subnet; otherwise add it manually. macOS may ask once to allow
+  6053 with the `api_key`. ESPHome's host mDNS is a stub (it compiles the
+  service records but never advertises them), so Home Assistant will not
+  discover the process; add it manually by address. macOS may ask once to allow
   incoming connections for the binary.
 - All Sim knobs, thresholds, `Simulate Humidity`, `Dryer Enabled`, `Force
   Swap`, `Clear Fault` work exactly as on the virtual board. The GPIO
