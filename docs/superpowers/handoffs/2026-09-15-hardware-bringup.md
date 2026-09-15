@@ -29,8 +29,11 @@ Do not re-brainstorm or re-plan the bring-up; the plan is `docs/hardware-bringup
   (`esphome/desiccant-dryer-virtual.yaml`) as an overnight soak at Sim Speed 60.
   Serial port `/dev/cu.usbserial-210` (macOS names it by USB location; if the
   board moves ports the name changes; `ls /dev/cu.usbserial*`). Its MAC is
-  `7c:df:a1:55:b1:02`. WiFi SSID `jcw-iot` is already in `esphome/secrets.yaml`
-  (gitignored, complete; never print or edit its password). The board got
+  `7c:df:a1:55:b1:02`. `esphome/secrets.yaml` is gitignored and the user's to
+  edit (never print it or edit its passwords). Before flashing, confirm with the
+  user that it has the two-site keys (`wifi_home_ssid`/`_password` and
+  `wifi_workshop_ssid`/`_password`) in place of the old `wifi_ssid`/`wifi_password`;
+  otherwise the config fails to validate. The board got
   `10.42.14.100` by DHCP both times; treat it as likely but read the real one
   from the boot log, which prints `IP x.x.x.x` two seconds after WiFi connects.
   `.local` mDNS does not resolve from this Mac.
