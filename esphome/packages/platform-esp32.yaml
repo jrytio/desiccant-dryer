@@ -16,25 +16,13 @@ logger:
   # base.yaml; ESPHome merges the two logger blocks.
   hardware_uart: UART0
 
-ota:
-  - platform: esphome
-    password: !secret ota_password
-
+# No network credentials here. The dev builds take theirs from
+# secrets.yaml through packages/dev-secrets.yaml; the production release
+# ships without any and the owner provisions WiFi through this fallback
+# access point (captive portal) or Improv over the USB serial port.
 wifi:
-  # One network per site; the board joins whichever is in range, so moving
-  # it between sites needs no reflash. Both keep the default priority, which
-  # only ranks networks found in the same scan, and the two sites are never
-  # in range together. fast_connect stays off (the default): every boot scans
-  # and joins the SSID actually present rather than first making blind
-  # attempts at the saved or first-listed network.
-  networks:
-    - ssid: !secret wifi_home_ssid
-      password: !secret wifi_home_password
-    - ssid: !secret wifi_workshop_ssid
-      password: !secret wifi_workshop_password
   ap:
     ssid: "${friendly_name} Setup"
-    password: !secret ap_password
   on_connect:
     - delay: 2s
     - lambda: ESP_LOGI("wifi", "IP %s", id(ip_addr).state.c_str());

@@ -4,8 +4,9 @@
 # Board:  packages/platform-esp32.yaml (board, WiFi, OTA, web server)
 # Wiring: packages/hw-real.yaml        (the only file the hardware side needs)
 # Screen: packages/screen-mirror.yaml  (/screen.png for Home Assistant)
-# Release: version.yaml + packages/release.yaml (version, HA update entity,
-#         diagnostics). Tagged builds are published by the release workflow;
+# Release: version.yaml + packages/release.yaml (version, provisioning, HA
+#         update entity, diagnostics). No secrets: the owner sets WiFi at
+#         flash time. Tagged builds are published by the release workflow;
 #         see docs/releasing.md.
 substitutions:
   name: desiccant-dryer

@@ -1,10 +1,10 @@
 name: release
 
-# Builds the production firmware for a version tag and publishes it two
-# ways: as a GitHub Release (the record) and to GitHub Pages (what the
-# dryer reads). The device's update entity polls
-# https://jrytio.github.io/desiccant-dryer/manifest.json and Home Assistant
-# offers the new version. Procedure and one-time setup: docs/releasing.md.
+# Builds the production firmware for a version tag and attaches the
+# binaries and an esp-web-tools manifest to a GitHub Release. The device's
+# update entity polls the "latest" release's manifest and Home Assistant
+# offers the new version. The image carries no secrets, so the build needs
+# none. Procedure: docs/releasing.md.
 on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+']
@@ -15,8 +15,6 @@ env:
 
 permissions:
   contents: write   # create the release
-  pages: write      # deploy the manifest
-  id-token: write   # deploy-pages OIDC
 
 concurrency:
   group: release
@@ -25,8 +23,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.ver.outputs.version }}
     steps:
       - uses: actions/checkout@v7
 
@@ -39,19 +35,6 @@ jobs:
             echo "::error::tag v$tag but esphome/version.yaml says $file"; exit 1
           fi
           echo "version=$tag" >> "$GITHUB_OUTPUT"
-
-      # The real WiFi, API and OTA secrets, so the released image joins the
-      # network and talks to Home Assistant. CI compile checks use the dummy
-      # esphome/secrets.ci.yaml instead; a release built with those would be
-      # unreachable.
-      - name: Write the real secrets
-        env:
-          SECRETS_YAML: ${{ secrets.ESPHOME_SECRETS_YAML }}
-        run: |
-          if [ -z "$SECRETS_YAML" ]; then
-            echo "::error::repository secret ESPHOME_SECRETS_YAML is not set (the full esphome/secrets.yaml)"; exit 1
-          fi
-          printf '%s\n' "$SECRETS_YAML" > esphome/secrets.yaml
 
       - name: Restore toolchains
         uses: actions/cache/restore@v6
@@ -90,17 +73,3 @@ jobs:
           gh release create "$GITHUB_REF_NAME" site/*.bin site/manifest.json \
             --title "Desiccant Dryer ${{ steps.ver.outputs.version }}" \
             --generate-notes
-
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: site
-
-  publish:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - id: deploy
-        uses: actions/deploy-pages@v4

@@ -102,10 +102,11 @@ service 180 min) are untested guesses meant to get first cycles logging.
 ## Working conventions
 
 - Flash with `esphome run esphome/desiccant-dryer.yaml` (real hardware) or
-  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Copy
-  `secrets.yaml.example` to `secrets.yaml` first; for a compile-only check,
-  `cp esphome/secrets.ci.yaml esphome/secrets.yaml` works.
-- WiFi is a `networks:` list in `packages/platform-esp32.yaml`, one secret
+  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). For the
+  virtual and host builds copy `secrets.yaml.example` to `secrets.yaml`
+  first (compile-only check: `cp esphome/secrets.ci.yaml esphome/secrets.yaml`);
+  the production build reads no secrets.
+- WiFi is a `networks:` list in `packages/dev-secrets.yaml`, one secret
   pair per site (`wifi_home_ssid`/`_password`, `wifi_workshop_ssid`/`_password`),
   so a board joins either site without a reflash. SSIDs live only in the
   gitignored `secrets.yaml`, quoted exactly: the workshop's ends in a space.
@@ -135,12 +136,14 @@ service 180 min) are untested guesses meant to get first cycles logging.
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
 - The production selector alone includes `esphome/version.yaml` (semver,
-  bumped in the PR) and `packages/release.yaml` (project version, HA update
-  entity polling the GitHub Pages manifest, safe mode, debug sensors). Tags
-  `vX.Y.Z` pushed by `scripts/release.sh` run the release workflow, which
-  builds with the `ESPHOME_SECRETS_YAML` repository secret; see
-  docs/releasing.md. Test builds are flashed by hand and carry no update
-  entity. The 1.x production builds log at DEBUG on purpose.
+  bumped in the PR) and `packages/release.yaml` (project version, Improv
+  and captive-portal provisioning, HA update entity polling the latest
+  GitHub Release's manifest, safe mode, debug sensors). It contains no
+  secrets and must validate with no `secrets.yaml` present: WiFi, the API
+  key and the OTA password live in `packages/dev-secrets.yaml`, included
+  only by the hand-flashed test builds. Tags `vX.Y.Z` pushed by
+  `scripts/release.sh` run the release workflow; see docs/releasing.md.
+  The 1.x production builds log at DEBUG on purpose.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.
 - First boot: read the three DS18B20 addresses from the log and fill in the

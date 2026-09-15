@@ -72,9 +72,10 @@ esphome:
 logger:
   level: INFO
 
+# Plain API here. The dev builds add an encryption key from secrets.yaml
+# (packages/dev-secrets.yaml); the production release ships without one and
+# Home Assistant sets a key when it adopts the device.
 api:
-  encryption:
-    key: !secret api_key
 
 # ---------------------------------------------------------------- globals
 globals:

@@ -21,21 +21,21 @@ by hand from a laptop and are not part of this.
   `manifest.json`. HA discovers the update entity through the native API
   with no HA-side configuration. The device compares the manifest's
   `version` with its own project version by string inequality.
-- **Hosting: GitHub Pages of this repo.** The release workflow deploys
-  `manifest.json`, `desiccant-dryer-X.Y.Z.ota.bin` and
-  `desiccant-dryer-X.Y.Z.factory.bin` to Pages with actions/deploy-pages,
-  and also attaches the same files to a GitHub Release for the record.
-  Pages is used because the device has no credentials: release assets of
-  a private repository are not fetchable anonymously. The repository is
-  private today, so Pages must be enabled (Settings → Pages → Source:
-  GitHub Actions), which on a private repo needs a paid GitHub plan; the
-  alternative is making the repository public. Either is a one-time
-  setting; the manifest URL is a substitution so it can move.
-- **Secrets.** CI compile checks keep using `esphome/secrets.ci.yaml`. The
-  release workflow instead writes `esphome/secrets.yaml` from one
-  repository secret, `ESPHOME_SECRETS_YAML`, holding the whole file, so
-  new secret keys never require a workflow change. It fails early if the
-  secret is unset.
+- **No secrets in the release image.** WiFi credentials, the API
+  encryption key and the OTA password move from `base.yaml` and
+  `platform-esp32.yaml` into `packages/dev-secrets.yaml`, included only by
+  the hand-flashed test builds. The production image ships with an open
+  fallback access point, captive portal, Improv serial and a plain API;
+  the owner enters WiFi at flash time and Home Assistant sets the API key
+  on adoption. `dashboard_import` points at this repo so the ESPHome
+  dashboard can adopt the device. The production yaml validates without
+  any `secrets.yaml` present.
+- **Hosting: the GitHub Release itself.** The repository is public, so
+  the device polls
+  `https://github.com/jrytio/desiccant-dryer/releases/latest/download/manifest.json`
+  anonymously (the redirect is followed) and the manifest's relative
+  `ota.path` resolves through the same URL. No Pages, no extra setup. The
+  URL is a substitution so it can move.
 - **v1.x is verbose on purpose.** The production build sets the logger to
   DEBUG and adds diagnostic entities (free heap, reset reason, project
   version, safe mode) so a remote agent can inspect and drive the unit
@@ -50,20 +50,20 @@ by hand from a laptop and are not part of this.
 | Unit | Purpose | Depends on |
 |---|---|---|
 | `esphome/version.yaml` | the version number | nothing |
-| `esphome/packages/release.yaml` | project id, http_request, OTA backend, update entity, diagnostics | `${version}`, `${update_manifest_url}` |
+| `esphome/packages/release.yaml` | project id, provisioning (Improv, dashboard_import), http_request, OTA backends, update entity, diagnostics | `${version}`, `${update_manifest_url}` |
+| `esphome/packages/dev-secrets.yaml` | WiFi, API key, OTA password from secrets.yaml; test builds only | `secrets.yaml` |
 | `esphome/desiccant-dryer.yaml` | includes the two above, sets DEBUG logging | |
-| `.github/workflows/release.yml` | tag `vX.Y.Z` → check version, build, manifest, Release, Pages | `ESPHOME_SECRETS_YAML` secret, Pages enabled |
+| `.github/workflows/release.yml` | tag `vX.Y.Z` → check version, build, manifest, GitHub Release | nothing beyond the repo token |
 | `scripts/release.sh` | tags and pushes the merged `main` at the version in `version.yaml` | |
 | `docs/releasing.md` | the procedure, one-time setup, how HA shows it | |
 
 ## Data flow
 
 PR bumps `version.yaml` → merge → `scripts/release.sh` tags `main` →
-workflow builds `esphome/desiccant-dryer.yaml` with real secrets →
+workflow builds `esphome/desiccant-dryer.yaml` (no secrets) →
 `firmware.ota.bin` and `firmware.factory.bin` renamed with the version,
 md5 computed, `manifest.json` written (`chipFamily: ESP32-S2`, relative
-`ota.path`, `release_url` of the GitHub Release) → deployed to Pages and
-attached to the Release → device polls the manifest every 6 h (and on
+`ota.path`, `release_url` of the GitHub Release) → attached to the Release → device polls the manifest every 6 h (and on
 HA's "check for update") → HA shows `update.desiccant_dryer_firmware`
 with the release notes → user presses Install → device fetches the
 `.ota.bin` over HTTPS, verifies the md5, reboots.
@@ -71,7 +71,6 @@ with the release notes → user presses Install → device fetches the
 ## Error handling
 
 - Tag / version mismatch: workflow fails before building.
-- Missing secrets secret: workflow fails before building.
 - Manifest unreachable: the update entity goes unavailable, nothing else
   changes; the controller keeps running (WiFi-independent invariant holds).
 - Bad OTA (md5 mismatch or interrupted): ESPHome aborts the update and
@@ -83,6 +82,7 @@ with the release notes → user presses Install → device fetches the
   in the existing build workflow.
 - Manifest generation exercised on a local compile with the same shell
   the workflow uses.
-- End-to-end (device sees the update in HA) can only be proven after
-  Pages is enabled and the first tag is pushed; documented as the
-  acceptance step in `docs/releasing.md`.
+- The production yaml is validated with `secrets.yaml` absent.
+- End-to-end (device sees the update in HA) can only be proven after the
+  first tag is pushed; documented as the acceptance step in
+  `docs/releasing.md`.

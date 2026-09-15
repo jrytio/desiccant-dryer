@@ -11,42 +11,41 @@ through this.
   selector includes it.
 - `esphome/packages/release.yaml` gives the firmware a project name and
   that version, adds ESPHome's `update` entity
-  (`update.desiccant_dryer_firmware`), an HTTP OTA backend, safe mode and
-  diagnostics (free heap, loop time, reset reason, running version). The
-  update entity polls
-  `https://jrytio.github.io/desiccant-dryer/manifest.json` every six hours
-  and whenever Home Assistant asks it to check.
+  (`update.desiccant_dryer_firmware`), an HTTP OTA backend, Improv serial
+  provisioning, `dashboard_import`, safe mode and diagnostics (free heap,
+  loop time, reset reason, running version). The update entity polls
+  `https://github.com/jrytio/desiccant-dryer/releases/latest/download/manifest.json`
+  every six hours and whenever Home Assistant asks it to check.
+- **The release image carries no secrets.** WiFi credentials, the API
+  encryption key and the OTA password live in `packages/dev-secrets.yaml`,
+  which only the test builds include. A released dryer gets its WiFi from
+  its owner at flash time and its API key from Home Assistant when it is
+  adopted.
 - Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`, which
   refuses to build unless the tag equals the version in `version.yaml`,
-  compiles with the real secrets, writes the manifest with
-  `scripts/make-manifest.sh`, attaches everything to a GitHub Release and
-  deploys the same files to GitHub Pages.
+  compiles the production yaml, writes the manifest with
+  `scripts/make-manifest.sh` and attaches everything to a GitHub Release.
+  Nothing else is needed: the repository is public, so the device reads
+  the "latest" release anonymously.
 - When the manifest's version differs from the running one, Home
   Assistant shows the update under Settings → Updates with the release
   notes and an Install button. Installing downloads the `.ota.bin` over
   HTTPS, checks its md5 and reboots into it. The controller keeps running
   if the manifest is unreachable; only the update entity goes unavailable.
 
-## One-time setup (repository owner)
+## Installing a release on a dryer (owner)
 
-1. **Repository secret `ESPHOME_SECRETS_YAML`**: the entire contents of
-   the real `esphome/secrets.yaml` (WiFi, AP password, API key, OTA
-   password). Settings → Secrets and variables → Actions. Without it the
-   workflow stops before compiling. Keep it in step with the secrets on
-   the developer laptop or the released firmware will not join the network
-   or pair with Home Assistant.
-2. **GitHub Pages**: Settings → Pages → Build and deployment → Source:
-   *GitHub Actions*. The repository is private, and Pages on a private
-   repository needs a paid GitHub plan; the alternative is making the
-   repository public. Release assets cannot be used instead: the device
-   has no GitHub credentials, and assets of a private repository are not
-   downloadable anonymously. If the manifest ever moves, change
-   `update_manifest_url` in `esphome/packages/release.yaml`.
-3. The device must already be running a build that includes
-   `release.yaml` (any production flash from this point on) to see
-   updates at all. The first such flash is by cable or `esphome run`.
+1. Open https://web.esphome.io in Chrome or Edge, plug the board in over
+   USB, choose *Prepare for first use* or install from the release's
+   manifest, and enter the WiFi network when asked (Improv over the USB
+   serial port). Alternatively join the open `Desiccant Dryer Setup`
+   access point the board raises when it has no network and enter the
+   WiFi there.
+2. Home Assistant discovers the device; accept it under Settings →
+   Devices → ESPHome. Home Assistant sets the API encryption key itself.
+3. From then on new releases appear under Settings → Updates.
 
-## Cutting a release
+## Cutting a release (developer)
 
 1. In the PR, bump `esphome/version.yaml` (semver: patch for fixes, minor
    for new behaviour or tunables, major for anything that changes wiring
@@ -77,8 +76,9 @@ service.
 - The first 1.x releases log at DEBUG (set in `esphome/desiccant-dryer.yaml`)
   so the unit can be brought up and tested remotely through `esphome logs`,
   the web server on port 80 and Home Assistant; a later release lowers it.
-- The `.factory.bin` in the manifest also lets https://web.esphome.io
-  flash a bare board over USB from the same manifest.
+- The manifest's relative `ota.path` resolves next to the manifest, so
+  `releases/latest/download/` serves the matching binary through the same
+  redirect. Filenames carry the version so nothing caches stale.
 - To dry-run the packaging locally:
 
   ```bash

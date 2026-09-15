@@ -1,25 +1,39 @@
-# Production-only: version identity, Home Assistant update entity and the
-# diagnostics a remote operator needs. See docs/releasing.md.
+# Production-only: version identity, first-time provisioning, the Home
+# Assistant update entity and the diagnostics a remote operator needs.
+# See docs/releasing.md.
 #
-# The device polls ${update_manifest_url} (an esp-web-tools style
-# manifest published by .github/workflows/release.yml) and reports an
-# update to Home Assistant when the manifest's version differs from
-# ${version}. Installing pulls the .ota.bin over HTTPS and checks its md5.
-# Test builds never include this file: they are flashed by hand.
+# The release image carries no credentials (packages/dev-secrets.yaml is
+# only in the test builds). The owner sets WiFi through Improv on the USB
+# serial port (web.esphome.io does this) or the fallback access point, and
+# Home Assistant adopts the device and sets its API encryption key.
+#
+# The device polls ${update_manifest_url}, the esp-web-tools manifest that
+# .github/workflows/release.yml attaches to every GitHub Release, and
+# reports an update to Home Assistant when the manifest's version differs
+# from ${version}. Installing pulls the .ota.bin over HTTPS (the relative
+# path in the manifest resolves next to it) and checks its md5.
 
 substitutions:
-  update_manifest_url: https://jrytio.github.io/desiccant-dryer/manifest.json
+  update_manifest_url: https://github.com/jrytio/desiccant-dryer/releases/latest/download/manifest.json
 
 esphome:
   project:
     name: jrytio.desiccant-dryer
     version: "${version}"
 
+# Lets the ESPHome dashboard adopt the device with this repo's config.
+dashboard_import:
+  package_import_url: github://jrytio/desiccant-dryer/esphome/desiccant-dryer.yaml@main
+  import_full_config: false
+
+improv_serial:
+
 http_request:
   verify_ssl: true
   timeout: 10s
 
 ota:
+  - platform: esphome     # first adoption and manual `esphome run` flashes
   - platform: http_request
 
 update:

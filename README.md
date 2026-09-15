@@ -18,9 +18,9 @@ Three builds share `esphome/packages/base.yaml`:
 | Screen scenarios | `esphome/desiccant-dryer-scenarios.yaml` | Fixed table of twelve screen states, no controller | Your Mac; `scripts/scenario-shots.sh` renders them to `docs/display/` |
 
 ```
-cp esphome/secrets.yaml.example esphome/secrets.yaml   # fill in
+cp esphome/secrets.yaml.example esphome/secrets.yaml   # fill in (test builds only)
 esphome run esphome/desiccant-dryer-virtual.yaml       # bare board
-esphome run esphome/desiccant-dryer.yaml               # real hardware
+esphome run esphome/desiccant-dryer.yaml               # real hardware; no secrets, WiFi set at flash time
 esphome run esphome/desiccant-dryer-host.yaml          # no board; brew install sdl2 first
 ```
 
