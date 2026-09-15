@@ -18,6 +18,9 @@
 | Buck | 24 V → 5 V module | Feeds board USB pin and relay coils |
 | Heaters | 2× 120 VAC, 123 Ω (~117 W) | Existing packs; switched by relay contacts |
 
+Datasheets for these parts, with sources and revisions, are in
+[datasheets/README.md](datasheets/README.md).
+
 ## Board pinout used
 
 From SparkFun's Eagle schematic (J4 = 16-pin, J2 = 12-pin); pin-by-pin
