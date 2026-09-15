@@ -25,7 +25,7 @@ struct UiState {
   int active = 0;         // 0 none, 1 A, 2 B
   int standby_state = 0;  // 0 WET, 1 HEATING, 2 COOLING, 3 READY
   int fault_code = 0;     // 0 none, 1 active overtemp, 2 standby overtemp, 3 not heating
-  bool enabled = true, sim = false, fan = false;
+  bool enabled = true, rh_override = false, fan = false;
   bool heater_a = false, heater_b = false, valve_a = false, valve_b = false;
   float t_a = NAN, t_b = NAN, t_case = NAN, rh = NAN;
   float arm_rh = 5, swap_rh = 10;
@@ -204,8 +204,8 @@ inline void draw_gauge(Display &it, const UiAssets &a, const UiState &s) {
   }
 }
 
-// Case label and temperature, fan label and the SIM badge. The fan icon
-// itself is an image and is drawn by draw_ui.
+// Case label and temperature, fan label and the OVR (humidity override)
+// badge. The fan icon itself is an image and is drawn by draw_ui.
 inline void draw_unit(Display &it, const UiAssets &a, const UiState &s) {
   it.print(6, 196, a.f_label, DIM, TextAlign::BASELINE_LEFT, "CASE");
   if (std::isnan(s.t_case))
@@ -213,9 +213,9 @@ inline void draw_unit(Display &it, const UiAssets &a, const UiState &s) {
   else
     it.printf(6, 209, a.f_val, WHITE, TextAlign::BASELINE_LEFT, "%.0f°", s.t_case);
   it.print(216, 211, a.f_label, DIM, TextAlign::BASELINE_CENTER, "FAN");
-  if (s.sim) {
+  if (s.rh_override) {
     rounded_rect(it, 210, 4, 22, 12, 2, AMBER);
-    it.print(221, 13, a.f_phase, BLACK, TextAlign::BASELINE_CENTER, "SIM", AMBER);
+    it.print(221, 13, a.f_phase, BLACK, TextAlign::BASELINE_CENTER, "OVR", AMBER);
   }
 }
 

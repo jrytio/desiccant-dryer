@@ -84,12 +84,12 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - The active (in-service) pack's heater is never on.
 - All outputs use `restore_mode: ALWAYS_OFF` and are forced off in `on_boot`.
 - `Dryer Enabled` off → everything off, state reset.
-- Humidity simulation (`sim_enabled` / `sim_rh`) must never survive a reboot,
-  and the display must show "SIM" whenever it is active.
+- The humidity override (`rh_override_on` / `rh_override`) must never survive
+  a reboot, and the display must show "OVR" whenever it is active.
 - `time_scale` is only ever written by `packages/hw-virtual.yaml`. Production
   runs at 1.0.
 - Virtual plant knobs (`Sim *`) persist across reboot by design; the base
-  `Simulate Humidity` override does not. Don't merge the two mechanisms.
+  `Override Humidity` switch does not. Don't merge the two mechanisms.
 - Outputs are applied from state by `apply_outputs` every tick. Never toggle
   a heater or valve from a state transition alone; change the state and let
   the apply step do it.

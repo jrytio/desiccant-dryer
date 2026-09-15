@@ -11,7 +11,7 @@
 #
 # Everything here is a test-bench control and persists across reboots so the
 # reboot tests keep their settings. That is deliberately different from the
-# base "Simulate Humidity" override, which never persists.
+# base "Override Humidity" switch, which never persists.
 
 globals:
   - id: plant_t_a

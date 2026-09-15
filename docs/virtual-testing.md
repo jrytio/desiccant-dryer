@@ -103,7 +103,7 @@ then on, and returning any knob you changed.
 | 9 | Disable / enable | Dryer Enabled off, then on | Off: all outputs off, status "Disabled". On: within 5 s "Air via A, B wet", Valve A on |
 | 10 | Reboot mid-service | At ~30 sim-min of service press Restart | Same active pack after boot, its valve on within one tick, Service Time within a minute of where it was, standby "wet" |
 | 11 | Reboot mid-HEATING | Press Restart during "B heating" | After boot: still "B heating", Heater B on within one tick, Standby Heater Time and Regen Hold Time restart from 0, Pack B Temperature continues from where it was (plant state persisted) |
-| 12 | Base humidity override | Simulate Humidity on, Simulated RH 12 | Control Humidity reads 12. Swap as soon as standby is ready. Press Restart: Simulate Humidity is off again |
+| 12 | Base humidity override | Override Humidity on, Override RH 12 | Control Humidity reads 12, display shows OVR. Swap as soon as standby is ready. Press Restart: Override Humidity is off again |
 | 13 | Fan thermostat | Sim Ambient Temp 40 | Case Temperature rises past 36.5 °C, Case Fan on. Back to 25: fan off once the case falls below 33.5 °C (about 6 simulated minutes, so 6 s real at 60x) and the 60 s minimum run time has passed |
 | 14 | Sim speed mid-cycle | Change Sim Speed between 1 and 60 during heating | Counters and temperatures stay continuous; nothing resets |
 | 15 | Short probe dropout | During "B heating", Sim Probe B Fault on for about 15 s (three control ticks), then off | Pack B Temperature shows unknown; Heater B stays on throughout; Standby State stays "heating"; no log warning; regen completes normally |

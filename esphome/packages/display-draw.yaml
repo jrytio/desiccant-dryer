@@ -112,7 +112,7 @@ script:
           s.standby_state = id(standby_state);
           s.fault_code = id(fault_code);
           s.enabled = id(dryer_enabled).state;
-          s.sim = id(sim_enabled).state;
+          s.rh_override = id(rh_override_on).state;
           s.fan = id(case_fan).state;
           s.heater_a = id(heater_a).state;
           s.heater_b = id(heater_b).state;
