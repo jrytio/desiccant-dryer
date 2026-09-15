@@ -5,9 +5,23 @@ on:
     branches: [main]
   pull_request:
 
-# Compiles both builds with the official ESPHome image at the same version as
+env:
+  ESPHOME_VERSION: 2026.1.4
+  # Workspace-relative so it needs no home-directory assumptions on the runner.
+  PIO_CACHE: .ci-cache/platformio
+
+# Compiles every build with the official ESPHome image at the same version as
 # the local install. (esphome/build-action pins its own minimum ESPHome
 # version, which drifted past ours.)
+#
+# Two caches keep repeat builds incremental; a cold ESP build spends ~70 s
+# installing toolchains and ~4 min compiling, ~700 objects of it ESP-IDF.
+# - toolchains: PlatformIO platforms/packages (under /cache, via the image's
+#   entrypoint) plus pioarduino's tools/ and penv/, which ignore that and
+#   live in /root/.platformio. Only those two are mounted, because the image
+#   ships its PlatformIO settings and libraries in the same directory.
+# - build: esphome/.esphome, so unchanged objects are not recompiled.
+# The container writes both as root; they are chowned back before saving.
 jobs:
   compile:
     name: compile ${{ matrix.variant }}
@@ -18,38 +32,62 @@ jobs:
         include:
           - variant: production
             yaml: esphome/desiccant-dryer.yaml
+            toolchain: esp32
           - variant: virtual
             yaml: esphome/desiccant-dryer-virtual.yaml
-    steps:
-      - uses: actions/checkout@v7
-      - name: Provide dummy secrets
-        run: cp esphome/secrets.ci.yaml esphome/secrets.yaml
-      - name: Compile ${{ matrix.variant }}
-        run: >
-          docker run --rm -v "$PWD:/config" -w /config
-          ghcr.io/esphome/esphome:2026.1.4
-          compile ${{ matrix.yaml }}
-
-  # The two host builds compile natively inside the same image. The sdl
-  # display validates by running sdl2-config, so SDL2 must be installed
-  # before even `esphome config` would pass.
-  compile-host:
-    name: compile ${{ matrix.variant }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
+            toolchain: esp32
+          # The host builds compile natively. The sdl display validates by
+          # running sdl2-config, so SDL2 must be installed before even
+          # `esphome config` would pass.
           - variant: host
             yaml: esphome/desiccant-dryer-host.yaml
+            toolchain: host
+            prepare: apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null &&
           - variant: scenarios
             yaml: esphome/desiccant-dryer-scenarios.yaml
+            toolchain: host
+            prepare: apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null &&
     steps:
       - uses: actions/checkout@v7
       - name: Provide dummy secrets
         run: cp esphome/secrets.ci.yaml esphome/secrets.yaml
+
+      - name: Restore toolchains
+        id: toolchains
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.PIO_CACHE }}
+          key: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-${{ hashFiles('esphome/packages/platform-*.yaml') }}
+          restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-
+      - name: Restore build directory
+        id: build
+        uses: actions/cache/restore@v6
+        with:
+          path: esphome/.esphome
+          key: build-${{ env.ESPHOME_VERSION }}-${{ matrix.variant }}-${{ hashFiles('esphome/**') }}
+          restore-keys: build-${{ env.ESPHOME_VERSION }}-${{ matrix.variant }}-
+
       - name: Compile ${{ matrix.variant }}
-        run: >
-          docker run --rm -v "$PWD:/config" -w /config --entrypoint bash
-          ghcr.io/esphome/esphome:2026.1.4
-          -c "apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null && esphome compile ${{ matrix.yaml }}"
+        run: |
+          mkdir -p "$PIO_CACHE/cache" "$PIO_CACHE/tools" "$PIO_CACHE/penv"
+          docker run --rm -v "$PWD:/config" -w /config \
+            -v "$PWD/$PIO_CACHE/cache:/cache" \
+            -v "$PWD/$PIO_CACHE/tools:/root/.platformio/tools" \
+            -v "$PWD/$PIO_CACHE/penv:/root/.platformio/penv" \
+            --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
+            -c '${{ matrix.prepare }} exec /entrypoint.sh compile ${{ matrix.yaml }}'
+
+      - name: Hand caches back to the runner user
+        run: sudo chown -R "$(id -u):$(id -g)" "$PIO_CACHE" esphome/.esphome
+      - name: Save toolchains
+        if: steps.toolchains.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.PIO_CACHE }}
+          key: ${{ steps.toolchains.outputs.cache-primary-key }}
+      - name: Save build directory
+        if: steps.build.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: esphome/.esphome
+          key: ${{ steps.build.outputs.cache-primary-key }}
