@@ -2,7 +2,7 @@
 # packages/display-st7789.yaml (real panel) and packages/display-sdl.yaml
 # (host window) both render ${display_lambda}, which here just runs the
 # ui_draw script. That script is the only place ids are read: it fills a
-# dryer_ui::UiState and hands it to draw_ui() in packages/display_ui.h, which
+# dryer_ui::UiState and hands it to draw_ui() in components/dryer_ui/display_ui.h, which
 # draws into the display with id `panel`. Edit display_ui.h (geometry, rules)
 # and assets/display/*.svg (art) to change the screen; see
 # docs/superpowers/specs/2026-09-14-display-ui-design.md for the design and
@@ -17,10 +17,12 @@
 
 substitutions:
   display_lambda: "id(ui_draw).execute();"
-
-esphome:
-  includes:
-    - packages/display_ui.h
+  # Where the SVG art is read from at compile time. A local path for every
+  # checked-in build; esphome/desiccant-dryer-adopt.yaml points it at the
+  # release tag on GitHub, because Device Builder's remote package cannot
+  # resolve paths inside this repository. The drawing code comes in the
+  # same way through packages/ui-code-local.yaml or ui-code-remote.yaml.
+  display_assets: assets/display
 
 font:
   - file: "gfonts://Barlow@700"
@@ -61,43 +63,43 @@ font:
 
 image:
   - platform: file
-    file: assets/display/schematic.svg
+    file: ${display_assets}/schematic.svg
     id: img_bg
     type: RGB565
     transparency: alpha_channel
     resize: 240x240
   - platform: file
-    file: assets/display/valve-open.svg
+    file: ${display_assets}/valve-open.svg
     id: img_valve_open
     type: RGB565
     transparency: alpha_channel
     resize: 19x17
   - platform: file
-    file: assets/display/valve-closed.svg
+    file: ${display_assets}/valve-closed.svg
     id: img_valve_closed
     type: RGB565
     transparency: alpha_channel
     resize: 19x17
   - platform: file
-    file: assets/display/flow-in.svg
+    file: ${display_assets}/flow-in.svg
     id: img_flow_in
     type: RGB565
     transparency: alpha_channel
     resize: 17x26
   - platform: file
-    file: assets/display/flow-out.svg
+    file: ${display_assets}/flow-out.svg
     id: img_flow_out
     type: RGB565
     transparency: alpha_channel
     resize: 27x31
   - platform: file
-    file: assets/display/lit-a.svg
+    file: ${display_assets}/lit-a.svg
     id: img_lit_a
     type: RGB565
     transparency: alpha_channel
     resize: 76x42
   - platform: file
-    file: assets/display/lit-b.svg
+    file: ${display_assets}/lit-b.svg
     id: img_lit_b
     type: RGB565
     transparency: alpha_channel
