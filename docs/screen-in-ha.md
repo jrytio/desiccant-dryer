@@ -53,21 +53,24 @@ actions:
 
 Each re-render changes the `?t=` value (the board ignores the query
 string), which drops Home Assistant's cached copy and changes the entity's
-state, and a **Picture Entity** card on the entity then loads the new
-still:
+state, so the dashboard loads the new still.
+
+Show it with the Dryer Screen card, `docs/ha/dryer-screen-card.js`. Register
+the file's contents as a dashboard resource (JavaScript module; the dev
+instance has it inline), then:
 
 ```yaml
-type: picture-entity
+type: custom:dryer-screen-card
 entity: image.dryer_screen
-aspect_ratio: "1"
-fit_mode: cover
-show_name: false
-show_state: false
 ```
 
-With `aspect_ratio` set, the card keeps the last loaded frame painted
-behind the image while the next one loads, and keeps the image visible if
-a single fetch fails.
+The card downloads and decodes each new frame off-screen and swaps it in
+only when it is complete, skipping to the newest frame if it falls behind
+and keeping the current one if a load fails. The built-in **Picture
+Entity** card points its image at each new URL straight away, so through
+the Cloudflare tunnel it blinks on every refresh while the frame arrives;
+on the LAN it is usable. Tapping the card opens the entity's more-info
+dialog.
 
 Home Assistant fetches the board only when someone is viewing, and viewers
 share one fetch per refresh. The cost is a recorded state change every 2 s

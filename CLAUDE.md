@@ -110,12 +110,14 @@ service 180 min) are untested guesses meant to get first cycles logging.
   3-3-2 palette the panel uses (every designed colour already sits on that
   grid); the host build shows the same drawing live but in full colour.
 - The device builds serve the live screen at `http://<board>/screen.png`
-  for Home Assistant's Generic Camera (docs/screen-in-ha.md). It streams
-  from the ST7789's 8-bit buffer; keep `color_palette: 8BIT` and rotation
-  0 or the endpoint returns 500.
+  for Home Assistant's `image.dryer_screen` template image
+  (docs/screen-in-ha.md). It streams from the ST7789's 8-bit buffer, taking
+  turns with redraws; keep `color_palette: 8BIT` and rotation 0 or the
+  endpoint returns 500.
 - The bench Home Assistant dashboard (virtual board) is
   `docs/ha/dryer-bench-dashboard.yaml`; its header lists what it needs on
-  the HA side (HACS Tabdeck Card, °C display units on the temperature
+  the HA side (HACS Tabdeck Card, the Dryer Screen card resource from
+  `docs/ha/dryer-screen-card.js`, °C display units on the temperature
   sensors, the `image.dryer_screen` template image and its 2 s refresh
   automation). Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
