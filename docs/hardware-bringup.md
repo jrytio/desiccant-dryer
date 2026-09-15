@@ -16,7 +16,9 @@ The testing runs on the **hardware test build**,
 hardware plus the developer credentials from `secrets.yaml`, so it takes
 OTA updates as often as needed and USB is only used once. The released
 production image (`esphome/desiccant-dryer.yaml`) has no OTA server and no
-built-in WiFi; it goes on last, as its own step (section 7).
+WiFi credentials (it has WiFi and a setup access point, and is provisioned
+through Improv or that access point); it goes on last, as its own step
+(section 7).
 
 ## 1. Flash the test build (USB, once)
 

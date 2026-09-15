@@ -45,6 +45,9 @@ jobs:
           - variant: virtual
             yaml: esphome/desiccant-dryer-virtual.yaml
             toolchain: esp32
+          - variant: hw-test
+            yaml: esphome/desiccant-dryer-hw-test.yaml
+            toolchain: esp32
           # The host builds compile natively. The sdl display validates by
           # running sdl2-config, so SDL2 must be installed before even
           # `esphome config` would pass.
