@@ -19,17 +19,18 @@ controller starts on pack A with B as WET standby.
 The logic never reads a clock for durations. Each tick measures the real
 seconds since the previous tick (clamped to 60 s so a stall cannot jump
 anything), multiplies by the `time_scale` global, and adds the result to
-three persisted counters:
+four persisted counters:
 
 | Counter | Meaning | Reset by |
 |---|---|---|
 | `service_elapsed_s` | Time the active pack has been in service | swap, first start, Dryer Enabled off |
 | `heat_elapsed_s` | Time the standby heater has run this regen | WET to HEATING, swap, first start, Dryer Enabled off, boot while HEATING, Clear Fault while HEATING |
 | `hold_elapsed_s` | Time continuously at or above `regen_temp` | dropping below `regen_temp`, plus all of the above |
+| `standby_elapsed_s` | Time in the standby pack's current phase | any change of `standby_state` (detected at the top of the tick), plus everything that resets `heat_elapsed_s` |
 
 `time_scale` is 1.0 in production. The virtual build's "Sim Speed" sets it
 so a full cycle runs in minutes. ESPHome flushes changed globals to flash about once a minute, one NVS key
-per changed global (one to three keys per minute in production, about six
+per changed global (two to four keys per minute in production, about seven
 on the virtual build because the plant temperatures keep moving), so a
 power loss costs at most a minute of each counter.
 
@@ -127,11 +128,13 @@ regeneration at this heater power is known to complete within 20 min.
 ## Observability
 
 `Dryer Status` ("Air via A, B heating (waiting)"), `Standby State`,
-`Service Time`, `Standby Heater Time`, `Regen Hold Time`, `Fault`,
-`Fault Message`, and a `Restart` button. `Standby Heater Time` and `Regen
-Hold Time` hold their final value through COOLING and READY so a regen's
-duration stays visible in HA history; the swap resets them. Transitions are
-logged under the `cycle` tag at INFO, faults at ERROR.
+`Service Time`, `Standby Heater Time`, `Regen Hold Time`, `Standby Phase
+Time`, `Fault`, `Fault Message`, and a `Restart` button. `Standby Heater
+Time` and `Regen Hold Time` hold their final value through COOLING and READY
+so a regen's duration stays visible in HA history; the swap resets them.
+`Standby Phase Time` is what the display shows under the standby pack; it
+resets on every phase change, so after a swap it restarts from zero as WET.
+Transitions are logged under the `cycle` tag at INFO, faults at ERROR.
 
 ## Humidity simulation (all builds)
 
