@@ -33,9 +33,9 @@ allow it so Home Assistant can reach the API.
 ## Drive it from Home Assistant
 
 The process behaves like any other ESPHome device, **Desiccant Dryer
-(Host)**. Home Assistant may discover it by mDNS on the same subnet;
-otherwise add the ESPHome integration manually with the Mac's LAN address,
-port 6053, and the `api_key` from `secrets.yaml`. Every Sim knob and
+(Host)**, but Home Assistant will not discover it on its own (the host
+platform has no real mDNS). Add the ESPHome integration manually with the
+Mac's LAN address, port 6053, and the `api_key` from `secrets.yaml`. Every Sim knob and
 threshold from `docs/virtual-testing.md` works the same way, so the
 checklist there can be run on the Mac with the screen in view. The five
 output switches toggle and interlock normally; they drive no pins.

@@ -948,6 +948,8 @@ cd /Users/josh/GitHub/desiccant-dryer/.claude/worktrees/display-mirroring-laptop
 
 Expected: `EQUIVALENT prod` and `EQUIVALENT virt`. Skip this step only if Step 1 had nothing to rebase.
 
+**Execution note from the final review:** `origin/main` now contains PR #2, which added `wifi.on_connect` inside the `wifi:` block this branch moved, so Step 1 will conflict in `base.yaml`; resolve by keeping `wifi:` out of `base.yaml` and adding the `on_connect` hunk to the `wifi:` block in `platform-esp32.yaml`. PR #2 also edits `docs/hardware-bringup.md` three lines above this branch's edits (take both). After the rebase, also run `esphome config esphome/desiccant-dryer-host.yaml` and `esphome compile esphome/desiccant-dryer-host.yaml`, because the rebased `base.yaml` and `hw-virtual.yaml` have never been compiled for host.
+
 - [ ] **Step 3: Push and open the PR**
 
 ```bash

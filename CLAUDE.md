@@ -44,8 +44,8 @@ this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
 (window on the Mac). `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
 and `desiccant-dryer-host.yaml` are short selectors. Base must only reference
 the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
-`case_temp` from the hardware package and `ip_addr` from the platform
-package. `hw-real.yaml` is the pin-map source of truth for sensors,
+`case_temp` from the hardware package; `display-draw.yaml` additionally
+reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source of truth for sensors,
 `base.yaml` for outputs, `display-st7789.yaml` for the display.
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
