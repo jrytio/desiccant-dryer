@@ -1,0 +1,22 @@
+# Hardware test build: the production controller, real sensors and panel,
+# plus the developer credentials (WiFi, API key, password-protected OTA) so
+# a unit on the bench can be reflashed over the network as often as needed.
+# Not a release: no version, update entity or provisioning. Appears in Home
+# Assistant as a separate device from the released unit.
+# Flash:  esphome run esphome/desiccant-dryer-hw-test.yaml
+#         (first time over USB, then --device <board> over the network)
+substitutions:
+  name: desiccant-dryer-hw-test
+  friendly_name: Desiccant Dryer (HW Test)
+
+packages:
+  base: !include packages/base.yaml
+  platform: !include packages/platform-esp32.yaml
+  secrets: !include packages/dev-secrets.yaml
+  hardware: !include packages/hw-real.yaml
+  draw: !include packages/display-draw.yaml
+  display: !include packages/display-st7789.yaml
+  mirror: !include packages/screen-mirror.yaml
+
+logger:
+  level: DEBUG
