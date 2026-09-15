@@ -11,8 +11,11 @@ streams without a compressor), exactly what the ST7789 is showing,
 palette rounding included. Home Assistant's Generic Camera accepts only
 PNG, JPEG, GIF, SVG and WebP stills, which is why it is not a BMP. The
 board streams it straight from the display buffer, so a request never
-copies the frame or allocates a buffer; the display keeps redrawing every
-2 s while you fetch, so a frame can occasionally mix two updates.
+copies the frame or allocates a buffer. Each redraw clears the buffer and
+repaints it over a few hundred milliseconds, so fetches and redraws take
+turns: a fetch waits for a redraw in progress to finish, and a redraw that
+falls due during a fetch (about 0.6 s) runs as soon as the fetch ends. The
+panel can therefore lag by up to one fetch while something is watching.
 
 ## Image entity
 
@@ -56,10 +59,15 @@ still:
 ```yaml
 type: picture-entity
 entity: image.dryer_screen
+aspect_ratio: "1"
 fit_mode: cover
 show_name: false
 show_state: false
 ```
+
+With `aspect_ratio` set, the card keeps the last loaded frame painted
+behind the image while the next one loads, and keeps the image visible if
+a single fetch fails.
 
 Home Assistant fetches the board only when someone is viewing, and viewers
 share one fetch per refresh. The cost is a recorded state change every 2 s

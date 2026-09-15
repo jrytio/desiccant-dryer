@@ -1,10 +1,14 @@
 #include "screen_mirror.h"
 
 #include <esp_http_server.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include <algorithm>
+#include <cinttypes>
 #include <cstring>
 
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -12,14 +16,27 @@ namespace screen_mirror {
 
 static const char *const TAG = "screen_mirror";
 
+// A redraw takes a few hundred milliseconds; one still running after this
+// long means something is wrong, and the fetch gives up rather than hang.
+static const uint32_t DRAW_WAIT_MS = 2000;
+
 namespace {
 
-// The driver keeps its frame buffer and colour mode protected. A class
-// derived from it may form pointers to those members and apply them to any
-// driver instance. Nothing is instantiated and no header is patched.
+// The driver keeps its frame buffer, colour mode and writer protected. A
+// class derived from it may form pointers to those members and apply them to
+// any driver instance. Nothing is instantiated and no header is patched.
 struct Peek : public ili9xxx::ILI9XXXDisplay {
   static uint8_t *buffer(ili9xxx::ILI9XXXDisplay *d) { return d->*(&Peek::buffer_); }
   static ili9xxx::ILI9XXXColorMode mode(ili9xxx::ILI9XXXDisplay *d) { return d->*(&Peek::buffer_color_mode_); }
+  static display::display_writer_t &writer(ili9xxx::ILI9XXXDisplay *d) { return d->*(&Peek::writer_); }
+};
+
+// Counts a request as streaming for as long as it is in scope, whichever way
+// handleRequest() returns.
+struct FetchGuard {
+  explicit FetchGuard(std::atomic<int> &count) : count_(count) { count_.fetch_add(1); }
+  ~FetchGuard() { count_.fetch_sub(1); }
+  std::atomic<int> &count_;
 };
 
 // CRC-32 as used by PNG and zlib (reflected, polynomial 0xEDB88320). The
@@ -85,8 +102,35 @@ bool send_chunk(httpd_req_t *req, const uint8_t *data, size_t len) {
 void ScreenMirror::setup() {
   // One PNG scanline: the filter byte (always 0, "None") followed by the row.
   this->row_.assign(static_cast<size_t>(this->display_->get_native_width()) + 1, 0);
+  // Take over the display's writer so redraws and fetches take turns (draw_()).
+  display::display_writer_t &writer = Peek::writer(this->display_);
+  this->writer_ = std::move(writer);
+  writer = display::display_writer_t([this](display::Display &it) { this->draw_(it); });
   this->base_->init();
   this->base_->add_handler(this);
+}
+
+// Runs on the main loop inside the display's update(). drawing_ is raised
+// before fetches_ is read, and handleRequest() raises fetches_ before reading
+// drawing_, so of a redraw and a fetch that start together at least one sees
+// the other and the buffer is never streamed mid-redraw.
+void ScreenMirror::draw_(display::Display &it) {
+  this->drawing_.store(true);
+  if (this->fetches_.load() > 0) {
+    this->drawing_.store(false);
+    this->redraw_pending_.store(true);
+    return;
+  }
+  this->writer_(it);
+  this->drawing_.store(false);
+}
+
+void ScreenMirror::loop() {
+  // Run a redraw skipped during a fetch as soon as nothing is streaming.
+  if (this->redraw_pending_.load() && this->fetches_.load() == 0) {
+    this->redraw_pending_.store(false);
+    this->display_->update();
+  }
 }
 
 void ScreenMirror::dump_config() {
@@ -113,6 +157,19 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
     }
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen_mirror: needs an 8-bit, unrotated frame buffer");
     return;
+  }
+
+  // Let a redraw in progress finish. From here until return, draw_() skips
+  // redraws and loop() runs them once the fetch is done.
+  FetchGuard guard(this->fetches_);
+  const uint32_t wait_start = millis();
+  while (this->drawing_.load()) {
+    if (millis() - wait_start > DRAW_WAIT_MS) {
+      ESP_LOGW(TAG, "Display still drawing after %" PRIu32 " ms; request dropped", DRAW_WAIT_MS);
+      httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen_mirror: display still drawing");
+      return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 
   const uint32_t w = static_cast<uint32_t>(this->display_->get_native_width());
