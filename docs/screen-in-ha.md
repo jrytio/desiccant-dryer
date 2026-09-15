@@ -89,6 +89,27 @@ each attempt as `stream ... canceled by remote`. The default
 `camera_view: auto` loads stills instead, but only every 10 s, and it has
 not been tried through the tunnel.
 
+## Moving between sites
+
+The device builds carry both sites' WiFi (`wifi: networks:` in
+`esphome/packages/platform-esp32.yaml`) and join whichever is in range,
+taking a new DHCP address there. Home Assistant does not follow the board:
+it learns a device's address only through mDNS or DHCP discovery on its
+own LAN, and mDNS does not cross the site-to-site VPN. The addresses on
+this page are the bench board at home. After a move:
+
+1. Find the new address: the boot log prints `IP x.x.x.x` two seconds
+   after WiFi connects, or look in the site router's DHCP leases (at the
+   workshop the router's DNS also answers `<name>.t3d.lan`).
+2. Settings, Devices & services, ESPHome, the device's entry menu,
+   **Reconfigure**: enter the new address, port 6053. Device and entity
+   ids are kept.
+3. Edit the `image.dryer_screen` helper's URL to the new address.
+
+Home Assistant reaches a board at the other site by IP across the VPN;
+the API (6053) and `/screen.png` (80) both worked from home to the
+workshop on 2026-09-15.
+
 ## Limits
 
 - The image is the drawing as the driver holds it. The panel's

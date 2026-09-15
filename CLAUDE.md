@@ -105,6 +105,13 @@ service 180 min) are untested guesses meant to get first cycles logging.
   `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Copy
   `secrets.yaml.example` to `secrets.yaml` first; for a compile-only check,
   `cp esphome/secrets.ci.yaml esphome/secrets.yaml` works.
+- WiFi is a `networks:` list in `packages/platform-esp32.yaml`, one secret
+  pair per site (`wifi_home_ssid`/`_password`, `wifi_workshop_ssid`/`_password`),
+  so a board joins either site without a reflash. SSIDs live only in the
+  gitignored `secrets.yaml`, quoted exactly: the workshop's ends in a space.
+  Keep `fast_connect` off. After a site move the board's IP changes and Home
+  Assistant keeps the old one (no mDNS across the VPN): reconfigure the
+  ESPHome entry and the `image.dryer_screen` URL (docs/screen-in-ha.md).
 - To see the screen without a board, `esphome run esphome/desiccant-dryer-host.yaml`
   compiles natively and opens an SDL window (needs `brew install sdl2`); see
   docs/host-preview.md. Nothing WiFi, OTA, SPI or LEDC related may be added

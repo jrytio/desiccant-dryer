@@ -18,7 +18,12 @@ preview build, with the display visible in a window; see
    cp esphome/secrets.yaml.example esphome/secrets.yaml
    ```
 
-   Fill `wifi_ssid` and `wifi_password`. Generate the others:
+   Fill one WiFi pair per site: `wifi_home_ssid` / `wifi_home_password`
+   and `wifi_workshop_ssid` / `wifi_workshop_password`. The board joins
+   whichever network is in range, so moving it between sites needs no
+   reflash. Quote each SSID exactly as broadcast; the workshop's ends in a
+   space, and dropping it gives "No matching network found". Generate the
+   others:
 
    ```bash
    openssl rand -base64 32     # api_key
@@ -46,6 +51,10 @@ preview build, with the display visible in a window; see
    ```bash
    esphome run esphome/desiccant-dryer-virtual.yaml --device desiccant-dryer-virtual.local
    ```
+
+   After the board moves to the other site it has a new address and Home
+   Assistant keeps trying the old one; see "Moving between sites" in
+   `docs/screen-in-ha.md`.
 
 4. Log tail without reflashing:
 
