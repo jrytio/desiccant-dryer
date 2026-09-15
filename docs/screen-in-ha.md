@@ -14,22 +14,69 @@ board streams it straight from the display buffer, so a request never
 copies the frame or allocates a buffer; the display keeps redrawing every
 2 s while you fetch, so a frame can occasionally mix two updates.
 
-## Camera entity
+## Image entity
 
-Settings, Devices & services, Add integration, **Generic Camera**:
+Show the screen on dashboards through a template **image** entity. Home
+Assistant fetches `/screen.png` itself, caches it, and gives browsers a
+plain still from `/api/image_proxy/...`. The browser never talks to the
+board, and a single short request per frame passes through a remote proxy
+such as the Cloudflare tunnel the same way it does on the LAN.
+
+Settings, Devices & services, Helpers, Create helper, **Template**,
+**Image**:
 
 | Field | Value |
 |---|---|
-| Still Image URL | `http://10.42.14.100/screen.png` (the board's address; `desiccant-dryer-virtual.local` if mDNS resolves from Home Assistant) |
-| Stream Source URL | leave empty |
-| Content Type | `image/png` |
-| Frame Rate (Hz) | `0.5` (the display redraws every 2 s) |
+| Name | `Dryer Screen` (entity `image.dryer_screen`) |
+| URL | `http://10.42.14.100/screen.png?t={{ now().timestamp() \| int }}` |
 | Verify SSL certificate | off (plain HTTP) |
 
-Name it "Dryer Screen". Add a **Picture Entity** card for it to the dryer
-dashboard; by default the card fetches a new still about every 10 s; set
-`camera_view: live` on the card to follow the camera's own 0.5 Hz rate. The
-production unit gets a second camera pointed at its own address.
+A template image only refetches when its URL changes, and a template using
+`now()` re-renders on its own only once a minute. An automation forces a
+re-render every 2 s, matching the display's redraw:
+
+```yaml
+alias: Dryer Screen refresh
+mode: single
+max_exceeded: silent
+triggers:
+  - trigger: time_pattern
+    seconds: "/2"
+actions:
+  - action: homeassistant.update_entity
+    target:
+      entity_id: image.dryer_screen
+```
+
+Each re-render changes the `?t=` value (the board ignores the query
+string), which drops Home Assistant's cached copy and changes the entity's
+state, and a **Picture Entity** card on the entity then loads the new
+still:
+
+```yaml
+type: picture-entity
+entity: image.dryer_screen
+fit_mode: cover
+show_name: false
+show_state: false
+```
+
+Home Assistant fetches the board only when someone is viewing, and viewers
+share one fetch per refresh. The cost is a recorded state change every 2 s
+for both the image entity and the automation. The production unit gets its
+own image entity and automation pointed at its own address.
+
+## Camera entity (LAN only)
+
+A Generic Camera on the same URL (Still Image URL
+`http://10.42.14.100/screen.png`, no stream source, content type
+`image/png`, frame rate `0.5` Hz) also works on the LAN, but not remotely
+at its useful rate. A Picture Entity card with `camera_view: live` holds
+an endless MJPEG response open (`/api/camera_proxy_stream/...`); through
+the Cloudflare tunnel the card stays blank, and the Cloudflared app logs
+each attempt as `stream ... canceled by remote`. The default
+`camera_view: auto` loads stills instead, but only every 10 s, and it has
+not been tried through the tunnel.
 
 ## Limits
 
