@@ -71,7 +71,8 @@ A's relay state. GPIO18 (A1) has an optional 10 kΩ pullup behind a solder
 jumper (open by default); unused. The 12-pin header carries GPIO8 and GPIO4
 where a standard Feather has "9" and "5" — GPIO9/GPIO5 are A3/A5 on the
 16-pin header only. Pin map verified against SparkFun's Eagle schematic
-(docs/pinout-verification.md); wiring picture in docs/breadboard.svg.
+(docs/pinout-verification.md); wiring picture in docs/breadboard.svg,
+protoboard placement proposal in docs/board-layout.svg.
 
 ## Control logic (see docs/control-logic.md for the full state machine)
 
