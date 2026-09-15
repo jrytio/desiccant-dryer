@@ -4,7 +4,8 @@
 // of the host build (packages/display-sdl.yaml) and the scenario captures
 // (packages/display-scenarios.yaml). The ui_draw script in
 // packages/display-draw.yaml gathers the state. Geometry and rules follow
-// docs/superpowers/specs/2026-09-14-display-ui-design.md sections 2, 4, 5.
+// docs/superpowers/specs/2026-09-14-display-ui-design.md sections 2, 4, 5,
+// with the cylinder colours of 2026-09-14-cylinder-state-colours-design.md.
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -27,7 +28,7 @@ struct UiState {
   bool enabled = true, sim = false, fan = false;
   bool heater_a = false, heater_b = false, valve_a = false, valve_b = false;
   float t_a = NAN, t_b = NAN, t_case = NAN, rh = NAN;
-  float arm_rh = 5, swap_rh = 10, cooldown = 40, regen = 90, overtemp = 120;
+  float arm_rh = 5, swap_rh = 10;
   float service_s = 0, standby_s = 0;
   std::string status, fault_msg, ip;
   uint32_t uptime_ms = 0;
@@ -36,8 +37,7 @@ struct UiState {
 // Aggregate-initialised by the ui_draw script; keep the member order in step.
 struct UiAssets {
   BaseFont *f_temp, *f_val, *f_cap, *f_label, *f_phase, *f_status, *f_status_b;
-  BaseImage *bg, *valve_open, *valve_closed, *heater_on_a, *heater_on_b, *lit_a, *lit_b, *fault_ring,
-      *cap_blue, *cap_amber, *cap_gold, *fan;
+  BaseImage *bg, *valve_open, *valve_closed, *heater_on_a, *heater_on_b, *lit_a, *lit_b, *fan;
 };
 
 // The most recently gathered state and asset table. The ui_draw script fills
@@ -60,11 +60,11 @@ inline uint32_t uptime_since_first_frame(uint32_t now) {
   return now - first;
 }
 
-// RGB 3-3-2 grid colours (spec section 5).
+// RGB 3-3-2 grid colours (display UI spec section 5; cylinder colours spec
+// section 1).
 static const Color BLACK(0, 0, 0), WHITE(255, 255, 255);
-static const Color GREEN(36, 219, 85), ORANGE(255, 146, 0), AMBER(255, 182, 0), ORANGE_MID(255, 109, 0);
-static const Color DEEP(219, 73, 0), DARKOR(182, 73, 0), CYAN(0, 219, 255);
-static const Color BLUE(36, 109, 255), BLUE_L(73, 146, 255), BLUE_D(0, 73, 170);
+static const Color GREEN(36, 219, 85), ORANGE(255, 146, 0), AMBER(255, 182, 0), CYAN(0, 219, 255);
+static const Color BLUE(36, 109, 255), PINK(255, 146, 170);
 static const Color SHELL(73, 73, 85), DIM(146, 146, 170), STRIP_TXT(182, 182, 170);
 static const Color RED_STRIP(219, 36, 36), RED(255, 36, 36);
 static const Color DRY_DIM(36, 109, 36), AMBER_DIM(109, 73, 0), RED_DIM(109, 0, 0);
@@ -78,10 +78,10 @@ struct PackView {
   int cx = 0;
   float t = NAN;
   const char *phase = "";
-  Color phase_color = DIM;
+  Color phase_color = DIM;  // also the body colour when filled
+  bool filled = false;      // body painted in phase_color; false when off or starting
   bool show_timer = false;
   float timer_s = 0;
-  bool faulted = false;
 };
 
 inline std::string fmt_timer(float seconds) {
@@ -104,22 +104,9 @@ inline void rounded_rect(Display &it, int x, int y, int w, int h, int r, Color c
   it.filled_circle(x + w - 1 - r, y + h - 1 - r, r, c);
 }
 
-// 2 px on, 3 px off, from x0 to x1 exclusive.
-inline void dashes(Display &it, int x0, int x1, int y, Color c) {
-  for (int x = x0; x < x1; x += 5) it.horizontal_line(x, y, 2, c);
-}
-
-// Row of the fill's top edge: 20 C .. overtemp maps onto the 110 px body.
-inline int level_y(float t, float overtemp) {
-  float f = (t - 20.0f) / (overtemp - 20.0f);
-  if (f < 0) f = 0;
-  if (f > 1) f = 1;
-  return 150 - (int) lroundf(f * 110.0f);
-}
-
 inline void pack_roles(const UiState &s, PackView &a, PackView &b) {
   static const char *const SB_NAMES[] = {"WET", "HEATING", "COOLING", "READY"};
-  static const Color SB_COLORS[] = {DIM, ORANGE, CYAN, BLUE};
+  static const Color SB_COLORS[] = {PINK, ORANGE, CYAN, BLUE};
   a = PackView{};
   b = PackView{};
   a.cx = CX_A;
@@ -133,63 +120,34 @@ inline void pack_roles(const UiState &s, PackView &a, PackView &b) {
   if (s.active != 1 && s.active != 2) return;  // starting: no roles yet
   PackView &act = s.active == 1 ? a : b;
   PackView &sb = s.active == 1 ? b : a;
-  act.phase = "IN SERVICE";
+  act.phase = "IN USE";
   act.phase_color = GREEN;
+  act.filled = true;
   act.show_timer = true;
   act.timer_s = s.service_s;
   int st = s.standby_state;
   if (st < 0 || st > 3) st = 0;
   sb.phase = SB_NAMES[st];
   sb.phase_color = SB_COLORS[st];
+  sb.filled = true;
   sb.show_timer = true;
   sb.timer_s = s.standby_s;
   PackView *faulted = s.fault_code == 1 ? &act : (s.fault_code == 2 || s.fault_code == 3) ? &sb : nullptr;
   if (faulted != nullptr) {
     faulted->phase = "FAULT";
     faulted->phase_color = RED;
-    faulted->faulted = true;
   }
 }
 
-// Stacked colour bands from the level down to row 156, then the cap sprite
-// on the level. Drawn before the background, whose opaque corners mask the
-// bands outside the bottom cap curve. Blue family at or below cooldown,
-// orange above, with an amber top band and gold cap at or above regen.
-inline void draw_fill(Display &it, const UiAssets &a, const UiState &s, const PackView &p) {
-  if (std::isnan(p.t)) return;
-  const int x0 = p.cx - 25;
-  const int top = level_y(p.t, s.overtemp);
-  Color bands[4];
-  int n = 0;
-  BaseImage *cap;
-  if (p.t <= s.cooldown) {
-    bands[n++] = BLUE;
-    bands[n++] = BLUE_D;
-    cap = a.cap_blue;
-  } else {
-    if (p.t >= s.regen) bands[n++] = AMBER;
-    bands[n++] = ORANGE;
-    bands[n++] = ORANGE_MID;
-    bands[n++] = DEEP;
-    cap = p.t >= s.regen ? a.cap_gold : a.cap_amber;
-  }
-  int h = (156 - top) / n;
-  if (h < 6) h = 6;
-  int y = top;
-  for (int i = 0; i < n; i++) {
-    const int hh = (i == n - 1) ? 156 - y : h;
-    if (hh > 0) it.filled_rectangle(x0, y, 51, hh, bands[i]);
-    y += h;
-  }
-  it.image(x0, top - 6, cap);
+// The body in its state colour: one rectangle over the cylinder interior,
+// drawn before the background, which keeps its grey top cap over row 40 and
+// masks everything outside the bottom cap curve down to row 156.
+inline void draw_fill(Display &it, const PackView &p) {
+  if (p.filled) it.filled_rectangle(p.cx - 25, 40, 51, 116, p.phase_color);
 }
 
-// Threshold dashes, the black plate, temperature, phase word and timer.
-inline void draw_pack_text(Display &it, const UiAssets &a, const UiState &s, const PackView &p) {
-  const int x0 = p.cx - 25, x1 = p.cx + 26;
-  dashes(it, x0, x1, level_y(s.regen, s.overtemp), DARKOR);
-  const bool cool = std::isnan(p.t) || p.t <= s.cooldown;
-  dashes(it, x0, x1, level_y(s.cooldown, s.overtemp), cool ? BLUE_D : BLUE_L);
+// The black plate, temperature, phase word and timer.
+inline void draw_pack_text(Display &it, const UiAssets &a, const PackView &p) {
   rounded_rect(it, p.cx - 23, 78, 47, 52, 4, BLACK);
   if (std::isnan(p.t))
     it.print(p.cx, 100, a.f_temp, DIM, TextAlign::BASELINE_CENTER, "--°");
@@ -279,8 +237,8 @@ inline void draw_ui(Display &it, const UiState &s, const UiAssets &a) {
   it.fill(BLACK);
   PackView pa, pb;
   pack_roles(s, pa, pb);
-  draw_fill(it, a, s, pa);
-  draw_fill(it, a, s, pb);
+  draw_fill(it, pa);
+  draw_fill(it, pb);
   it.image(0, 0, a.bg);
   // Symbols follow the real output switches, not the state machine.
   if (s.valve_a)
@@ -291,12 +249,10 @@ inline void draw_ui(Display &it, const UiState &s, const UiAssets &a) {
   it.image(CX_B - 9, 158, s.valve_b ? a.valve_open : a.valve_closed);
   if (s.heater_a) it.image(17, 65, a.heater_on_a);
   if (s.heater_b) it.image(207, 65, a.heater_on_b);
-  if (pa.faulted) it.image(CX_A - 28, 34, a.fault_ring);
-  if (pb.faulted) it.image(CX_B - 28, 34, a.fault_ring);
   it.print(CX_A, 44, a.f_cap, WHITE, TextAlign::BASELINE_CENTER, "A", SHELL);
   it.print(CX_B, 44, a.f_cap, WHITE, TextAlign::BASELINE_CENTER, "B", SHELL);
-  draw_pack_text(it, a, s, pa);
-  draw_pack_text(it, a, s, pb);
+  draw_pack_text(it, a, pa);
+  draw_pack_text(it, a, pb);
   draw_gauge(it, a, s);
   draw_unit(it, a, s);
   it.image(209, 189, a.fan, s.fan ? GREEN : SHELL);

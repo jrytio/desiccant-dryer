@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
   <!-- Opaque black everywhere except the two cylinder interiors (columns
        35..85 and 155..205, rows 40 down to the bottom cap curve), which stay
-       transparent so the temperature fill drawn underneath shows through. -->
+       transparent so the state colour drawn underneath shows through. -->
   <path fill="#000000" fill-rule="evenodd"
         d="M0 0H240V240H0Z M35 40H86V150A25.5 6 0 0 1 35 150Z M155 40H206V150A25.5 6 0 0 1 155 150Z"/>
   <!-- pipes: inlet stub and manifold, inlet branches, outlet branches and manifold -->

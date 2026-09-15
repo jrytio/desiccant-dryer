@@ -79,30 +79,6 @@ number:
     step: 0.5
     initial_value: 10
     optimistic: true
-  - platform: template
-    name: "Cooldown temp"
-    id: cooldown_temp
-    min_value: 20
-    max_value: 80
-    step: 1
-    initial_value: 40
-    optimistic: true
-  - platform: template
-    name: "Regen temp"
-    id: regen_temp
-    min_value: 40
-    max_value: 120
-    step: 1
-    initial_value: 90
-    optimistic: true
-  - platform: template
-    name: "Pack overtemp limit"
-    id: overtemp
-    min_value: 60
-    max_value: 125
-    step: 1
-    initial_value: 120
-    optimistic: true
 
 sensor:
   - platform: template
