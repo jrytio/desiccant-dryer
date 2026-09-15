@@ -98,7 +98,7 @@ then on, and returning any knob you changed.
 | 4 | Waiting state | Sim RH Rise Rate 1, reset | RH passes 10 % while B is still heating. Status ends "(waiting)". Swap happens the tick after "B ready" |
 | 5 | Force Swap | Press during "B heating" | Heater B off first, valves swap, status "Air via B, A wet". No fault |
 | 6 | Standby overtemp | Sim Heater Max 130, reset, wait for heating | Fault on, Fault Message "Standby pack overtemp", both heaters off, Valve A still on, Standby State "cooling", Service Time keeps counting. Press Clear Fault: pack cools, "ready", cycle continues |
-| 7 | Not heating | Sim Heater Fault on, reset, wait for arm | 5 sim-min after Heater B turns on: Fault "Standby heater not heating", heater off, state "cooling". Clear Fault → "ready" |
+| 7 | Not heating | Sim Heater Fault on, reset, wait for arm | 5 sim-min after Heater B turns on: Fault "Standby heater not heating", heater off, state "wet" (not "cooling"). Clear Fault with Sim Heater Fault still on: "B heating" again within one tick (RH is above 5 %), then the same fault 5 sim-min later; B never becomes "ready" and no swap happens. Turn Sim Heater Fault off, Clear Fault: B heats, regenerates, "ready", cycle continues |
 | 8 | Active overtemp | Sim Manual Temps on, Sim Pack A Temp 125 | Fault "Active pack overtemp" within one tick, heaters off, Valve A still on. Set 25, Clear Fault → continues |
 | 9 | Disable / enable | Dryer Enabled off, then on | Off: all outputs off, status "Disabled". On: within 5 s "Air via A, B wet", Valve A on |
 | 10 | Reboot mid-service | At ~30 sim-min of service press Restart | Same active pack after boot, its valve on within one tick, Service Time within a minute of where it was, standby "wet" |
