@@ -47,8 +47,8 @@ Useful screen states and how to reach them:
 
 | Screen | How |
 |---|---|
-| A IN USE (solid green), B WET (solid pink), air path lit down the A branch | Fresh start |
-| B turns solid orange, HEATING, heater glow beside B | Sim Speed 60, wait about a minute |
+| A IN USE (solid green), B WET (solid pink), green chevrons into the top of A, air path lit down the A branch | Fresh start |
+| B turns solid orange, HEATING, amber heat waves rising from the top of B | Sim Speed 60, wait about a minute |
 | B turns cyan (COOLING), then blue (READY), then the path moves to B | Keep waiting |
 | Gauge word RISING / HIGH / OVER, SIM badge top right | Simulate Humidity on, Simulated RH 6 / 9 / 12 |
 | OFF on both packs, nothing lit, strip "Disabled" | Dryer Enabled off |
