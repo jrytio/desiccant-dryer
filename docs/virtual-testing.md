@@ -110,3 +110,19 @@ then on, and returning any knob you changed.
 | 16 | Long probe dropout | During "B heating", Sim Probe B Fault on for 40 s, then off | After 25 s: log "Standby probe lost", Heater B off, state still "heating", no fault. On recovery: Heater B on within one tick, Standby Heater Time restarts from 0, no fault, regen completes |
 
 Record anything unexpected with the log excerpt and the knob values.
+
+## Screen scenarios
+
+Every screen state, including the ones the controller only reaches under
+fault or sensor loss, can be rendered on the Mac without a board:
+
+```bash
+scripts/scenario-shots.sh          # build once, render states 1..12 to docs/display/
+scripts/scenario-shots.sh 6 6      # just one
+```
+
+The script runs `esphome/desiccant-dryer-scenarios.yaml` with `SCENARIO=n`
+and `SHOT=<file>`; the program draws the frame through the panel's RGB
+3-3-2 palette into a buffer, writes it, and exits. Needs `brew install sdl2`.
+The live, controller-driven screen is `docs/host-preview.md`; the board's
+own screen is `docs/screen-in-ha.md`.

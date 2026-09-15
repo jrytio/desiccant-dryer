@@ -38,11 +38,18 @@ entities). Platform: `packages/platform-esp32.yaml` (board, WiFi, OTA, web
 server) or `packages/platform-host.yaml` (native build on the Mac). Hardware:
 `packages/hw-real.yaml` (buses and real sensors; the hardware side edits only
 this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
-`packages/display-draw.yaml` (fonts, colours and the drawing lambda as the
-`display_lambda` substitution; edit this to change the screen) plus a driver,
+`packages/display-draw.yaml` (fonts, SVG sprites from `esphome/assets/display/`,
+and the `ui_draw` script that gathers ids into a `UiState` for
+`packages/display_ui.h`, where all drawing lives with no `id()` calls; the
+`display_lambda` substitution just runs that script) plus a driver,
 `packages/display-st7789.yaml` (real panel) or `packages/display-sdl.yaml`
-(window on the Mac). `packages/screen-mirror.yaml` (device builds only) serves the panel's frame buffer as `/screen.png` through the local component `esphome/components/screen_mirror`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
-and `desiccant-dryer-host.yaml` are short selectors. Base must only reference
+(window on the Mac); both give the display id `panel`. `packages/screen-mirror.yaml` (device builds only) serves the panel's frame buffer as `/screen.png` through the local component `esphome/components/screen_mirror`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`
+and `desiccant-dryer-host.yaml` are short selectors; `desiccant-dryer-scenarios.yaml`
+is a fourth, host-only build that swaps the controller for a fixed table of
+twelve screen states (`packages/display-scenarios.yaml`) so
+`scripts/scenario-shots.sh` can render them all through the panel's palette
+into `docs/display/`. The screen design is in
+`docs/superpowers/specs/2026-09-14-display-ui-design.md`. Base must only reference
 the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
 `case_temp` from the hardware package; `display-draw.yaml` additionally
 reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source of truth for sensors,
@@ -96,6 +103,10 @@ service 180 min) are untested guesses meant to get first cycles logging.
   docs/host-preview.md. Nothing WiFi, OTA, SPI or LEDC related may be added
   to `base.yaml` or `display-draw.yaml`, because the host build has none of
   those; it goes in the platform or driver package.
+- Any display change: run `scripts/scenario-shots.sh` and check the PNGs in
+  `docs/display/` before flashing. They are rendered through the same RGB
+  3-3-2 palette the panel uses (every designed colour already sits on that
+  grid); the host build shows the same drawing live but in full colour.
 - The device builds serve the live screen at `http://<board>/screen.png`
   for Home Assistant's Generic Camera (docs/screen-in-ha.md). It streams
   from the ST7789's 8-bit buffer; keep `color_palette: 8BIT` and rotation
