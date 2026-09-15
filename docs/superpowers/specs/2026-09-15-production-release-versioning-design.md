@@ -27,8 +27,11 @@ by hand from a laptop and are not part of this.
   the hand-flashed test builds. The production image ships with an open
   fallback access point, captive portal, Improv serial and a plain API;
   the owner enters WiFi at flash time and Home Assistant sets the API key
-  on adoption. `dashboard_import` points at this repo so the ESPHome
-  dashboard can adopt the device. The production yaml validates without
+  on adoption (the `api` block keeps an empty `encryption: {}` so that
+  bootstrap mode is compiled in). No ESPHome OTA server: unauthenticated,
+  it would let any LAN host reflash a mains controller; firmware arrives
+  only through the update entity or USB. The API reboot watchdog is off so
+  an unadopted unit keeps running. The production yaml validates without
   any `secrets.yaml` present.
 - **Hosting: the GitHub Release itself.** The repository is public, so
   the device polls
@@ -50,7 +53,7 @@ by hand from a laptop and are not part of this.
 | Unit | Purpose | Depends on |
 |---|---|---|
 | `esphome/version.yaml` | the version number | nothing |
-| `esphome/packages/release.yaml` | project id, provisioning (Improv, dashboard_import), http_request, OTA backends, update entity, diagnostics | `${version}`, `${update_manifest_url}` |
+| `esphome/packages/release.yaml` | project id, Improv provisioning, http_request, HTTP OTA backend, update entity, diagnostics | `${version}`, `${update_manifest_url}` |
 | `esphome/packages/dev-secrets.yaml` | WiFi, API key, OTA password from secrets.yaml; test builds only | `secrets.yaml` |
 | `esphome/desiccant-dryer.yaml` | includes the two above, sets DEBUG logging | |
 | `.github/workflows/release.yml` | tag `vX.Y.Z` → check version, build, manifest, GitHub Release | nothing beyond the repo token |

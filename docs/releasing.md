@@ -12,7 +12,7 @@ through this.
 - `esphome/packages/release.yaml` gives the firmware a project name and
   that version, adds ESPHome's `update` entity
   (`update.desiccant_dryer_firmware`), an HTTP OTA backend, Improv serial
-  provisioning, `dashboard_import`, safe mode and diagnostics (free heap,
+  provisioning, safe mode and diagnostics (free heap,
   loop time, reset reason, running version). The update entity polls
   `https://github.com/jrytio/desiccant-dryer/releases/latest/download/manifest.json`
   every six hours and whenever Home Assistant asks it to check.
@@ -20,7 +20,13 @@ through this.
   encryption key and the OTA password live in `packages/dev-secrets.yaml`,
   which only the test builds include. A released dryer gets its WiFi from
   its owner at flash time and its API key from Home Assistant when it is
-  adopted.
+  adopted. It also has no ESPHome OTA server and the web server's
+  firmware-upload page is off: unauthenticated, either would let anyone on
+  the LAN upload firmware to a mains controller. Firmware reaches a
+  released unit only through the update entity or the USB port (plus the
+  captive portal, which exists only while the unit has no WiFi and is
+  broadcasting its setup access point), so `esphome run` over the network
+  does not work against a released dryer; that is intended.
 - Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`, which
   refuses to build unless the tag equals the version in `version.yaml`,
   compiles the production yaml, writes the manifest with
@@ -36,9 +42,9 @@ through this.
 ## Installing a release on a dryer (owner)
 
 1. Open https://web.esphome.io in Chrome or Edge, plug the board in over
-   USB, choose *Prepare for first use* or install from the release's
-   manifest, and enter the WiFi network when asked (Improv over the USB
-   serial port). Alternatively join the open `Desiccant Dryer Setup`
+   USB, and install the release: the GitHub Release page carries the
+   `.factory.bin`, and the manifest is in esp-web-tools format. Enter the
+   WiFi network when asked (Improv over the USB serial port). Alternatively join the open `Desiccant Dryer Setup`
    access point the board raises when it has no network and enter the
    WiFi there.
 2. Home Assistant discovers the device; accept it under Settings →

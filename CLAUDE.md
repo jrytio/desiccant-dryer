@@ -138,8 +138,12 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - The production selector alone includes `esphome/version.yaml` (semver,
   bumped in the PR) and `packages/release.yaml` (project version, Improv
   and captive-portal provisioning, HA update entity polling the latest
-  GitHub Release's manifest, safe mode, debug sensors). It contains no
-  secrets and must validate with no `secrets.yaml` present: WiFi, the API
+  GitHub Release's manifest, safe mode, debug sensors). It has no ESPHome
+  OTA server and the web server's upload page is off (unauthenticated
+  reflash of a mains controller); the API reboot watchdog is off; `api:
+  encryption: {}` in base.yaml must stay so HA can hand the released unit
+  a key. It contains no secrets and must validate with no `secrets.yaml`
+  present: WiFi, the API
   key and the OTA password live in `packages/dev-secrets.yaml`, included
   only by the hand-flashed test builds. Tags `vX.Y.Z` pushed by
   `scripts/release.sh` run the release workflow; see docs/releasing.md.

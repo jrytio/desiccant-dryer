@@ -5,7 +5,10 @@
 # The release image carries no credentials (packages/dev-secrets.yaml is
 # only in the test builds). The owner sets WiFi through Improv on the USB
 # serial port (web.esphome.io does this) or the fallback access point, and
-# Home Assistant adopts the device and sets its API encryption key.
+# Home Assistant adopts the device and sets its API encryption key. There
+# is deliberately no ESPHome OTA server: without a password it would let
+# any host on the LAN upload firmware to a mains controller. Firmware
+# arrives only through the signed-off release below or the USB port.
 #
 # The device polls ${update_manifest_url}, the esp-web-tools manifest that
 # .github/workflows/release.yml attaches to every GitHub Release, and
@@ -21,20 +24,29 @@ esphome:
     name: jrytio.desiccant-dryer
     version: "${version}"
 
-# Lets the ESPHome dashboard adopt the device with this repo's config.
-dashboard_import:
-  package_import_url: github://jrytio/desiccant-dryer/esphome/desiccant-dryer.yaml@main
-  import_full_config: false
+# A fresh unit has no API client until it is adopted; ESPHome's default
+# would reboot it every 15 min meanwhile. The controller must run without
+# Home Assistant, so the API watchdog is off.
+api:
+  reboot_timeout: 0s
 
 improv_serial:
 
 http_request:
   verify_ssl: true
   timeout: 10s
+  # The releases/latest/download URL answers with a redirect whose signed
+  # Location header runs to several hundred bytes; the 512-byte default
+  # fails with "Out of buffer" before the manifest is ever read.
+  buffer_size_rx: 2048
 
 ota:
-  - platform: esphome     # first adoption and manual `esphome run` flashes
   - platform: http_request
+
+# The web server's own firmware-upload page is the same unauthenticated
+# LAN reflash path; the status pages and controls stay.
+web_server:
+  ota: false
 
 update:
   - platform: http_request
@@ -57,7 +69,6 @@ text_sensor:
     name: "Firmware Version"
     entity_category: diagnostic
     icon: mdi:tag
-    update_interval: never
     lambda: return {"${version}"};
   - platform: debug
     reset_reason:
