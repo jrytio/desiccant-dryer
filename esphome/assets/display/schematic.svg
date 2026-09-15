@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <!-- Opaque black everywhere except the two cylinder interiors (columns
+       35..85 and 155..205, rows 40 down to the bottom cap curve), which stay
+       transparent so the temperature fill drawn underneath shows through. -->
+  <path fill="#000000" fill-rule="evenodd"
+        d="M0 0H240V240H0Z M35 40H86V150A25.5 6 0 0 1 35 150Z M155 40H206V150A25.5 6 0 0 1 155 150Z"/>
+  <!-- pipes: inlet stub and manifold, inlet branches, outlet branches and manifold -->
+  <path d="M120.5 2V24 M59 22.5H182 M60.5 22.5V40 M180.5 22.5V40 M60.5 156V178 M180.5 156V178 M59 176.5H182"
+        stroke="#494955" stroke-width="3" fill="none"/>
+  <path d="M116.5 14L120.5 19L124.5 14" stroke="#9292AA" stroke-width="1.5" fill="none"/>
+  <!-- cylinder shells: sides, lower arc of the bottom cap, filled top cap -->
+  <g stroke="#494955" fill="none">
+    <path d="M34.5 40V150 M86.5 40V150 M154.5 40V150 M206.5 40V150"/>
+    <path d="M34.5 150A26 6 0 0 0 86.5 150 M154.5 150A26 6 0 0 0 206.5 150"/>
+  </g>
+  <ellipse cx="60.5" cy="40" rx="26" ry="6" fill="#494955"/>
+  <ellipse cx="180.5" cy="40" rx="26" ry="6" fill="#494955"/>
+  <!-- heater elements in the off state, B the mirror of A -->
+  <path d="M22 70L30 78L22 86L30 94L22 102L30 110L22 118 M218 70L210 78L218 86L210 94L218 102L210 110L218 118"
+        stroke="#494955" stroke-width="2" fill="none" stroke-linejoin="round"/>
+  <!-- sensor node on the outlet manifold, stem and arrow -->
+  <circle cx="120.5" cy="176.5" r="6" fill="#000000" stroke="#494955" stroke-width="1.5"/>
+  <path d="M120.5 182V190" stroke="#494955" stroke-width="3" fill="none"/>
+  <path d="M116.5 187L120.5 192L124.5 187" stroke="#494955" stroke-width="1.5" fill="none"/>
+</svg>

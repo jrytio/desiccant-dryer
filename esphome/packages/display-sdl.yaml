@@ -7,10 +7,12 @@
 
 display:
   - platform: sdl
+    id: panel                   # same id as the ST7789, so ui_draw finds it
     dimensions:
       width: 240
       height: 240
     update_interval: 2s
+    auto_clear_enabled: false   # draw_ui() fills the frame itself
     window_options:
       resizable: true
     lambda: ${display_lambda}
