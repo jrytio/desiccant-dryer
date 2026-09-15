@@ -5,7 +5,7 @@ air dryer control board. Swaps packs on measured humidity and pack
 temperature instead of a fixed timer. See `CLAUDE.md` for decisions,
 `docs/hardware.md` for wiring and BOM, `docs/control-logic.md` for the
 state machine, `docs/virtual-testing.md` for testing without hardware,
-`docs/host-preview.md` for the display on your Mac.
+`docs/host-preview.md` for the display on your Mac, `docs/screen-in-ha.md` for the live screen in Home Assistant.
 
 Three builds share `esphome/packages/base.yaml`:
 
