@@ -37,7 +37,7 @@ struct UiState {
 // Aggregate-initialised by the ui_draw script; keep the member order in step.
 struct UiAssets {
   BaseFont *f_temp, *f_val, *f_cap, *f_label, *f_phase, *f_status, *f_status_b;
-  BaseImage *bg, *valve_open, *valve_closed, *heater_on_a, *heater_on_b, *lit_a, *lit_b, *fan;
+  BaseImage *bg, *valve_open, *valve_closed, *flow_in, *flow_out, *lit_a, *lit_b, *fan;
 };
 
 // The most recently gathered state and asset table. The ui_draw script fills
@@ -204,10 +204,9 @@ inline void draw_gauge(Display &it, const UiAssets &a, const UiState &s) {
   }
 }
 
-// Labels, case temperature, fan label and the SIM badge. The fan icon itself
-// is an image and is drawn by draw_ui.
+// Case label and temperature, fan label and the SIM badge. The fan icon
+// itself is an image and is drawn by draw_ui.
 inline void draw_unit(Display &it, const UiAssets &a, const UiState &s) {
-  it.print(112, 11, a.f_label, DIM, TextAlign::BASELINE_RIGHT, "WET AIR");
   it.print(6, 196, a.f_label, DIM, TextAlign::BASELINE_LEFT, "CASE");
   if (std::isnan(s.t_case))
     it.print(6, 209, a.f_val, DIM, TextAlign::BASELINE_LEFT, "--°");
@@ -247,8 +246,12 @@ inline void draw_ui(Display &it, const UiState &s, const UiAssets &a) {
     it.image(109, 154, a.lit_b);
   it.image(CX_A - 9, 158, s.valve_a ? a.valve_open : a.valve_closed);
   it.image(CX_B - 9, 158, s.valve_b ? a.valve_open : a.valve_closed);
-  if (s.heater_a) it.image(17, 65, a.heater_on_a);
-  if (s.heater_b) it.image(207, 65, a.heater_on_b);
+  // Air in at the top of a pack whose valve is open; warm air out of the top
+  // of a pack whose heater is on.
+  if (s.valve_a) it.image(CX_A - 8, 3, a.flow_in);
+  if (s.valve_b) it.image(CX_B - 8, 3, a.flow_in);
+  if (s.heater_a) it.image(CX_A - 13, 1, a.flow_out);
+  if (s.heater_b) it.image(CX_B - 13, 1, a.flow_out);
   it.print(CX_A, 44, a.f_cap, WHITE, TextAlign::BASELINE_CENTER, "A", SHELL);
   it.print(CX_B, 44, a.f_cap, WHITE, TextAlign::BASELINE_CENTER, "B", SHELL);
   draw_pack_text(it, a, pa);

@@ -75,16 +75,16 @@ image:
     type: RGB565
     transparency: alpha_channel
     resize: 19x17
-  - file: assets/display/heater-on-a.svg
-    id: img_heater_on_a
+  - file: assets/display/flow-in.svg
+    id: img_flow_in
     type: RGB565
     transparency: alpha_channel
-    resize: 16x56
-  - file: assets/display/heater-on-b.svg
-    id: img_heater_on_b
+    resize: 17x26
+  - file: assets/display/flow-out.svg
+    id: img_flow_out
     type: RGB565
     transparency: alpha_channel
-    resize: 16x56
+    resize: 27x31
   - file: assets/display/lit-a.svg
     id: img_lit_a
     type: RGB565
@@ -133,6 +133,6 @@ script:
           dryer_ui::last_assets() = dryer_ui::UiAssets{id(f_temp), id(f_val), id(f_cap), id(f_label), id(f_phase),
                                                        id(f_status), id(f_status_b),
                                                        id(img_bg), id(img_valve_open), id(img_valve_closed),
-                                                       id(img_heater_on_a), id(img_heater_on_b), id(img_lit_a), id(img_lit_b),
+                                                       id(img_flow_in), id(img_flow_out), id(img_lit_a), id(img_lit_b),
                                                        id(img_fan)};
           dryer_ui::draw_ui(*id(panel), s, dryer_ui::last_assets());

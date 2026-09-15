@@ -8,7 +8,11 @@ temperature fill, threshold dashes, cap sprites (`img_cap_*`), fault ring
 (`img_fault_ring`), the `cooldown`/`regen`/`overtemp` inputs, and the phase
 colours and words below are superseded: each cylinder body is now one solid
 colour for its state (IN USE green, WET pink, HEATING orange, COOLING cyan,
-READY blue, FAULT red). The rest of this document stands.
+READY blue, FAULT red). Also amended by
+`2026-09-15-airflow-indicators-design.md`: the WET AIR label, inlet pipes,
+heater zigzags and heater-on glow sprites are gone; chevrons over a pack
+with its valve open and heat waves over a pack with its heater on replace
+them. The rest of this document stands.
 
 ## Goal
 
