@@ -1,13 +1,16 @@
 # Production build: real sensors on the SparkFun ESP32-S2 Thing Plus.
 # Flash:  esphome run esphome/desiccant-dryer.yaml
 # Logic:  packages/base.yaml           (shared with the virtual and host builds)
-# Board:  packages/platform-esp32.yaml (board, WiFi, OTA, web server)
+# Board:  packages/platform-esp32.yaml (board, WiFi, web server)
 # Wiring: packages/hw-real.yaml        (the only file the hardware side needs)
-# Screen: packages/screen-mirror.yaml  (/screen.png for Home Assistant)
-# Release: version.yaml + packages/release.yaml (version, provisioning, HA
-#         update entity, diagnostics). No secrets: the owner sets WiFi at
-#         flash time. Tagged builds are published by the release workflow;
-#         see docs/releasing.md.
+# Release: version.yaml + packages/release.yaml (version, provisioning,
+#         diagnostics). No secrets: the owner sets WiFi at flash time and
+#         adopts the device in ESPHome Device Builder, which generates the
+#         owner's own API key and OTA password and pushes later updates
+#         over WiFi. See docs/releasing.md.
+# Screen: no /screen.png mirror in production. Its local external component
+#         does not resolve when Device Builder pulls this file as a remote
+#         package; the test builds keep packages/screen-mirror.yaml.
 substitutions:
   name: desiccant-dryer
   friendly_name: Desiccant Dryer
@@ -19,8 +22,13 @@ packages:
   hardware: !include packages/hw-real.yaml
   draw: !include packages/display-draw.yaml
   display: !include packages/display-st7789.yaml
-  mirror: !include packages/screen-mirror.yaml
   release: !include packages/release.yaml
+
+# Lets ESPHome Device Builder adopt a flashed unit: it writes a short YAML
+# that pulls this file as a package and adds the owner's credentials.
+dashboard_import:
+  package_import_url: github://jrytio/desiccant-dryer/esphome/desiccant-dryer.yaml@main
+  import_full_config: false
 
 # 1.x releases log at DEBUG so the unit can be brought up and tested
 # remotely through `esphome logs`, the web server and Home Assistant.
