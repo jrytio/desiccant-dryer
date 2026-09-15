@@ -22,8 +22,10 @@ preview build, with the display visible in a window; see
    and `wifi_workshop_ssid` / `wifi_workshop_password`. The board joins
    whichever network is in range, so moving it between sites needs no
    reflash. Quote each SSID exactly as broadcast; the workshop's ends in a
-   space, and dropping it gives "No matching network found". Generate the
-   others:
+   space, and dropping it gives "No matching network found". A
+   `secrets.yaml` from before the two-site change still has `wifi_ssid` /
+   `wifi_password`, which no longer validate: rename them to the pair for
+   that network's site and add the other pair. Generate the others:
 
    ```bash
    openssl rand -base64 32     # api_key
