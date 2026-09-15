@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  ESPHOME_VERSION: 2026.1.4
+  ESPHOME_VERSION: 2026.8.2
   # Workspace-relative so it needs no home-directory assumptions on the runner.
   PIO_CACHE: .ci-cache/platformio
 
