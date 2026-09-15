@@ -27,21 +27,9 @@ Settings, Devices & services, Add integration, **Generic Camera**:
 | Verify SSL certificate | off (plain HTTP) |
 
 Name it "Dryer Screen". Add a **Picture Entity** card for it to the dryer
-dashboard with `camera_view: live`, which follows the camera's frame rate
-(`auto` only fetches a new still about every 10 s). Set the frame rate to
-0.5 Hz as in the table, not the Generic Camera default of 2 Hz: with no
-stream source, live view re-fetches the still at that rate, and one fetch
-from the S2 takes about 1 s (0.45 s to first byte, 1.0 s for the 58,688
-bytes, measured from the LAN). At 2 Hz the fetches overlap and each frame
-half paints before it is replaced; at 0.5 Hz the image is steady. Every
-open live view makes its own request every 2 s, so a few viewers at once
-add real load on the board. The production unit gets a second camera
-pointed at its own address.
-
-The bench dashboard built around this camera is
-`docs/ha/dryer-bench-dashboard.yaml`: screen, status and trends on top,
-tabs for simulation, thresholds, test recipes and diagnostics below. Its
-header lists the helper and unit settings it needs on the HA side.
+dashboard; by default the card fetches a new still about every 10 s; set
+`camera_view: live` on the card to follow the camera's own 0.5 Hz rate. The
+production unit gets a second camera pointed at its own address.
 
 ## Limits
 
