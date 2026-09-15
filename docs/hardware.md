@@ -89,6 +89,16 @@ IRLZ44N TO-220 tab at back, legs down: G D S. Tab is tied to drain.
 - Nothing above 24 V on the breadboard. Heater contacts and mains wiring go
   on the relay module / a terminal block in the enclosure.
 
+## Protoboard layout (proposal)
+
+![Protoboard layout](board-layout.svg)
+
+Two boards, split at the mains boundary rather than by voltage: a 70×90 mm
+logic + 24 V board (ESP socketed, buck, three MOSFET channels, 1-wire block,
+display header) and a 50×70 mm relay board (relays, 2N2222 stages, 120 VAC
+terminals) joined by a 4-wire logic-level harness. Not yet built; the buck
+footprint is unverified and the Songle relay pins are not on a 2.54 mm grid.
+
 ## Mechanical notes
 
 - SHT45 must sit downstream of both valves so it sees the air actually sent
