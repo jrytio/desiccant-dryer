@@ -1,0 +1,6 @@
+# The production firmware version. Semantic versioning. Bump it in the PR
+# that should become the next release; after the merge, scripts/release.sh
+# tags main with the same number and the release workflow builds it.
+# Only esphome/desiccant-dryer.yaml includes this file.
+substitutions:
+  version: "1.0.0"

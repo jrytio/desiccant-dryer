@@ -72,9 +72,12 @@ esphome:
 logger:
   level: INFO
 
+# The empty encryption block matters: with it and no key, the device accepts
+# a key from Home Assistant when adopted and persists it. The dev builds
+# merge a static key in from secrets.yaml (packages/dev-secrets.yaml, and
+# platform-host.yaml on the host); the production release ships without one.
 api:
-  encryption:
-    key: !secret api_key
+  encryption: {}
 
 # ---------------------------------------------------------------- globals
 globals:

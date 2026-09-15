@@ -16,6 +16,10 @@ text_sensor:
     lambda: return std::string("host");
 
 api:
+  # The key comes from secrets.yaml, as on the virtual build's
+  # dev-secrets.yaml; the host build has no WiFi so it cannot share that file.
+  encryption:
+    key: !secret api_key
   # base.yaml's api block keeps ESPHome's default 15 min reboot_timeout: no
   # client for that long calls App.reboot(), which on host is exit(0), so the
   # window would close on its own. Also removes the "api set Warning flag"

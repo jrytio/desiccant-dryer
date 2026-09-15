@@ -1,0 +1,73 @@
+name: release
+
+# Builds the production firmware for a version tag and attaches the
+# binaries and an esp-web-tools manifest to a GitHub Release. The device's
+# update entity polls the "latest" release's manifest and Home Assistant
+# offers the new version. The image carries no secrets, so the build needs
+# none. Procedure: docs/releasing.md.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+env:
+  ESPHOME_VERSION: 2026.8.2
+  TOOL_CACHE: .ci-cache/tools
+
+permissions:
+  contents: write   # create the release
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the tag matches esphome/version.yaml
+        id: ver
+        run: |
+          tag=${GITHUB_REF_NAME#v}
+          file=$(sed -n 's/^  version: "\(.*\)"/\1/p' esphome/version.yaml)
+          if [ "$tag" != "$file" ]; then
+            echo "::error::tag v$tag but esphome/version.yaml says $file"; exit 1
+          fi
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Restore toolchains
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.TOOL_CACHE }}
+          key: toolchains-${{ env.ESPHOME_VERSION }}-esp32-${{ hashFiles('esphome/packages/platform-*.yaml') }}
+          restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-esp32-
+      - name: Restore build directory
+        uses: actions/cache/restore@v6
+        with:
+          path: esphome/.esphome
+          key: build-${{ env.ESPHOME_VERSION }}-production-${{ hashFiles('esphome/**') }}
+          restore-keys: build-${{ env.ESPHOME_VERSION }}-production-
+
+      - name: Compile
+        run: |
+          mkdir -p "$TOOL_CACHE"
+          docker run --rm -v "$PWD:/config" -w /config \
+            -v "$PWD/$TOOL_CACHE:/cache" \
+            "ghcr.io/esphome/esphome:$ESPHOME_VERSION" compile esphome/desiccant-dryer.yaml
+          sudo chown -R "$(id -u):$(id -g)" esphome/.esphome
+
+      - name: Assemble manifest and binaries
+        run: |
+          scripts/make-manifest.sh "${{ steps.ver.outputs.version }}" \
+            esphome/.esphome/build/desiccant-dryer/.pioenvs/desiccant-dryer \
+            site "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          cat site/manifest.json
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" site/*.bin site/manifest.json \
+            --title "Desiccant Dryer ${{ steps.ver.outputs.version }}" \
+            --generate-notes

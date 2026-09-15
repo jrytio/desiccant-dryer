@@ -30,7 +30,6 @@ preview build, with the display visible in a window; see
    ```bash
    openssl rand -base64 32     # api_key
    openssl rand -hex 16        # ota_password
-   openssl rand -hex 8         # ap_password
    ```
 
 2. First flash over USB. Plug the board in, find the port, flash:

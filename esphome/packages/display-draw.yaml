@@ -60,43 +60,51 @@ font:
     glyphs: " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~°·"
 
 image:
-  - file: assets/display/schematic.svg
+  - platform: file
+    file: assets/display/schematic.svg
     id: img_bg
     type: RGB565
     transparency: alpha_channel
     resize: 240x240
-  - file: assets/display/valve-open.svg
+  - platform: file
+    file: assets/display/valve-open.svg
     id: img_valve_open
     type: RGB565
     transparency: alpha_channel
     resize: 19x17
-  - file: assets/display/valve-closed.svg
+  - platform: file
+    file: assets/display/valve-closed.svg
     id: img_valve_closed
     type: RGB565
     transparency: alpha_channel
     resize: 19x17
-  - file: assets/display/flow-in.svg
+  - platform: file
+    file: assets/display/flow-in.svg
     id: img_flow_in
     type: RGB565
     transparency: alpha_channel
     resize: 17x26
-  - file: assets/display/flow-out.svg
+  - platform: file
+    file: assets/display/flow-out.svg
     id: img_flow_out
     type: RGB565
     transparency: alpha_channel
     resize: 27x31
-  - file: assets/display/lit-a.svg
+  - platform: file
+    file: assets/display/lit-a.svg
     id: img_lit_a
     type: RGB565
     transparency: alpha_channel
     resize: 76x42
-  - file: assets/display/lit-b.svg
+  - platform: file
+    file: assets/display/lit-b.svg
     id: img_lit_b
     type: RGB565
     transparency: alpha_channel
     resize: 76x42
   # Tinted at draw time: green when the fan runs, shell grey otherwise.
-  - file: mdi:fan
+  - platform: file
+    file: mdi:fan
     id: img_fan
     type: BINARY
     transparency: chroma_key
