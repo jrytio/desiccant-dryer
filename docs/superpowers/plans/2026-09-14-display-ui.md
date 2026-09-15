@@ -821,7 +821,7 @@ esphome:
             {2, 1, 0, true,  false, true,  true,  false, false, true,  94,  29,  30, 5.6f,  6000,  900, "Air via B, A heating", "", ""},
             {1, 2, 2, true,  false, true,  false, false, true,  false, 33, 124,  36, 6.1f,  8400, 1080, "Air via A, B cooling", "Standby pack overtemp", ""},
             {0, 0, 0, false, false, false, false, false, false, false, 28,  45,  26, 3.0f,     0,    0, "Disabled", "", ""},
-            {1, 0, 0, true,  false, false, false, false, true,  false, 25,  25,  25, 2.0f,     0,    0, "Air via A, B wet", "", "10.42.14.100"},
+            {1, 0, 0, true,  false, false, false, false, true,  false, 25,  25,  25, 2.0f,     0,    0, "Air via A, B wet", "", "198.51.100.200"},
             {1, 1, 0, true,  true,  false, false, false, true,  false, 30, NAN,  29, 6.0f,  2640,  180, "Air via A, B heating", "", ""},
           };
           int n = 3;
@@ -1338,7 +1338,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 scripts/preview-shots.sh
 ls -la docs/display/*.png | wc -l
 ```
-Expected: 12 files. Open each and compare against the matching tile in `docs/display/mockup-states.html`. Check specifically: 1 has no roles, timers or lit path; 6 shows OVER in red with the red zone bright; 7 shows HIGH; 10 shows OFF on both packs, both valves closed, no fan; 11's strip reads `10.42.14.100`; 12 shows the SIM badge. Fix any mismatch in the header or SVGs, re-run the affected scenario, and repeat until they match.
+Expected: 12 files. Open each and compare against the matching tile in `docs/display/mockup-states.html`. Check specifically: 1 has no roles, timers or lit path; 6 shows OVER in red with the red zone bright; 7 shows HIGH; 10 shows OFF on both packs, both valves closed, no fan; 11's strip reads `198.51.100.200`; 12 shows the SIM badge. Fix any mismatch in the header or SVGs, re-run the affected scenario, and repeat until they match.
 
 - [ ] **Step 2: Compile both ESP builds one last time**
 

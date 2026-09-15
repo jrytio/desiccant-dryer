@@ -3,7 +3,7 @@
 Both device builds serve the panel's frame buffer as an image:
 
 ```bash
-curl -o screen.png http://10.42.14.100/screen.png     # bench board
+curl -o screen.png http://<board>/screen.png     # <board>: the board's IP address
 ```
 
 It is a 240x240 8-bit indexed PNG, 58,688 bytes (uncompressed, so it
@@ -31,7 +31,7 @@ Settings, Devices & services, Helpers, Create helper, **Template**,
 | Field | Value |
 |---|---|
 | Name | `Dryer Screen` (entity `image.dryer_screen`) |
-| URL | `http://10.42.14.100/screen.png?t={{ now().timestamp() \| int }}` |
+| URL | `http://<board>/screen.png?t={{ now().timestamp() \| int }}` |
 | Verify SSL certificate | off (plain HTTP) |
 
 A template image only refetches when its URL changes, and a template using
@@ -80,7 +80,7 @@ own image entity and automation pointed at its own address.
 ## Camera entity (LAN only)
 
 A Generic Camera on the same URL (Still Image URL
-`http://10.42.14.100/screen.png`, no stream source, content type
+`http://<board>/screen.png`, no stream source, content type
 `image/png`, frame rate `0.5` Hz) also works on the LAN, but not remotely
 at its useful rate. A Picture Entity card with `camera_view: live` holds
 an endless MJPEG response open (`/api/camera_proxy_stream/...`); through

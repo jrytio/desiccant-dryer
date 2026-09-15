@@ -311,14 +311,14 @@ twelve-row table matching `docs/display/mockup-states.html`:
 | 8 | B in service, A HEATING, 94/29 °C, RH 5.6 |
 | 9 | Fault 2, B at 124 °C, strip "FAULT · Standby pack overtemp" |
 | 10 | Disabled, 28/45 °C |
-| 11 | Boot: uptime under 60 s, strip shows 10.42.14.100 |
+| 11 | Boot: uptime under 60 s, strip shows 198.51.100.200 |
 | 12 | Probe B NaN, SIM on, heater blocked |
 
 The stub sets the switch states directly (valve A open and so on); there is
 no state machine on the host. Every host run starts at uptime zero, so the
 boot-IP rule would fire in every scenario; the stub therefore publishes an
 empty `ip_addr` in all scenarios except 11, where it publishes
-`10.42.14.100`.
+`198.51.100.200` (a documentation address, RFC 5737).
 
 `scripts/preview-shots.sh`: `esphome compile` the preview once, then for
 each scenario run the built binary with `SCENARIO=n`, wait for the window,
