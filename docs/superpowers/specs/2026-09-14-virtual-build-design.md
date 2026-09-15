@@ -3,6 +3,13 @@
 Date: 2026-09-14
 Status: approved in conversation; awaiting spec review
 
+Amended 2026-09-15 (PR #9): fault 3 ("Standby heater not heating") now
+sends the standby pack to WET, not COOLING, because that pack never reached
+regen temperature and would otherwise become READY as soon as the fault was
+cleared. The `standby_state = COOLING` on the fault 3 line of the tick
+pseudocode below is superseded; `docs/control-logic.md` is current. The
+rest of this document stands.
+
 ## Goal
 
 Make the dryer control logic testable end to end on a bare SparkFun

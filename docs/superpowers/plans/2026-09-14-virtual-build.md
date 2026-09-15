@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-14-virtual-build-design.md`
 
+**Amended 2026-09-15 (PR #9), after this plan was carried out:** fault 3 now sets `standby_state = 0` (WET), not 2 (COOLING), so a pack whose heater failed must regenerate before it can be READY. The fault 3 code, the fault table row and scenario 7 below still show the old behaviour and are superseded; `esphome/packages/base.yaml`, `docs/control-logic.md` and `docs/virtual-testing.md` are current. Do not re-apply those steps as written.
+
 ## Global Constraints
 
 - ESPHome version: 2026.1.4 locally and in CI (`version: 2026.1.4`).
