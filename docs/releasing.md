@@ -88,5 +88,5 @@ service.
 - To dry-run the packaging locally:
 
   ```bash
-  esphome compile esphome/desiccant-dryer.yaml && scripts/make-manifest.sh 1.0.0 esphome/.esphome/build/desiccant-dryer/.pioenvs/desiccant-dryer /tmp/site
+  esphome compile esphome/desiccant-dryer.yaml && scripts/make-manifest.sh 1.0.0 esphome/.esphome/build/desiccant-dryer/build /tmp/site
   ```
