@@ -17,11 +17,9 @@
 
 substitutions:
   display_lambda: "id(ui_draw).execute();"
-  # Where the SVG art is read from at compile time. A local path for every
-  # checked-in build; esphome/desiccant-dryer-adopt.yaml points it at the
-  # release tag on GitHub, because Device Builder's remote package cannot
-  # resolve paths inside this repository. The drawing code comes in the
-  # same way through packages/ui-code-local.yaml or ui-code-remote.yaml.
+  # Where the SVG art is read from at compile time: a local path, used by
+  # every build. The drawing code comes in the same way, through
+  # packages/ui-code-local.yaml.
   display_assets: assets/display
 
 font:

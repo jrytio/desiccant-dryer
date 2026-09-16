@@ -2,10 +2,9 @@ name: release
 
 # Builds the production firmware for a version tag, attaches the binaries
 # and an esp-web-tools manifest to a GitHub Release, and copies them to the
-# gh-pages branch so web.esphome.io can install them. Owners update from
-# ESPHome Device Builder, which compiles desiccant-dryer-adopt.yaml at this
-# tag; nothing on the device polls. The image carries no secrets, so the
-# build needs none. Procedure: docs/releasing.md.
+# gh-pages branch so web.esphome.io can install them. The on-device `update:`
+# entity installs releases published here itself. The image carries no
+# secrets, so the build needs none. Procedure: docs/releasing.md.
 on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+']

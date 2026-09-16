@@ -2,11 +2,9 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 
 # The screen's drawing code (display_ui.h) as a component rather than an
-# `esphome: includes:` file. Includes resolve next to the top-level YAML,
-# so a build that pulls the production YAML as a remote package (ESPHome
-# Device Builder adoption) could not find the header; external components
-# can come from a git ref instead. packages/ui-code-local.yaml and
-# packages/ui-code-remote.yaml choose the source.
+# `esphome: includes:` file, so it can be shared via packages across the
+# production, virtual, hw-test and host selectors. packages/ui-code-local.yaml
+# chooses the source.
 
 CODEOWNERS = []
 DEPENDENCIES = ["display"]
