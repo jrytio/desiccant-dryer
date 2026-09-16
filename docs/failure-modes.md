@@ -376,6 +376,8 @@ when no existing issue fits. Every row must appear in exactly one issue —
 `scripts/failure-modes-report.py` prints each row's issue number, and a blank
 one means this table has gone stale.
 
+Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds the config-lint CI job (T-F15, T-J04). Record each new GitHub issue number here when it is opened.
+
 | # | Issue title | IDs | Highest Pri |
 |---|---|---|---|
 | 1 | Verify relay contact and heater-element failure behaviour on the bench and live rig | A-01, A-13, A-19, A-20, A-21, A-22 | P0 |

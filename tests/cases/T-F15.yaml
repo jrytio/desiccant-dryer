@@ -1,0 +1,8 @@
+id: T-F15
+covers: [F-15, J-03]
+type: lint
+status: green
+harness: ci-lint
+selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
+assert:
+  - every switch in [heater_a, heater_b, valve_a, valve_b, case_fan] has restore_mode ALWAYS_OFF

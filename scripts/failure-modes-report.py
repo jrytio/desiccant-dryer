@@ -31,10 +31,37 @@ for n, ln in enumerate(SRC.read_text().splitlines(), 1):
         i, text, pri, kind, ver, gap = m.groups()
         items.append({"id": i, "cat": cur, "text": text, "pri": pri, "kind": kind, "verify": ver, "gap": bool(gap)})
 
+PLAN = SRC.parent / "verification-plan.md"
+TEST = re.compile(r"^\| (T-[A-L]\d\d) \| (logic|detect|infer|lint|physical|hil) \| ((?:[A-L]-\d\d(?:, )?)+) \| (host|ci-lint|checklist|bench|live) \| (.+?) \| (.+?) \| (green|red|manual|later) \|$")
+tests = []
+if PLAN.exists():
+    in_tests = False
+    for n, ln in enumerate(PLAN.read_text().splitlines(), 1):
+        if ln.startswith("## "):
+            in_tests = ln.strip() == "## Tests"
+        if not in_tests or not ln.startswith("| T-"):
+            continue
+        m = TEST.match(ln)
+        if not m:
+            sys.exit(f"{PLAN}:{n}: test row does not match the documented format:\n{ln}")
+        i, typ, cov, har, inj, exp, stat = m.groups()
+        tests.append({"id": i, "type": typ, "covers": cov.split(", "), "harness": har, "inject": inj, "expect": exp, "status": stat})
+    test_of = {}
+    for t in tests:
+        for c in t["covers"]:
+            if c in test_of:
+                sys.exit(f"{PLAN}: {c} is covered by both {test_of[c]} and {t['id']}")
+            test_of[c] = t["id"]
+    known = {it["id"] for it in items}
+    uncovered = sorted(known - set(test_of))
+    unknown = sorted(set(test_of) - known)
+    if uncovered or unknown:
+        sys.exit(f"{PLAN}: rows without a test: {uncovered}; tests citing unknown rows: {unknown}")
+    for it in items: it["test"] = test_of.get(it["id"])
 issue_of = {i: iss["n"] for iss in issues for i in iss["ids"]}
 for it in items: it["issue"] = issue_of.get(it["id"])
 counts = {p: sum(1 for x in items if x["pri"] == p) for p in ["P0", "P1", "P2", "P3", "P4"]}
-data = json.dumps({"cats": cats, "items": items, "issues": issues, "meaning": PRI_MEANING}, ensure_ascii=False)
+data = json.dumps({"cats": cats, "items": items, "issues": issues, "tests": tests, "meaning": PRI_MEANING}, ensure_ascii=False)
 
 page = """<title>Desiccant Dryer Failure Modes</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
@@ -112,6 +139,15 @@ td.iss{width:52px;white-space:nowrap}
 .il:hover{text-decoration:underline}
 #issues td.t{width:auto}
 #issues td.ids{color:var(--ink-2);font-size:12.5px}
+td.tst{width:64px;white-space:nowrap}
+.tl{color:var(--accent);text-decoration:none;cursor:pointer;background:none;border:0;font:inherit;padding:0}
+.tl:hover{text-decoration:underline}
+.st{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:3px}
+.st-green{color:#1E7A3E;background:#E3F3E8}.st-red{color:var(--p0);background:var(--p0-bg)}.st-manual{color:var(--ink-2);background:var(--chip)}.st-later{color:var(--p3);background:var(--p3-bg)}
+:root[data-theme="dark"] .st-green{color:#6FD08F;background:#1B3324}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .st-green{color:#6FD08F;background:#1B3324}}
+.ty{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+#tests td.inj,#tests td.exp{font-size:12.5px;color:var(--ink-2);min-width:220px}
 .key{font-size:12.5px;color:var(--ink-2);margin:14px 0 0;max-width:110ch}
 .key b{color:var(--ink)}
 .empty{color:var(--ink-3);padding:24px 10px;text-align:center}
@@ -123,7 +159,7 @@ td.iss{width:52px;white-space:nowrap}
   <h1>Desiccant Dryer Failure Modes</h1>
   <p class="sub">Every hardware and software failure we could think of, grouped by subsystem and ranked from “this starts a fire” to “the display is wrong”. Source of truth is <span class="mono">docs/failure-modes.md</span>; this page is rendered from it. Click a priority tile or a chip to filter.</p>
   <div class="scale" id="scale"></div>
-  <p class="key"><b>Kind</b>: HW component fault · WIRE assembly or wiring error · FW firmware logic · CFG YAML or tunable · OPS operator or Home Assistant action. <b>Verify</b>: virtual provable in the host or virtual build · bench real board, mains off · live energised heaters, instrumented · inspect a build or config review. <b>Gap</b>: the firmware has no detection for this today.</p>
+  <p class="key"><b>Kind</b>: HW component fault · WIRE assembly or wiring error · FW firmware logic · CFG YAML or tunable · OPS operator or Home Assistant action. <b>Verify</b>: virtual provable in the host or virtual build · bench real board, mains off · live energised heaters, instrumented · inspect a build or config review. <b>Gap</b>: the firmware has no detection for this today. <b>Test</b>: the verification-plan test that covers the row; its status is <span class="st st-green">green</span> passes today, <span class="st st-red">red</span> fails until the gap closes, <span class="st st-manual">manual</span> checklist, <span class="st st-later">later</span> hardware in the loop.</p>
 </header>
 <div class="bar"><div class="bar-in">
   <div class="group" id="kind"><span class="g">Kind</span></div>
@@ -150,12 +186,22 @@ document.getElementById('gaponly').onclick=e=>{st.gap=!st.gap;render();};
 document.getElementById('q').oninput=e=>{st.q=e.target.value.trim().toLowerCase();render();};
 const main=document.getElementById('main');
 D.cats.forEach(c=>{const s=document.createElement('section');s.id='cat-'+c.key;
- const rows=D.items.filter(i=>i.cat===c.key).map(i=>`<tr class="${i.pri.toLowerCase()}" data-id="${i.id}"><td class="id mono">${i.id}</td><td>${esc(i.text)}</td><td class="pri"><span class="pb">${i.pri}</span></td><td class="kind mono">${i.kind}</td><td class="ver mono">${i.verify}</td><td class="gap">${i.gap?'<span class="gb">gap</span>':''}</td><td class="iss mono">${i.issue?`<button class="il" data-iss="${i.issue}" title="Show issue ${i.issue}">#${i.issue}</button>`:''}</td></tr>`).join('');
- s.innerHTML=`<h2><span class="k mono">${c.key}</span>${esc(c.name)}<span class="cc mono" data-cc></span></h2><div class="wrap"><table><thead><tr><th>ID</th><th>Failure</th><th>Pri</th><th>Kind</th><th>Verify</th><th>Gap</th><th>Issue</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+ const rows=D.items.filter(i=>i.cat===c.key).map(i=>`<tr class="${i.pri.toLowerCase()}" data-id="${i.id}"><td class="id mono">${i.id}</td><td>${esc(i.text)}</td><td class="pri"><span class="pb">${i.pri}</span></td><td class="kind mono">${i.kind}</td><td class="ver mono">${i.verify}</td><td class="gap">${i.gap?'<span class="gb">gap</span>':''}</td><td class="iss mono">${i.issue?`<button class="il" data-iss="${i.issue}" title="Show issue ${i.issue}">#${i.issue}</button>`:''}</td><td class="tst mono">${i.test?`<a class="tl" href="#${i.test}">${i.test}</a>`:''}</td></tr>`).join('');
+ s.innerHTML=`<h2><span class="k mono">${c.key}</span>${esc(c.name)}<span class="cc mono" data-cc></span></h2><div class="wrap"><table><thead><tr><th>ID</th><th>Failure</th><th>Pri</th><th>Kind</th><th>Verify</th><th>Gap</th><th>Issue</th><th>Test</th></tr></thead><tbody>${rows}</tbody></table></div>`;
  main.appendChild(s);});
 const iss=document.createElement('section');iss.id='issues';
 iss.innerHTML=`<h2><span class="k mono">§</span>Proposed GitHub issues<span class="cc mono">${D.issues.length} issues</span></h2><div class="wrap"><table><thead><tr><th>#</th><th>Title</th><th>Rows</th><th>Pri</th></tr></thead><tbody>${D.issues.map(x=>`<tr class="${x.pri.toLowerCase()}"><td class="id mono"><button class="il" data-iss="${x.n}">#${x.n}</button></td><td class="t">${esc(x.title)}</td><td class="ids mono">${x.ids.join(', ')}</td><td class="pri"><span class="pb">${x.pri}</span></td></tr>`).join('')}</tbody></table></div>`;
 main.appendChild(iss);
+const TSTAT={green:'passes today',red:'fails until the gap closes',manual:'checklist',later:'hardware in the loop'};
+const ts=document.createElement('section');ts.id='tests';
+const tcount=Object.fromEntries(['green','red','manual','later'].map(k=>[k,D.tests.filter(t=>t.status===k).length]));
+ts.innerHTML=`<h2><span class="k mono">T</span>Verification tests<span class="cc mono">${D.tests.length} tests · ${Object.entries(tcount).map(([k,v])=>v+' '+k).join(' · ')}</span></h2>
+<div class="group" style="margin:0 0 8px" id="tstatus"><span class="g">Status</span></div>
+<div class="wrap"><table><thead><tr><th>Test</th><th>Type</th><th>Covers</th><th>Harness</th><th>Inject</th><th>Expect</th><th>Status</th></tr></thead><tbody>${D.tests.map(t=>{const p=byIdPri(t.covers);return `<tr class="${p}" id="${t.id}" data-st="${t.status}"><td class="id mono">${t.id}</td><td><span class="ty">${t.type}</span></td><td class="mono" style="font-size:12px">${t.covers.join(', ')}</td><td class="mono" style="font-size:12px">${t.harness}</td><td class="inj">${esc(t.inject)}</td><td class="exp">${esc(t.expect)}</td><td><span class="st st-${t.status}" title="${TSTAT[t.status]}">${t.status}</span></td></tr>`}).join('')}</tbody></table></div>`;
+function byIdPri(ids){const pr=ids.map(i=>D.items.find(x=>x.id===i)).filter(Boolean).map(x=>x.pri).sort()[0]||'P4';return pr.toLowerCase();}
+main.appendChild(ts);
+st.tstatus=new Set();
+['green','red','manual','later'].forEach(v=>{const c=document.createElement('button');c.className='chip';c.textContent=v+' ('+tcount[v]+')';c.setAttribute('aria-pressed','false');c.dataset.v=v;c.onclick=()=>{st.tstatus.has(v)?st.tstatus.delete(v):st.tstatus.add(v);render();};document.getElementById('tstatus').appendChild(c);});
 st.issue=null;
 main.addEventListener('click',e=>{const b=e.target.closest('[data-iss]');if(!b)return;st.issue=st.issue===+b.dataset.iss?null:+b.dataset.iss;st.pri=new Set(PRI);render();window.scrollTo({top:0,behavior:'smooth'});});
 const byId=Object.fromEntries(D.items.map(i=>[i.id,i]));
@@ -164,7 +210,9 @@ function render(){
  ['kind','verify'].forEach(id=>document.querySelectorAll('#'+id+' .chip').forEach(c=>c.setAttribute('aria-pressed',String(st[id].has(c.dataset.v)))));
  document.getElementById('gaponly').setAttribute('aria-pressed',String(st.gap));
  let shown=0;
- document.querySelectorAll('section:not(#issues)').forEach(s=>{let n=0;s.querySelectorAll('tbody tr').forEach(tr=>{const i=byId[tr.dataset.id];
+ document.querySelectorAll('#tstatus .chip').forEach(c=>c.setAttribute('aria-pressed',String(st.tstatus.has(c.dataset.v))));
+ document.querySelectorAll('#tests tbody tr').forEach(tr=>{tr.hidden=st.tstatus.size>0&&!st.tstatus.has(tr.dataset.st);});
+ document.querySelectorAll('section:not(#issues):not(#tests)').forEach(s=>{let n=0;s.querySelectorAll('tbody tr').forEach(tr=>{const i=byId[tr.dataset.id];
   const ok=st.pri.has(i.pri)&&(!st.kind.size||st.kind.has(i.kind))&&(!st.verify.size||st.verify.has(i.verify))&&(!st.gap||i.gap)&&(!st.issue||i.issue===st.issue)&&(!st.q||(i.id+' '+i.text).toLowerCase().includes(st.q));
   tr.hidden=!ok;if(ok)n++;});shown+=n;s.hidden=n===0;s.querySelector('[data-cc]').textContent=n+' shown';});
  document.getElementById('shown').textContent=shown+' of '+D.items.length+' shown'+(st.issue?' · issue #'+st.issue+' (click # again to clear)':'');
@@ -174,4 +222,4 @@ render();
 </script>
 """
 OUT.write_text(page.replace("__DATA__", data.replace("</", "<\\/")).replace("__N__", str(len(items))))
-print(f"{len(items)} items, {counts} -> {OUT}")
+print(f"{len(items)} items, {counts}, {len(tests)} tests -> {OUT}")

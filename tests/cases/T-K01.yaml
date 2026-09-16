@@ -1,0 +1,18 @@
+id: T-K01
+covers: [K-01, K-02]
+type: logic
+status: red            # manual heater toggle while disabled is never corrected today
+setup:
+  Sim Speed: 60
+  Dryer Enabled: off
+steps:
+  - set: {Heater A: on}
+  - wait_sim_min: 1
+  - expect:
+      Heater A: off
+  - set: {Dryer Enabled: on}
+  - wait_until: {Valve A: on}
+    timeout_sim_min: 2
+  - set: {Heater A: on}       # active pack's heater
+  - expect:
+      Heater A: {within_ticks: 1, value: off}

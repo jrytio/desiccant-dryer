@@ -1,0 +1,18 @@
+id: T-B02
+covers: [B-02, A-01]
+type: infer
+status: red            # needs Sim Relay Stuck On A and a heater-off-still-heating check
+setup:
+  Sim Speed: 60
+  Sim Breakthrough Time: 5
+  Dryer Enabled: on
+steps:
+  - wait_until: {Standby State: heating}
+    timeout_sim_min: 30
+  - set: {Sim Relay Stuck On A: on}
+  - wait_until: {Standby State: cooling}
+    timeout_sim_min: 60
+  - wait_sim_min: 10
+  - expect:
+      Heater A: off
+      Fault: on

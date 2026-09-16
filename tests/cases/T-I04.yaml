@@ -1,0 +1,16 @@
+id: T-I04
+covers: [I-04, I-23]
+type: logic
+status: red            # no-rise check fires only at the 5 min mark today
+setup:
+  Sim Speed: 60
+  Sim Breakthrough Time: 5
+  Dryer Enabled: on
+steps:
+  - wait_until: {Standby State: heating}
+    timeout_sim_min: 30
+  - wait_sim_min: 7          # heater healthy through the 5 min check
+  - set: {Sim Heater Fault: on}
+  - wait_sim_min: 10
+  - expect:
+      Fault Message: Standby heater not heating
