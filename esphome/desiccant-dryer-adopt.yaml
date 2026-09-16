@@ -17,3 +17,6 @@ substitutions:
 packages:
   production: !include packages/production.yaml
   ui: !include packages/ui-code-remote.yaml
+  # No api encryption block, so Device Builder mints a key into the owner's
+  # YAML; the OTA block below inherits it and requires encryption.
+  ota: !include packages/ota-adopted.yaml

@@ -11,3 +11,6 @@ substitutions:
 packages:
   production: !include packages/production.yaml
   ui: !include packages/ui-code-local.yaml
+  # The owner flashes this image, so Home Assistant provisions its API key.
+  # The adopt selector leaves this out; see the package's header.
+  api: !include packages/api-provisioned.yaml
