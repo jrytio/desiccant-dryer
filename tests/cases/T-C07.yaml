@@ -1,0 +1,14 @@
+id: T-C07
+covers: [C-07, C-08, L-03]   # L-03 (OVR badge) is checked by eye in the host window until the runner can read the frame
+type: logic
+status: green
+setup:
+  Sim Speed: 60
+  Dryer Enabled: on
+steps:
+  - set: {Override RH: 50, Override Humidity: on}
+  - expect: {Control Humidity: 50}
+  - restart
+  - expect:
+      Override Humidity: off
+      Control Humidity: {not: 50}

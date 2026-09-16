@@ -1,0 +1,9 @@
+id: T-B20
+covers: [B-20, J-09]
+type: lint
+status: red            # max_value is 125 today, above the SF129E holding temperature of 118 C
+harness: ci-lint
+selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
+assert:
+  - number overtemp has max_value <= 118
+  - number overtemp has initial_value <= max_value

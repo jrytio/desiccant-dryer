@@ -1,0 +1,18 @@
+id: T-B01
+covers: [B-01]
+type: logic
+status: green          # fault 3 exists today: 5 min, less than +5 C rise
+setup:
+  Sim Speed: 60
+  Sim Breakthrough Time: 5
+  Sim Heater Fault: on   # heater draws no power in the plant model
+  Dryer Enabled: on
+steps:
+  - wait_until: {Standby State: heating}
+    timeout_sim_min: 30
+  - wait_sim_min: 6
+  - expect:
+      Fault Message: Standby heater not heating
+      Heater A: off
+      Heater B: off
+      Standby State: wet

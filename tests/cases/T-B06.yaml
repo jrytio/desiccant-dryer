@@ -1,0 +1,15 @@
+id: T-B06
+covers: [B-06]
+type: detect
+status: red            # 85 C sentinel is accepted as a real reading today
+setup:
+  Sim Speed: 60
+  Dryer Enabled: on
+steps:
+  - wait_until: {Standby State: heating}
+    timeout_sim_min: 30
+  - set: {Sim Probe 85C: on}    # standby probe reports exactly 85.0 from a cold pack
+  - wait_sim_min: 3
+  - expect:
+      Regen Hold Time: 0        # not counted as regen hold
+      Standby State: heating
