@@ -34,7 +34,7 @@ end of this file; their numbers are not reused.
 | **Gap** | ✱ the firmware has no detection for this today; a test would fail until a check is added |
 
 For agents: each row matches `^\| ([A-L]-\d\d) \| (.+) \| [🔴🟠🟡🔵⚪] (P[0-4]) \| (HW|WIRE|FW|CFG|OPS) \| (virtual|bench|live|inspect) \| (✱?) \|$`.
-`scripts/failure-modes-report.py` renders this file as a filterable HTML page.
+`scripts/failure-modes-report.py` renders this file as a filterable HTML page. The `inspect` rows are expanded into a hands-on checklist in `docs/inspection-checklist.md`.
 
 ## Contents
 
