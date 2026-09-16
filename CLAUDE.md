@@ -149,8 +149,13 @@ service 180 min) are untested guesses meant to get first cycles logging.
   ESPHome OTA server and the web server's upload page is off
   (unauthenticated reflash of a mains controller); the API reboot watchdog
   is off. Updates come from ESPHome Device Builder: `dashboard_import`
-  points at `desiccant-dryer-adopt.yaml`, and the owner's adopted YAML adds
-  their API key, OTA password and WiFi. Do not bring back an on-device
+  points at `desiccant-dryer-adopt.yaml`, and the owner only supplies WiFi.
+  `packages/api-provisioned.yaml` (bare `api: encryption: {}`) belongs to
+  the flashed image only; the adopt selector omits it so Device Builder
+  mints a key, and takes `packages/ota-adopted.yaml`, whose keyless
+  `encryption:` inherits that key and makes OTA encryption required. The
+  adopt selector failing standalone validation with "encryption key to
+  inherit" is intended — that string is what triggers the mint. Do not bring back an on-device
   `update: platform: http_request`: the S2 never has the ~17 KB contiguous
   block a TLS firmware download needs (1.0.x). Anything the adopt selector
   reads from this repository must be remote-safe (no `esphome: includes`,
