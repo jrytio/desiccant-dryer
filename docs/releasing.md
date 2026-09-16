@@ -191,8 +191,6 @@ should be protected accordingly.
 - The first 1.x releases log at DEBUG (set in `packages/production.yaml`)
   so the unit can be brought up and tested remotely through `esphome logs`,
   the web server on port 80 and Home Assistant; a later release lowers it.
-- There is no `/screen.png` mirror in production. The hw-test and virtual
-  builds keep it.
 - To dry-run the packaging locally:
 
   ```bash

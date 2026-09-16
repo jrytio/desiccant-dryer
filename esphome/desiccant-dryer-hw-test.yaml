@@ -21,7 +21,6 @@ packages:
   draw: !include packages/display-draw.yaml
   ui: !include packages/ui-code-local.yaml
   display: !include packages/display-st7789.yaml
-  mirror: !include packages/screen-mirror.yaml
 
 logger:
   level: DEBUG

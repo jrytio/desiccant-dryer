@@ -17,8 +17,8 @@ hardware plus the developer credentials from `secrets.yaml`, so it takes
 OTA updates as often as needed and USB is only used once. The released
 production image (`esphome/desiccant-dryer.yaml`) has no OTA server, no
 WiFi credentials (it has WiFi and a setup access point, and is provisioned
-through Improv or that access point) and no `/screen.png`; it installs its
-own updates from the published manifest instead. It goes on last,
+through Improv or that access point); it installs its own updates from the
+published manifest instead. It goes on last,
 as its own step (section 7).
 
 ## 1. Flash the test build (USB, once)
@@ -104,9 +104,8 @@ tick should open Valve A and leave everything else off.
 
 ## 4. Display
 
-Compare the panel with `http://<board>/screen.png` (the same drawing,
-re-rendered by the board from the state of the last redraw) and with the
-reference states in `docs/display/`. With
+Compare the panel with the reference states in `docs/display/` (and with
+the live host preview, `docs/host-preview.md`). With
 no SHT45 the humidity reads `--% RH`. If the image is shifted or cropped,
 try `offset_height: 80` as the comment in `display-st7789.yaml` says; red
 and blue swapped means the colour order, a negative image means

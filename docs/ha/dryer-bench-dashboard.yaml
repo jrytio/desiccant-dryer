@@ -3,7 +3,7 @@
 # this file is the versioned copy (paste into Raw configuration editor, or
 # publish through the HA API).
 #
-# Layout: Screen, Status and Trends across the top, with a Simulation speed
+# Layout: Status and Trends across the top, with a Simulation speed
 # chip (always shown, amber above 1x) in the badge row. Below them one
 # full-width tabbed card: Simulator, Settings, How to test, Diagnostics.
 # Each browser remembers its own selected tab.
@@ -12,21 +12,17 @@
 #   - HACS card Tabdeck Card (tempus2016/tabdeck-card, v1.0.0), resource
 #     /hacsfiles/tabdeck-card/tabdeck-card.js (JavaScript module; HACS
 #     registers it on install).
-#   - Dryer Screen card (docs/ha/dryer-screen-card.js), registered as an
-#     inline dashboard resource (JavaScript module). Everything else is a
-#     built-in card.
+#     Everything else is a built-in card.
 #   - Display unit overridden to °C on the four dryer temperature sensors
 #     (Pack A, Pack B, Case, Outlet Air). The threshold numbers have no
 #     device class and stay in °C; history-graph draws one chart per unit,
 #     so without the override the recharge/ready lines would not overlay
 #     the pack temperatures on an imperial install.
-#   - image.dryer_screen: template image helper, URL
-#     http://<board>/screen.png?t={{ now().timestamp() | int }} with
-#     verify_ssl off, re-rendered every 10 s by automation.dryer_screen_refresh
-#     (time_pattern /10 s -> homeassistant.update_entity). A still image works
-#     through the Cloudflare tunnel; a live camera stream does not. Keep the
-#     interval at 10 s: each fetch re-renders the whole screen on the board
-#     and costs about a second of CPU (docs/screen-in-ha.md).
+#
+# The dashboard does not show the device's screen. To see the display
+# without looking at a panel, run the host build: it compiles the same
+# drawing natively on the Mac and opens an SDL window. See
+# docs/host-preview.md.
 #
 # Entity ids are the ones ESPHome gives the virtual build on the dev
 # instance. The production unit would be desiccant_dryer_* and has no
@@ -132,18 +128,6 @@ views:
 
     sections:
       # ------------------------------------------------------------ top row
-      - type: grid
-        cards:
-          - type: heading
-            heading: Screen
-            icon: mdi:monitor
-          - type: custom:dryer-screen-card
-            entity: image.dryer_screen
-            # Swaps in each 2 s frame only once it has fully loaded; the
-            # built-in Picture Entity card blinks through the tunnel.
-            grid_options:
-              columns: full
-
       - type: grid
         cards:
           - type: heading
@@ -624,19 +608,19 @@ views:
                   content: |-
                     **Before each test**, clear any fault (tap the Fault tile), then turn **Dryer on** off and back on: Status should read "Air via A, B wet" within 5 seconds. A fault stays through that and through a restart until you clear it. At **Simulation speed** 1 the spare does not start heating for 100 minutes, so most tests use 60 (a real second counts as a dryer minute) or 10 when you need time to catch the heating step. Change the speed with the chip at the top.
 
-                    **Reading the top row.** "Air via A, B heating" means air flows through pack A and the spare, B, is heating. The spare's states are *wet* (used, needs recharging), *heating*, *cooling* and *ready*. "(waiting)" means the air is damp enough to switch but the spare is not ready. "Disabled" means Dryer on is off; "Starting" shows for a moment after turning it on. Fault messages call the pack in use *active* and the spare *standby*; *overtemp* means too hot. The **Screen** shows what the tiles do not: a glow on a pack whose heater is on, a green valve under the pack in use, a green FAN icon while the case fan runs, and --° for a lost reading.
+                    **Reading the top row.** "Air via A, B heating" means air flows through pack A and the spare, B, is heating. The spare's states are *wet* (used, needs recharging), *heating*, *cooling* and *ready*. "(waiting)" means the air is damp enough to switch but the spare is not ready. "Disabled" means Dryer on is off; "Starting" shows for a moment after turning it on. Fault messages call the pack in use *active* and the spare *standby*; *overtemp* means too hot. The device's own **screen** (the panel, or the host preview in `docs/host-preview.md`) shows what the tiles do not: a glow on a pack whose heater is on, a green valve under the pack in use, a green FAN icon while the case fan runs, and --° for a lost reading.
 
                     | Test | Do this | You should see | Afterwards |
                     |---|---|---|---|
-                    | Step through by hand | Simulation speed 10. Turn on **Override humidity** with **Override value** at 2 | "Air via A, B wet". Slide to 6: "B heating" and pack B glows on the Screen. After about 3 minutes: "B cooling", then "B ready". Slide to 12: "Air via B", and A starts recharging at once because 12 % is above 5 % | Slide back to 2, then **Restart** (Diagnostics tab): Override humidity is off again. Speed back to 1 |
+                    | Step through by hand | Simulation speed 10. Turn on **Override humidity** with **Override value** at 2 | "Air via A, B wet". Slide to 6: "B heating" and pack B glows on the screen. After about 3 minutes: "B cooling", then "B ready". Slide to 12: "Air via B", and A starts recharging at once because 12 % is above 5 % | Slide back to 2, then **Restart** (Diagnostics tab): Override humidity is off again. Speed back to 1 |
                     | Hands-free cycle | Simulation speed 60, then watch | After about a minute Outlet humidity rises from 1 %. At 5 %: "B heating", pack B climbs on the chart. After 15 dryer-minutes above 90 °C: "B cooling". At 40 °C: "B ready". At 10 %: "Air via B, A wet", humidity back to 1 %, Pack in use for back to 0. Keep watching and it repeats the other way | Speed back to 1 |
                     | Spare not ready in time | **Then gets damper by** 1, speed 60 | Humidity passes 10 % while B is still heating and Status ends "(waiting)". Within about 5 seconds of "B ready", the air switches to B | Then gets damper by back to 0.1, speed back to 1 |
                     | Switch by hand | Speed 10. When Status shows "Air via A, B heating", tap **Switch packs now** and confirm | B's glow goes off, then "Air via B, A wet". B is in use without finishing its recharge. No fault | Speed back to 1 |
-                    | Turn the dryer off | Turn **Dryer on** off | "Disabled". The Screen shows both valves closed and nothing heating. Timers go to 0 | Turn it back on: "Air via A, B wet" within 5 seconds |
+                    | Turn the dryer off | Turn **Dryer on** off | "Disabled". The screen shows both valves closed and nothing heating. Timers go to 0 | Turn it back on: "Air via A, B wet" within 5 seconds |
                     | Spare overheats | **Heater top temp** 130, speed 60, wait for "B heating" | Once pack B passes 110 °C: Fault badge and "Standby pack overtemp", Spare pack "cooling", air still via A, Pack in use for keeps counting | Heater top temp back to 110, then clear the fault. B cools, shows ready and the cycle carries on. Speed back to 1 |
                     | Heater failure | **Fake heater failure** on, speed 60, wait for humidity to reach 5 % | A few seconds after "B heating" (5 dryer-minutes): fault "Standby heater not heating", Spare pack "wet" | Fake heater failure off, then clear the fault. B heats again (humidity is past 5 %), recharges, cools, then shows ready. If you clear it with the failure still on, it faults again 5 dryer-minutes after "B heating" and never shows ready. Speed back to 1 |
                     | Pack in use overheats | At speed 1, turn on **Set pack temps by hand**, then set **Pack A temp** to 125 | Within 5 seconds: fault "Active pack overtemp", heaters off, air still via A | Pack A temp back to 25 first (or it faults again), then clear the fault, then Set pack temps by hand off |
-                    | Case fan | **Room temp** 40, speed 60 | Case temp (Diagnostics tab) passes 36.5 °C and the FAN icon on the Screen turns green | Room temp back to 25: the fan stops once the case is below 33.5 °C and it has run at least 60 seconds. Speed back to 1 |
+                    | Case fan | **Room temp** 40, speed 60 | Case temp (Diagnostics tab) passes 36.5 °C and the FAN icon on the screen turns green | Room temp back to 25: the fan stops once the case is below 33.5 °C and it has run at least 60 seconds. Speed back to 1 |
                     | Short sensor loss | Speed 10. During "B heating", turn **Sensor B lost** on for about 15 seconds, then off | Pack B temp reads Unknown, B keeps glowing, Spare pack stays "heating", no fault, the recharge finishes normally | Speed back to 1 |
                     | Long sensor loss | Speed 10. During "B heating", turn **Sensor B lost** on for about 40 seconds, then off | After 25 seconds B's glow goes off but it still says "heating", no fault. Once the sensor is back: B glows again within 5 seconds, Heater time (Diagnostics tab) starts again from 0, the recharge finishes | Speed back to 1 |
                     | Restart mid-recharge | Speed 10. During "B heating", tap **Restart** (Diagnostics tab) and confirm | Once it is back: still "B heating", B glows again, Heater time and Hold time start from 0, Pack B temp carries on from about where it was | Speed back to 1 |

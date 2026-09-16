@@ -7,8 +7,6 @@
 #         diagnostics). No secrets: the owner sets WiFi at flash time,
 #         Home Assistant sets the API key on adoption, and the unit
 #         installs later releases itself. See docs/releasing.md.
-# Screen: no /screen.png mirror in production; the test builds keep
-#         packages/screen-mirror.yaml.
 
 # 2026.9.0 is the version the release images are built and tested with, and
 # the version CI and the release workflow pin. The floor records that, not a

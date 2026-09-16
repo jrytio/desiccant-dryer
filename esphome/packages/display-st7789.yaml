@@ -29,9 +29,9 @@
 # default set below).
 #
 # Both figures were captured on the hw-test build, which also runs the web
-# server and the screen mirror, so treat the absolutes as indicative for
-# production and the 322 ms delta between them as the reliable number: it is
-# one extra writer pass, and matches the measured 321 ms/band directly.
+# server, so treat the absolutes as indicative for production and the 322 ms
+# delta between them as the reliable number: it is one extra writer pass, and
+# matches the measured 321 ms/band directly.
 #
 # This file is shared by production, virtual and hw-test, so every key below
 # is emitted for all three. Nothing here requires a particular ESPHome

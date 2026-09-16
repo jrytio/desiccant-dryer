@@ -50,7 +50,7 @@ calls; the `display_lambda` substitution just runs that script; the art path
 is the `display_assets` substitution) plus `packages/ui-code-local.yaml`,
 which loads the `dryer_ui` component from this checkout, plus a driver,
 `packages/display-st7789.yaml` (real panel) or `packages/display-sdl.yaml`
-(window on the Mac); both give the display id `panel`. `packages/screen-mirror.yaml` (hw-test and virtual builds only) serves the screen as `/screen.png` through the local component `esphome/components/screen_mirror`, which re-renders `draw_ui()` into its own band buffer rather than reading the driver's. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`,
+(window on the Mac); both give the display id `panel`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`,
 `desiccant-dryer-hw-test.yaml` and `desiccant-dryer-host.yaml` are short
 selectors; the production one wraps `packages/production.yaml`
 (docs/releasing.md); `desiccant-dryer-scenarios.yaml`
@@ -124,7 +124,7 @@ service 180 min) are untested guesses meant to get first cycles logging.
   gitignored `secrets.yaml`, quoted exactly: the workshop's ends in a space.
   Keep `fast_connect` off. After a site move the board's IP changes and Home
   Assistant keeps the old one (no mDNS across the VPN): reconfigure the
-  ESPHome entry and the `image.dryer_screen` URL (docs/screen-in-ha.md).
+  ESPHome entry.
 - To see the screen without a board, `esphome run esphome/desiccant-dryer-host.yaml`
   compiles natively and opens an SDL window (needs `brew install sdl2`); see
   docs/host-preview.md. Nothing WiFi, OTA, SPI or LEDC related may be added
@@ -134,17 +134,11 @@ service 180 min) are untested guesses meant to get first cycles logging.
   `docs/display/` before flashing. They are rendered through the same RGB
   3-3-2 palette the panel uses (every designed colour already sits on that
   grid); the host build shows the same drawing live but in full colour.
-- The hw-test and virtual builds (not production) serve the live screen at `http://<board>/screen.png`
-  for Home Assistant's `image.dryer_screen` template image
-  (docs/screen-in-ha.md). It re-renders the UI from the last captured state
-  into its own band buffer, so it does not read the driver's frame buffer and
-  does not care about the driver's colour depth, buffer size or rotation.
 - The bench Home Assistant dashboard (virtual board) is
   `docs/ha/dryer-bench-dashboard.yaml`; its header lists what it needs on
-  the HA side (HACS Tabdeck Card, the Dryer Screen card resource from
-  `docs/ha/dryer-screen-card.js`, °C display units on the temperature
-  sensors, the `image.dryer_screen` template image and its 2 s refresh
-  automation). Keep it in step with the dashboard
+  the HA side (HACS Tabdeck Card, °C display units on the temperature
+  sensors). The screen itself is previewed with the host build
+  (docs/host-preview.md), not on the dashboard. Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
 - Only `packages/production.yaml` (wrapped by `desiccant-dryer.yaml`)
