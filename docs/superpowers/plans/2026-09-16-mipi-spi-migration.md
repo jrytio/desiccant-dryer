@@ -762,12 +762,38 @@ esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x
 Run: `scripts/check-screen-png.py <board> /tmp/screen-task2.png`
 Expected: `OK 240x240 indexed PNG, ...`
 
-Then compare `/tmp/screen-task2.png` with `/tmp/screen-task1.png` from Task 1. They should be **pixel-identical**: the mirror renders from `draw_ui()` and never touches the driver, so swapping drivers must not change it. Any difference means something other than the driver changed.
+Then compare `/tmp/screen-task2.png` with `/tmp/screen-task1.png` from Task 1.
+
+**They will NOT be byte-identical, and that is expected** — Task 1's image came
+from the virtual build (simulated sensors, a running uptime counter, an elapsed
+service timer) and this one comes from hw-test with no probes attached. The
+live values differ by design.
+
+What must match is the *structure*: same layout, same fonts, same palette, both
+cylinders drawn, gauge and status strip present, no horizontal seams at
+multiples of 24 rows. A seam would mean the band stitching broke; a palette
+shift would mean the RGB332 assumption is wrong. Either is a blocker.
 
 ```bash
-cmp /tmp/screen-task1.png /tmp/screen-task2.png && echo "IDENTICAL - driver swap did not affect drawing"
+python3 - <<'EOF'
+import struct, zlib
+def load(p):
+    d = open(p, "rb").read(); off = 8; idat = b""; ihdr = None
+    while off < len(d):
+        (n,) = struct.unpack(">I", d[off:off+4]); k = d[off+4:off+8]
+        if k == b"IHDR": ihdr = d[off+8:off+8+n]
+        elif k == b"IDAT": idat += d[off+8:off+8+n]
+        off += 12 + n
+    w, h = struct.unpack(">II", ihdr[:8]); raw = zlib.decompress(idat)
+    return w, h, [raw[y*(w+1)+1:(y+1)*(w+1)] for y in range(h)]
+for p in ("/tmp/screen-task1.png", "/tmp/screen-task2.png"):
+    w, h, rows = load(p)
+    print(p, f"{w}x{h}", "palette entries used:", len({b for r in rows for b in r}))
+EOF
 ```
 
+Expected: both report `240x240` and a similar count of palette entries (Task 1
+measured 32). A large drop means colours are being lost.
 No panel is attached to this board, so the glass check (colour, banding, tearing, offset) is deferred — see "Deferred: panel sign-off". Confirm instead from the log that the driver came up and allocated its buffer:
 
 ```bash
