@@ -16,12 +16,14 @@
 - The `host` and `scenarios` builds additionally need, prepended inside the `-c` string:
   `apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null &&`
 - All five selectors must pass: `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`, `desiccant-dryer-hw-test.yaml`, `desiccant-dryer-host.yaml`, `desiccant-dryer-scenarios.yaml`.
-- `esphome/secrets.yaml` is gitignored. In **this worktree it does not exist**, so `cp esphome/secrets.ci.yaml esphome/secrets.yaml` is safe here. Before doing so, run `test -L esphome/secrets.yaml && echo SYMLINK-STOP` — if it prints `SYMLINK-STOP`, do **not** write to it; it would clobber the main checkout's real dev credentials.
+- `esphome/secrets.yaml` is gitignored and **already holds the real dev credentials** in this worktree (copied from the main checkout, which was not modified). Do NOT overwrite it with `secrets.ci.yaml`: the CI file's SSIDs are placeholders and the board will never join WiFi. Before writing to that path for any reason, run `test -L esphome/secrets.yaml && echo SYMLINK-STOP` — if it prints `SYMLINK-STOP`, stop; writing would clobber the main checkout's credentials through the symlink.
+- The ESP builds are native ESP-IDF (CMake/Ninja), **not** PlatformIO. Firmware lands at `esphome/.esphome/build/<name>/build/firmware.factory.bin` — there is no `.pioenvs` directory.
+- `esptool` is on PATH as a standalone command; `python -m esptool` is not installed.
 - The production build must validate with **no** `secrets.yaml` present.
 - `components/dryer_ui/display_ui.h` must contain **no `id()` calls** and use only the generic `display::Display` API.
 - Nothing WiFi, OTA, SPI or LEDC related may go into `base.yaml` or `display-draw.yaml` — the host build has none of those.
 - Board on USB at `/dev/cu.usbserial-210`. USB flash command:
-  `python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 <firmware.factory.bin>`
+  `esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 <firmware.factory.bin>`
 - **The bench board has NO display attached.** The driver still allocates its
   buffer and still clocks pixels out over SPI, so heap figures and redraw
   timings are real and valid. What cannot be checked on this board is how the
@@ -539,8 +541,8 @@ Expected: `INFO Successfully compiled program.` If the compiler cannot find `dry
 - [ ] **Step 7: Flash the virtual build and verify the PNG**
 
 ```bash
-python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
-  esphome/.esphome/build/desiccant-dryer-virtual/.pioenvs/desiccant-dryer-virtual/firmware.factory.bin
+esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
+  esphome/.esphome/build/desiccant-dryer-virtual/build/firmware.factory.bin
 ```
 
 Then, once the board has joined WiFi:
@@ -749,8 +751,8 @@ Expected: differences confined to the `display:` block (platform, `color_depth`/
 - [ ] **Step 8: Flash hw-test and confirm the panel and the mirror**
 
 ```bash
-python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
-  esphome/.esphome/build/desiccant-dryer-hw-test/.pioenvs/desiccant-dryer-hw-test/firmware.factory.bin
+esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
+  esphome/.esphome/build/desiccant-dryer-hw-test/build/firmware.factory.bin
 ```
 
 Run: `scripts/check-screen-png.py 10.42.14.100 /tmp/screen-task2.png`
@@ -765,7 +767,7 @@ cmp /tmp/screen-task1.png /tmp/screen-task2.png && echo "IDENTICAL - driver swap
 No panel is attached to this board, so the glass check (colour, banding, tearing, offset) is deferred — see "Deferred: panel sign-off". Confirm instead from the log that the driver came up and allocated its buffer:
 
 ```bash
-python -m esphome logs esphome/desiccant-dryer-hw-test.yaml --device /dev/cu.usbserial-210 2>&1 | tee /tmp/task2.log
+esphome logs esphome/desiccant-dryer-hw-test.yaml --device /dev/cu.usbserial-210 2>&1 | tee /tmp/task2.log
 grep -iE "mipi_spi|Buffer bytes|Buffer fraction|Buffer allocation failed|setup failed" /tmp/task2.log
 ```
 
@@ -797,13 +799,12 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 This task is **capped by explicit user decision**: take the obvious wins, then report the honest number. Do not iterate past Step 5.
 
 **Files:**
-- Possibly modify: `esphome/components/dryer_ui/display_ui.h`
-- Possibly modify: `esphome/packages/production.yaml` (`display_update_interval`)
-- Modify: `docs/display/*.png` (regenerated) **only if** `display_ui.h` changes
+- Possibly modify: `esphome/packages/production.yaml` (`display_update_interval` only)
+- **Not** modified: `esphome/components/dryer_ui/display_ui.h` — see Step 4
 
 **Interfaces:**
-- Consumes: `dryer_ui::draw_ui(Display &, const UiState &, const UiAssets &)` — signature must not change; `screen_mirror` and the `ui_draw` script both call it.
-- Produces: nothing new.
+- Consumes: nothing. This task measures and, at most, changes one substitution value.
+- Produces: the redraw measurements quoted in the PR.
 
 - [ ] **Step 1: Build a VERBOSE production image to read the band timings**
 
@@ -822,14 +823,14 @@ Then compile and flash:
 docker run --rm -v "$PWD:/config" -w /config -v "$PWD/.ci-cache/tools:/cache" \
   --entrypoint bash ghcr.io/esphome/esphome:2026.9.0 \
   -c 'exec /entrypoint.sh compile esphome/desiccant-dryer-hw-test.yaml'
-python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
-  esphome/.esphome/build/desiccant-dryer-hw-test/.pioenvs/desiccant-dryer-hw-test/firmware.factory.bin
+esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
+  esphome/.esphome/build/desiccant-dryer-hw-test/build/firmware.factory.bin
 ```
 
 - [ ] **Step 2: Record the measurement**
 
 ```bash
-python -m esphome logs esphome/desiccant-dryer-hw-test.yaml --device /dev/cu.usbserial-210 \
+esphome logs esphome/desiccant-dryer-hw-test.yaml --device /dev/cu.usbserial-210 \
   2>&1 | tee /tmp/verbose.log
 ```
 
@@ -847,36 +848,29 @@ Write the numbers into the task notes: per-band draw ms, per-band SPI write ms, 
 - If **draw time dominates** (draw ms >> write ms): the writer is the cost, and Steps 4–5 apply.
 - If **SPI write time dominates**: `draw_ui()` is not the problem and optimising it will not help. Skip to Step 6 and report that the cost is SPI bandwidth, not drawing.
 
-- [ ] **Step 4: Take the one obvious win — skip the background blit outside the band**
+- [ ] **Step 4: Record the conclusion — there is no optimisation to make**
 
-Only if Step 3 said draw time dominates. `draw_ui()` starts by blitting the full-screen 240x240 `schematic.svg` and filling the frame; both are redone in full on every band. `display::Display::get_clipping()` is checked inside `MipiSpiBuffer::draw_pixel_at` but the loop still runs for every pixel, so the saving must come from not issuing the call at all.
+Decided with the user before execution began: **no speculative change to
+`display_ui.h`.** The only lever reachable through ESPHome's public `Display`
+API is the clipping rectangle, and `MipiSpiBuffer` never sets one, so a guard
+built on `get_clipping()` would be dead code. The band multiplier cannot be
+removed without band-aware rendering that the `Display` API does not expose.
 
-In `esphome/components/dryer_ui/display_ui.h`, in `draw_ui()`, guard the background image so it is only drawn when part of it falls inside the band. `Display` exposes no band bounds, so use the clipping rectangle the caller sets — add this helper immediately above `draw_ui()`:
+So the honest outcome of this task is a measurement plus a setting, not a code
+change. Write into the report:
 
-```cpp
-// True when rows [y, y + h) could be visible. Display has no notion of the
-// driver's current band, so this only helps where a caller sets clipping;
-// it is a no-op otherwise and is safe on every build.
-inline bool band_touches(Display &it, int y, int h) {
-  const auto clip = it.get_clipping();
-  if (!clip.is_set())
-    return true;
-  return y < clip.y + clip.h && y + h > clip.y;
-}
-```
+- the measured per-band draw time, per-band SPI write time and total update time
+- which of the two dominates
+- whether the ~500 ms target was met
 
-Apply it to the full-screen background blit in `draw_ui()`, wrapping the existing `it.image(0, 0, a.bg)` call:
+- [ ] **Step 5: Bound the tick delay if the target was missed**
 
-```cpp
-if (band_touches(it, 0, 240))
-  it.image(0, 0, a.bg);
-```
-
-**Note:** this helps only if something sets clipping. `MipiSpiBuffer` does not. If Step 2 showed draw time dominating and this change does not move the number, that is the expected outcome — the honest conclusion is that the multiplier cannot be removed without band-aware rendering that ESPHome's `Display` API does not expose, and the cap says stop there.
-
-- [ ] **Step 5: Re-measure once, then stop**
-
-Recompile and reflash exactly as in Step 1, rerun Step 2, and record the new numbers. Whatever they are, this is the last optimisation attempt. If the redraw is still above ~500 ms, raise `display_update_interval` in `esphome/packages/production.yaml` to `10s` so the blocking redraw happens half as often, and record that the ~500 ms acceptance bar was **not met**, with the measured value.
+If the total update time from Step 2 is above ~500 ms, raise
+`display_update_interval` in `esphome/packages/production.yaml` from `5s` to
+`10s`, so the blocking redraw happens half as often. Record that the ~500 ms
+acceptance bar was **not met**, with the measured value. Do not restate the
+target as if it were met, and do not attempt further optimisation — the effort
+cap is a user decision, not a suggestion.
 
 - [ ] **Step 6: Revert the temporary VERBOSE/50% edits to hw-test**
 
@@ -888,27 +882,29 @@ git diff esphome/desiccant-dryer-hw-test.yaml
 
 Expected: no diff against the Task 2 commit.
 
-- [ ] **Step 7: Regenerate the screen shots if and only if display_ui.h changed**
+- [ ] **Step 7: Confirm display_ui.h was not touched**
 
 ```bash
 git diff --quiet HEAD -- esphome/components/dryer_ui/display_ui.h \
-  && echo "unchanged - skip scenario shots" \
-  || scripts/scenario-shots.sh
+  && echo "OK display_ui.h unchanged - no scenario shots needed" \
+  || echo "UNEXPECTED: display_ui.h changed - run scripts/scenario-shots.sh and review docs/display/"
 ```
 
-If it ran, review every PNG in `docs/display/` and confirm nothing regressed. These render through SDL and **will not** catch a mipi_spi-specific problem — that is what Task 2 Step 8 was for.
+Expected: `OK display_ui.h unchanged`. The drawing code is deliberately not
+modified in this task, so the rendered scenarios in `docs/display/` stay valid.
 
 - [ ] **Step 8: Commit (skip if nothing changed)**
 
 ```bash
-git add -A esphome/components/dryer_ui esphome/packages/production.yaml docs/display
-git commit -m "Measure the mipi_spi redraw cost and cap the optimisation
+git add -A esphome/packages/production.yaml
+git commit -m "Measure the mipi_spi redraw cost and bound the tick delay
 
 MipiSpiBuffer::update() re-runs the writer once per band, so a 50% buffer
-draws the UI twice per redraw. Records the measured per-band draw and SPI
-write times and takes the one win available through the generic Display
-API. Where the number still exceeds the target the update_interval absorbs
-it; the measured value is reported rather than the target restated.
+draws the UI twice per redraw. The multiplier cannot be removed through
+ESPHome's public Display API: the only lever is the clipping rect, and
+MipiSpiBuffer never sets one. So this records the measurement and lets
+update_interval absorb what is left, rather than adding a guard that would
+do nothing. The measured value is reported rather than the target restated.
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ```
@@ -1373,8 +1369,8 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 docker run --rm -v "$PWD:/config" -w /config -v "$PWD/.ci-cache/tools:/cache" \
   --entrypoint bash ghcr.io/esphome/esphome:2026.9.0 \
   -c 'exec /entrypoint.sh compile esphome/desiccant-dryer.yaml'
-python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
-  esphome/.esphome/build/desiccant-dryer/.pioenvs/desiccant-dryer/firmware.factory.bin
+esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
+  esphome/.esphome/build/desiccant-dryer/build/firmware.factory.bin
 ```
 
 Note: this image carries **no** WiFi credentials. Provision it through Improv on the serial port (web.esphome.io) or the fallback access point before the next step.
@@ -1396,7 +1392,7 @@ Expected in the device log: `Update complete`, then a reboot.
 After the reboot, watch the log for at least two minutes:
 
 ```bash
-python -m esphome logs esphome/desiccant-dryer.yaml --device /dev/cu.usbserial-210 2>&1 | tee /tmp/postupdate.log
+esphome logs esphome/desiccant-dryer.yaml --device /dev/cu.usbserial-210 2>&1 | tee /tmp/postupdate.log
 grep -iE "rollback|Rolled back|boot partition|Firmware Version" /tmp/postupdate.log
 ```
 
