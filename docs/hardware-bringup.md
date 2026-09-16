@@ -22,7 +22,7 @@ as its own step (section 7).
 
 ## 1. Flash the test build (USB, once)
 
-1. First pull J-USB (protoboard) or the wire from the board's USB pin to
+1. First pull JP-USB (protoboard) or the wire from the board's USB pin to
    the breadboard 5 V rail (breadboard). That pin is the same net as the
    USB-C connector's VBUS, with no diode, so leaving it in ties the buck to
    the computer's USB port. Then plug the

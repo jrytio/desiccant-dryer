@@ -16,7 +16,7 @@
 | Fan | 24 V axial | On/off only |
 | Supply | 24 V, 1.5 A (e.g. Mean Well LRS-35-24) | Whole system ~12 W; open-frame Class I: FG to PE, guard the mains terminals |
 | Buck | MP1584 "mini" 24 V → 5 V module (22 × 17 mm, trimmer), or a fixed-5 V module | Feeds board USB pin (through the Schottky) and relay coils; set to 5.00–5.10 V |
-| USB-pin Schottky | SS34 (SMD) or 1N5819 (axial) | Buck 5 V → J-USB → board USB pin |
+| USB-pin Schottky | SS34 (SMD) or 1N5819 (axial) | Buck 5 V → JP-USB → board USB pin |
 | Heaters | 2× 120 VAC, 123 Ω (~117 W) | Existing packs; switched by relay contacts |
 | Heater over-temp cutouts | 2× SEFUSE SF129E one-shot thermal fuse (TCO), Tf 133 °C, Th 118 °C, 10 A / 250 VAC | In series with each heater's switched L lead, clamped to the pack body next to the DS18B20. Its holding temperature sets the `overtemp` latch — see [Mains and earthing](#mains-and-earthing) |
 
@@ -29,16 +29,16 @@ addition to the parts above:
 | Relay board | Double-sided plated FR-4 protoboard, 5 × 7 cm | 2.54 mm grid |
 | ESP sockets | 1× 16-pin and 1× 12-pin female header, 2.54 mm | ESP is socketed |
 | Bulk capacitors | 2× 100 µF / 16 V electrolytic | 5 V on each board; mind polarity |
-| J-USB | 2-pin header + shunt | Manual disconnect between buck and USB pin |
+| JP-USB | 2-pin header + shunt | Manual disconnect between buck and USB pin |
 | Harness | JST-XH 4-way: B4B-XH-A header on each board, 2× XHP-4 housings, crimps, cable | Or an equivalent keyed 0.1" housing |
 | Display cable | 8-pin male header + 8-way female-female cable ≤ 15 cm | |
 | Resistors | 4.7 kΩ (1-wire pullup) plus the driver-stage resistors above | |
 | Sensor terminals | 9-position 5.08 mm screw terminal block | DS18B20 ×3 |
 | 24 V terminals | 4× 2-position 5.08 mm screw terminal block | 24 V in, valve A, valve B, fan |
 | Mains terminals | 3× 2-position 5.08 mm **mains-rated** screw terminal block (UL 1059 300 V / 10 A or IEC 250 V class) | 120 VAC in, heater A, heater B |
-| Mains fuse | T 3.15 A 5 × 20 mm fuse + panel/inline holder | In L at the inlet, ahead of PSU and heaters |
+| Mains fuse | T 3.15 A 5 × 20 mm fuse + holder (panel, inline, or PCB-mount) | In L at the inlet, ahead of **both** the PSU and the heaters — see [Mains and earthing](#mains-and-earthing) |
 | Mounting | M3 nylon standoffs | Board corners |
-| Wire | Tinned bus wire; insulated hookup wire; mains-rated wire for the relay board | |
+| Wire | 22 AWG solid tinned bus wire; 24–26 AWG insulated hookup; 22 AWG stranded for 24 V; 18 AWG stranded 300 V / 105 °C for mains | Sizes and reasoning under [Wire sizes](#wire-sizes) |
 
 Datasheets for these parts, with sources and revisions, are in
 [datasheets/README.md](datasheets/README.md).
@@ -114,9 +114,9 @@ up with USB-C at the left, the 12-pin row is on top.
   back-fed (the MP1584 is non-synchronous and cannot sink current; a higher
   host VBUS just stops it switching), but a buck set above the host's VBUS
   sources current into the computer's port, up to the MP1584's 4–4.7 A
-  current limit. Only pulling the wire (or J-USB on the protoboard) prevents
+  current limit. Only pulling the wire (or JP-USB on the protoboard) prevents
   that; the protoboard's series Schottky blocks the other direction only
-  (see J-USB below).
+  (see JP-USB below).
 - Display: GND/VCC to top rails; SCL→36, SDA→35, RES→14, DC→9, CS→5, BLK→17.
 - DS18B20 ×3: all GND to top GND, all VDD to top 3.3 V, all DQ tied together
   → GPIO37 with one 4.7 kΩ to 3.3 V. Three-wire hookup; do not use parasitic
@@ -165,11 +165,11 @@ Geometry sources, all in [datasheets/](datasheets/README.md):
 
 ### Build steps
 
-1. Before fitting J-USB or the ESP: power the 24 V input, set the MP1584
+1. Before fitting JP-USB or the ESP: power the 24 V input, set the MP1584
    module's trimmer to 5.00–5.10 V measured at the buck's OUT+ pad, lock
    the pot, power down. (Measure at OUT+ rather than the socket's USB
-   position: that position is downstream of the Schottky and J-USB, so it
-   reads open with J-USB out and about 0.3–0.4 V low with it in.) A fixed-5 V
+   position: that position is downstream of the Schottky and JP-USB, so it
+   reads open with JP-USB out and about 0.3–0.4 V low with it in.) A fixed-5 V
    module avoids the trimmer.
 2. Fit the parts; check every net in the tables below with a meter before
    the ESP goes into its sockets.
@@ -184,17 +184,17 @@ Geometry sources, all in [datasheets/](datasheets/README.md):
    body next to that pack's DS18B20 (see
    [Mains and earthing](#mains-and-earthing)).
 
-### J-USB and the Schottky
+### JP-USB and the Schottky
 
 The ESP's USB pin is the USB-C VBUS net with no diode or fuse before it. It
 feeds D2 (BAT20J Schottky) → AP2112 3.3 V LDO (600 mA, 6.5 V absolute
 maximum) and the MCP73831 charger (7 V absolute maximum). The MP1584 is a
 non-synchronous buck and cannot sink current, so a higher host VBUS simply
-stops it switching; the real hazard with J-USB fitted and a USB cable
+stops it switching; the real hazard with JP-USB fitted and a USB cable
 plugged in is the buck, if it is above the host's VBUS, sourcing current
 into the computer's port, up to the MP1584's 4–4.7 A current limit.
 
-The layout puts a series Schottky (SS34 or 1N5819) from buck 5 V to J-USB,
+The layout puts a series Schottky (SS34 or 1N5819) from buck 5 V to JP-USB,
 but it does **not** block that direction: buck → USB pin is the diode's
 forward direction, which is how the board is powered. What the Schottky does
 is stop a host from back-feeding the buck's output node, the 5 V bus and the
@@ -202,14 +202,14 @@ relay coils, for a 0.3–0.4 V drop; with the buck at 5.0 V the AP2112 still
 has ≥ 0.39 V dropout margin at the 430 mA peak, using the worst-case drops
 from the BAT20J and AP2112 datasheets.
 
-So J-USB, not the diode, is what keeps the buck off a computer's USB port:
+So JP-USB, not the diode, is what keeps the buck off a computer's USB port:
 
-- pull J-USB before plugging in a USB-C cable, every time;
+- pull JP-USB before plugging in a USB-C cable, every time;
 - the buck stays at or below 5.1 V;
 - a USB-C host may also refuse to attach while VBUS is pre-biased, which is
-  another reason J-USB comes out first.
+  another reason JP-USB comes out first.
 
-Making the USB port safe with J-USB fitted would need a real power path (an
+Making the USB port safe with JP-USB fitted would need a real power path (an
 ideal-diode/load-switch ORing the two sources), not a series diode. That is
 not in this layout.
 
@@ -233,6 +233,27 @@ not in this layout.
   + to 24+, − to SW (the drain). DS18B20s → the 9-position block, one
   3V3/DQ/GND triple per probe.
 
+### Wire sizes
+
+Nothing here is ampacity-limited. One heater at a time draws
+117 W / 120 VAC ≈ 1 A (the heaters are interlocked), one valve at a time
+125 mA, the fan 65–75 mA, a relay coil ~72 mA, and the ESP peaks near
+310 mA. So the sizes below are chosen for hole fit, terminal grip,
+insulation rating and mechanical robustness, not for current.
+
+| Where | Size | Why |
+|---|---|---|
+| Bus wire on either board (GND, 3V3, 5 V, 24V+) | 22 AWG (0.64 mm) solid tinned copper | Fits a ~1 mm protoboard hole with room for solder and lies flat along a hole row. 20 AWG (0.81 mm) is the practical maximum for those holes |
+| Signals, underside hookup | 24–26 AWG insulated | Flexible enough to dress around the sockets; crossings are fine because it is insulated |
+| 24 V (PSU → board, board → valves and fan) | 22 AWG stranded, 20 AWG for runs beyond about a metre | Well above a 125 mA valve; stranded survives the flexing at a screw terminal |
+| Mains: L, N, switched L, heater tails | 18 AWG stranded, 300 V insulation minimum, 105 °C | Standard appliance mains practice and a firm grip in a 5.08 mm block, with large margin over the ~1 A heater |
+| Heater tails and thermal-fuse leads at the pack | 105 °C or better, or silicone with fibreglass sleeving | They sit on a pack that runs to 90 °C and may reach the 133 °C fuse trip |
+
+Note that 18 AWG **solid** (1.02 mm) will not pass a 1 mm protoboard hole.
+That is deliberate: all mains lands on the 5.08 mm screw blocks and never
+in a board hole. Keep mains conductors clear of the low-voltage side of the
+dashed boundary, and route them as a pair so they do not enclose loop area.
+
 ### Net list — logic + 24 V board
 
 | Net | From | To |
@@ -240,7 +261,7 @@ not in this layout.
 | GND | 24 V IN 0V | Buck IN− / OUT− (one net on the module), 100 µF −, ESP GND (16-pin), display GND, harness pin 2, GND bus → 10 kΩ gate pulldowns ×3 and IRLZ44N sources ×3, DS18B20 GND ×3 |
 | 3V3 | ESP 3V3 (16-pin) | 3V3 bus → display 3V3, 4.7 kΩ top, DS18B20 3V3 ×3 |
 | 5 V | Buck OUT+ | 100 µF +, Schottky anode, harness pin 1 |
-| VBUS | Schottky cathode | J-USB pin 2; J-USB pin 1 → ESP USB (12-pin) |
+| VBUS | Schottky cathode | JP-USB pin 2; JP-USB pin 1 → ESP USB (12-pin) |
 | 24V+ | 24 V IN 24+ | 24V+ bus → load blocks 24+ ×3, 1N4007 cathodes ×3; insulated feed → buck IN+ |
 | GPIO13 | ESP 13 (12-pin) | 1 kΩ → harness pin 3 |
 | GPIO12 | ESP 12 (12-pin) | 1 kΩ → harness pin 4 |
@@ -281,7 +302,19 @@ not in this layout.
   **not** on the protoboard.
 - 0 V bonds to PE at one point, at the PSU, because the relay's 1500 VAC
   coil–contact rating is a basic-insulation barrier only.
-- Fuse T 3.15 A in L at the inlet, ahead of the PSU and heaters.
+- Fuse T 3.15 A (time-delay) in L at the inlet, ahead of the PSU and the
+  heaters. One fuse covers everything only if it sits upstream of the split
+  to the PSU, so the intended order is: inlet L → fuse → (a) PSU L,
+  (b) relay board "L" terminal. The original board fused at 3 A; 3.15 A is
+  the nearest standard 5 × 20 value and time-delay rides out the PSU's
+  cold-start inrush (the LRS-35 datasheet quotes 45 A).
+- A PCB-mount 5 × 20 holder on the relay board works instead of a panel or
+  inline holder, but only with the same ordering: it must sit between the
+  board's incoming "L" terminal and the two COM pins, and the PSU's live
+  feed then has to be spurred off the **fused** side (a third mains terminal
+  on the board), not taken straight from the inlet. Otherwise the PSU
+  branch runs unfused. The current drawing does not include that holder or
+  the PSU spur; say the word and it goes in the layout.
 - Each relay switches L only; N passes straight through.
 - Each heater carries its own one-shot thermal fuse (TCO) in series, in the
   switched L lead between the relay board's "L sw" terminal and the heater.
