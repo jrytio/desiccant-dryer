@@ -7,9 +7,16 @@
 # Home Assistant sets the API encryption key when it adopts the device.
 # Later updates come from the update entity below; no add-on is needed.
 #
-# The released image has no OTA *server*: without a password it would let
-# any host on the LAN upload firmware to a mains controller. Updates are
-# pull-only, through the update entity below.
+# The released image has no ESPHome OTA *server*, and the normal LAN path
+# is strictly pull-based, through the update entity below.
+#
+# That is not the whole story: `captive_portal:` (packages/platform-esp32.yaml)
+# AUTO_LOADs `ota.web_server`, whose POST /update handler stays reachable
+# whenever the captive portal is active — i.e. during a WiFi outage, over
+# the open "${friendly_name} Setup" fallback AP. That is an accepted trade
+# for provisioning convenience, not an oversight; it is closed by either
+# passwording the AP or dropping `captive_portal:`, neither of which this
+# repo currently does.
 #
 # 1.0.x tried this and failed: with ili9xxx's mandatory full frame buffer
 # the S2 never had the ~16,749-byte contiguous block a TLS record needs.
@@ -81,6 +88,10 @@ http_request:
   # response headers stay short. Kept a little above the 512-byte default
   # for header headroom.
   buffer_size_rx: 1024
+  # Pages answers directly. Enforce that rather than assume it: following a
+  # redirect is how 1.0.x ended up at a ~900-byte signed URL that neither the
+  # buffer below nor the S2's heap could take.
+  follow_redirects: false
 
 # The download backend for the update entity below. This is not an OTA
 # *server*: nothing listens, so no LAN host can push firmware to a mains
@@ -88,6 +99,16 @@ http_request:
 ota:
   - platform: http_request
 
+# The md5 checked below comes from this same manifest, so it proves the
+# download was not corrupted, not who produced it: platform: http_request
+# has no code signing. Anyone with push access to gh-pages can run
+# arbitrary firmware on every deployed unit within one 6h poll interval.
+# That push access is the security boundary for the whole fleet.
+#
+# Installing an update reboots the unit, which can land mid drying-cycle.
+# That fails safe: all outputs use restore_mode: ALWAYS_OFF and are forced
+# off in on_boot, so the reboot drops the heaters and valves rather than
+# leaving them energised.
 update:
   - platform: http_request
     name: "Firmware"
