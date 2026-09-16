@@ -43,7 +43,7 @@ For agents: each row matches `^\| ([A-L]-\d\d) \| (.+) \| [🔴🟠🟡🔵⚪] 
 | [A. Heater mains path (relays, drivers, fuses, wiring)](#a-heater-mains-path-relays-drivers-fuses-wiring) | 17 | 6 | 4 | 2 |  | 29 |
 | [B. Pack temperature sensing and thermal control](#b-pack-temperature-sensing-and-thermal-control) | 2 | 12 | 7 | 3 |  | 24 |
 | [C. Outlet humidity sensing (SHT45)](#c-outlet-humidity-sensing-sht45) |  |  | 9 | 4 |  | 13 |
-| [D. Valves and airflow](#d-valves-and-airflow) |  | 10 | 5 | 1 |  | 16 |
+| [D. Valves and airflow](#d-valves-and-airflow) |  | 10 | 4 | 2 |  | 16 |
 | [E. Case cooling, enclosure and fan](#e-case-cooling-enclosure-and-fan) | 1 | 4 | 2 | 1 | 1 | 9 |
 | [F. Power supplies and rails](#f-power-supplies-and-rails) | 2 | 9 | 7 | 1 |  | 19 |
 | [G. Wiring, connectors, mechanical, environmental](#g-wiring-connectors-mechanical-environmental) | 4 | 6 | 4 | 1 |  | 15 |
@@ -142,7 +142,7 @@ For agents: each row matches `^\| ([A-L]-\d\d) \| (.+) \| [🔴🟠🟡🔵⚪] 
 |---|---|---|---|---|---|
 | D-01 | Both valves open at once through an electrical or firmware fault (MOSFET shorted, or the `interlock: [valve_b]`/`[valve_a]` pair removed by a config error) rather than a mechanical failure; regenerating pack vents wet purge air into the outlet, hot air to the ozone feed. Bench-test that the interlock config actually blocks this; there is no runtime cross-check that would catch it if it did occur. D-04 is the mechanical equivalent (valve physically stuck open) | 🟠 P1 | FW | bench | ✱ |
 | D-02 | Both valves closed while heater on through an electrical or firmware fault (valve MOSFET open, coil open, 24 V lost) rather than a mechanical failure; pack heats with no purge airflow, hot spot, and nothing cross-checks valve state against heater state. D-05 is the mechanical equivalent | 🟠 P1 | FW | virtual | ✱ |
-| D-03 | `do_swap` is aborted mid-swap (e.g. `Dryer Enabled` turned off during the 500 ms delay), clearing `active_pack`; `apply_outputs` then returns immediately while `active_pack == 0`, leaving both valves closed with no air to the ozone generator until the dryer is re-enabled, and nothing logs or flags the stall | 🟡 P2 | FW | virtual | ✱ |
+| D-03 | `do_swap` is interrupted while the dryer stays enabled (reset, brownout or watchdog reboot inside the 500 ms both-valves-closed window), so step 2 never runs: `active_pack` still names the retiring pack and `standby_state` is unchanged. After boot `on_boot` forces outputs off and the first tick re-derives them, so the retiring pack's valve should reopen within one 5 s tick; verify that, and that no half-swapped state (both closed, or wrong pack open) persists. Turning `Dryer Enabled` off during the window is the intended safe state, not this fault | 🔵 P3 | FW | virtual |  |
 | D-04 | Valve solenoid mechanically sticks open (debris, coil energised too long against a 90 °C pack) even though only one is commanded on; same visible symptom as D-01 (wet purge air, hot air to the outlet) but caused by hardware wear, found by exercising the valve live rather than by a config or interlock review | 🟠 P1 | HW | live |  |
 | D-05 | Valve stuck closed mechanically (debris, seized coil); same symptom as D-02, or no service flow if it is the active valve — found by exercising the valve live, not by a config review | 🟡 P2 | HW | live |  |
 | D-06 | Valve coil overheats (rated 50 °C, mounted on a 90 °C pack); insulation failure, short on the 24 V rail | 🟠 P1 | HW | live |  |
@@ -257,7 +257,7 @@ For agents: each row matches `^\| ([A-L]-\d\d) \| (.+) \| [🔴🟠🟡🔵⚪] 
 | I-16 | Tunables mutually inconsistent (`cooldown_temp` > `regen_temp`, `arm_rh` > `swap_rh`, `regen_hold_min` > `regen_max_min`); no cross-validation | 🟡 P2 | FW | virtual | ✱ |
 | I-17 | `sb_nan_ticks` allows the heater on for 25 s after the probe vanishes; probe loss during a fast rise | 🟡 P2 | FW | virtual |  |
 | I-18 | NaN RH with a valid standby temperature; fault checks run but the state machine is frozen, heater state preserved from the last decision | 🟡 P2 | FW | virtual |  |
-| I-19 | Service counter never resets on a failed swap (`do_swap` aborted); immediate re-swap next tick | 🔵 P3 | FW | virtual |  |
+| I-19 | Swap interrupted by a reset before step 2 of `do_swap` (see D-03) leaves `service_elapsed_s` above `max_service_min`, so the retry fires on the first tick after boot while the standby may have cooled below READY conditions; verify the retried swap still goes to a READY pack, or that the retry is deferred | 🔵 P3 | FW | virtual |  |
 | I-20 | Swap triggered every tick when RH stays above `swap_rh` and both packs are marginal; rapid alternation, valves cycling | 🟡 P2 | FW | virtual |  |
 | I-21 | Heater duty not bounded per hour or per day; a broken humidity baseline can run the heater near-continuously (energy, pack life) | 🔵 P3 | FW | virtual |  |
 | I-22 | No detection that regen produced no drop in outlet RH after the swap (pack exhausted, desiccant dead) | 🟡 P2 | FW | virtual | ✱ |
@@ -302,7 +302,7 @@ For agents: each row matches `^\| ([A-L]-\d\d) \| (.+) \| [🔴🟠🟡🔵⚪] 
 | ID | Failure | Pri | Kind | Verify | Gap |
 |---|---|---|---|---|---|
 | L-01 | Display blank or garbage (SPI cable, CS/DC swap, wrong `data_rate`); operator cannot see state or faults | 🔵 P3 | HW | bench |  |
-| L-02 | Display shows a stale frame after a redraw stall; appears healthy while the controller is hung (see H-01/A-03) | 🔵 P3 | FW | bench |  |
+| L-02 | Display shows a stale frame after a redraw stall; appears healthy while the controller is hung (see A-03) | 🔵 P3 | FW | bench |  |
 | L-03 | "OVR" badge missing while override is active (invariant) | 🔵 P3 | FW | virtual |  |
 | L-04 | Fault code shown but not the fault message, or vice versa | ⚪ P4 | FW | virtual |  |
 | L-05 | Pack colours or airflow arrows disagree with actual valve/heater state (UiState gathered before `apply_outputs`) | ⚪ P4 | FW | virtual |  |
@@ -380,8 +380,8 @@ issue covers, using the scale above.
 |---|---|---|
 | P0 | 31 | Welded or stuck-on heater path, missing thermal fuse, probe/valve/relay mapping errors, mains wiring and creepage, firmware hang with heater on, no software detection of "heater off but still heating" |
 | P1 | 68 | Single-layer protection losses, sensor plausibility gaps, 24 V and 5 V rail faults, valves stuck, manual HA toggles |
-| P2 | 62 | Wet air delivered, silent stalls, NaN and frozen sensors, state machine dead ends |
-| P3 | 28 | Wasted regens, nuisance faults, manual resets |
+| P2 | 61 | Wet air delivered, silent stalls, NaN and frozen sensors, state machine dead ends |
+| P3 | 29 | Wasted regens, nuisance faults, manual resets |
 | P4 | 10 | Display and telemetry only |
 
 Suggested first targets for the verify suite, in order: A-01/B-02 (welded

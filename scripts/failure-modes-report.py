@@ -13,7 +13,12 @@ ROW = re.compile(r"^\| ([A-L]-\d\d) \| (.+) \| [🔴🟠🟡🔵⚪] (P[0-4]) \|
 CAT = re.compile(r"^## ([A-L])\. (.+)$")
 PRI_MEANING, items, cats, issues, cur = {}, [], [], [], None
 ISSUE = re.compile(r"^\| (\d+) \| (.+?) \| ((?:[A-L]-\d\d(?:, )?)+) \| (P[0-4]) \|$")
-for ln in SRC.read_text().splitlines():
+in_catalogue = False
+for n, ln in enumerate(SRC.read_text().splitlines(), 1):
+    if ln.startswith("## "):
+        in_catalogue = bool(CAT.match(ln))
+    if in_catalogue and ln.startswith("| ") and not ln.startswith("| ID |") and not ROW.match(ln):
+        sys.exit(f"{SRC}:{n}: catalogue row does not match the row format given in the Column key:\n{ln}")
     m = re.match(r"^\| \*\*(P[0-4])\*\* \| (.+) \|$", ln)
     if m: PRI_MEANING[m.group(1)] = m.group(2)
     m = CAT.match(ln)
