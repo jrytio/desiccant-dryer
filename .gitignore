@@ -1,5 +1,8 @@
 esphome/secrets.yaml
 esphome/.esphome/
+# Docker builds mount the repo root as /config, so ESPHome caches toolchains
+# (~2 GB of ESP-IDF and PlatformIO) here as well.
+/.esphome/
 .ci-cache/
 *.bin
 .DS_Store
