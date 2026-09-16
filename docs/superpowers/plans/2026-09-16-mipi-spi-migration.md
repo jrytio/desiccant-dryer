@@ -836,6 +836,32 @@ This task is **capped by explicit user decision**: take the obvious wins, then r
 - Consumes: nothing. This task measures and, at most, changes one substitution value.
 - Produces: the redraw measurements quoted in the PR.
 
+- [ ] **Step 0: Restore the SPI clock the driver swap silently dropped**
+
+Found during Task 2's normalised-config diff: SPI `data_rate` went from
+**40 MHz to 10 MHz**. `ili9xxx` defaulted to 40 MHz; `mipi_spi` defaults to
+10 MHz (`mipi_spi/display.py:186`) and the `ST7789V` model sets no override
+(`mipi_spi/models/ili.py:437`). Nothing in this repo asked for the change — it
+came free with the driver swap.
+
+This is a regression to undo, not an optimisation, so it is inside the effort
+cap. Expect it to be worth roughly 35 ms per full frame, not hundreds: 57,600
+bytes is ~46 ms at 10 MHz and ~12 ms at 40 MHz. Restore it and measure, rather
+than assuming either number.
+
+In `esphome/packages/display-st7789.yaml`, add to the `display:` block, directly
+below `invert_colors`:
+
+```yaml
+    # ili9xxx defaulted to 40MHz; mipi_spi defaults to 10MHz and the ST7789V
+    # model sets no override, so the driver swap quartered the SPI clock.
+    data_rate: 40MHz
+```
+
+If the panel ever shows corruption at 40 MHz on real glass, this is the first
+thing to lower — but note no panel was attached when this was set, so 40 MHz is
+**restored, not re-validated**. Record that.
+
 - [ ] **Step 1: Build a VERBOSE production image to read the band timings**
 
 mipi_spi logs `Drawing from line %d took %dms` and `Write to display took %dms` per band, but only at VERBOSE. Temporarily append to `esphome/desiccant-dryer-hw-test.yaml`, replacing its existing `logger:` block:
