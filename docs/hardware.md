@@ -26,7 +26,7 @@ addition to the parts above:
 | Item | Part | Notes |
 |---|---|---|
 | Logic board | Double-sided plated FR-4 protoboard, 7 × 9 cm | 2.54 mm grid |
-| Relay board | Double-sided plated FR-4 protoboard, 5 × 7 cm | 2.54 mm grid |
+| Relay board | Double-sided plated FR-4 protoboard, 7 × 9 cm | Same stock as the logic board. 5 × 7 cm has no 23 mm clear run for the fuse holder once the four mains blocks are in |
 | ESP sockets | 1× 16-pin and 1× 12-pin female header, 2.54 mm | ESP is socketed |
 | Bulk capacitors | 2× 100 µF / 16 V electrolytic | 5 V on each board; mind polarity |
 | JP-USB | 2-pin header + shunt | Manual disconnect between buck and USB pin |
@@ -35,8 +35,8 @@ addition to the parts above:
 | Resistors | 4.7 kΩ (1-wire pullup) plus the driver-stage resistors above | |
 | Sensor terminals | 9-position 5.08 mm screw terminal block | DS18B20 ×3 |
 | 24 V terminals | 4× 2-position 5.08 mm screw terminal block | 24 V in, valve A, valve B, fan |
-| Mains terminals | 3× 2-position 5.08 mm **mains-rated** screw terminal block (UL 1059 300 V / 10 A or IEC 250 V class) | 120 VAC in, heater A, heater B |
-| Mains fuse | T 3.15 A 5 × 20 mm fuse + holder (panel, inline, or PCB-mount) | In L at the inlet, ahead of **both** the PSU and the heaters — see [Mains and earthing](#mains-and-earthing) |
+| Mains terminals | 4× 2-position 5.08 mm **mains-rated** screw terminal block (UL 1059 300 V / 10 A or IEC 250 V class) | 120 VAC in, heater A, heater B, 24 V PSU feed |
+| Mains fuse | T 3.15 A 5 × 20 mm fuse + PCB clips or block holder | **F1**, on the relay board in L between the inlet terminal and both COM pins. Clips drawn on 22.86 mm centres (9 × 2.54) — check yours — see [Mains and earthing](#mains-and-earthing) |
 | Mounting | M3 nylon standoffs | Board corners |
 | Wire | 22 AWG solid tinned bus wire; 24–26 AWG insulated hookup; 22 AWG stranded for 24 V; 18 AWG stranded 300 V / 105 °C for mains | Sizes and reasoning under [Wire sizes](#wire-sizes) |
 
@@ -134,8 +134,9 @@ up with USB-C at the left, the 12-pin row is on top.
 
 Two boards, split at the mains boundary rather than by voltage: a 90 × 70 mm
 logic + 24 V board (ESP socketed, buck, three MOSFET channels, 1-wire block,
-display header) and a 70 × 50 mm relay board (relays, PN2222A stages,
-120 VAC terminals) joined by a 4-wire logic-level harness. Not yet built.
+display header) and a 90 × 70 mm relay board (relays, PN2222A stages, the
+mains fuse and the 120 VAC terminals) joined by a 4-wire logic-level
+harness. Both boards are the same 7 × 9 cm stock. Not yet built.
 The drawing is a top view of the component side with the wiring on the
 underside, and prints 1:1 (check its 10 mm bar).
 
@@ -287,8 +288,9 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
 | Base A | Harness pin 3 (GPIO13 via 1 kΩ) | PN2222A A base, 10 kΩ top |
 | Base B | Harness pin 4 (GPIO12 via 1 kΩ) | PN2222A B base, 10 kΩ top |
 | Coil A − / coil B − | PN2222A collector | Relay coil pin (other side), 1N4007 anode |
-| L | 120 VAC IN L | Relay A COM, relay B COM |
-| N | 120 VAC IN N | Heater A N, heater B N (passes through, never switched) |
+| L (unfused) | 120 VAC IN "L" | F1 clip 1 |
+| L (fused) | F1 clip 2 | Relay A COM, relay B COM, "24 V PSU" block L |
+| N | 120 VAC IN "N" | Heater A N, heater B N, "24 V PSU" block N (passes through, never switched or fused) |
 | L sw A | Relay A NO | Heater A "L sw" → thermal fuse at pack A → heater A |
 | L sw B | Relay B NO | Heater B "L sw" → thermal fuse at pack B → heater B |
 | NC A / NC B | — | Unconnected (live when the heater is off) |
@@ -302,19 +304,24 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
   **not** on the protoboard.
 - 0 V bonds to PE at one point, at the PSU, because the relay's 1500 VAC
   coil–contact rating is a basic-insulation barrier only.
-- Fuse T 3.15 A (time-delay) in L at the inlet, ahead of the PSU and the
-  heaters. One fuse covers everything only if it sits upstream of the split
-  to the PSU, so the intended order is: inlet L → fuse → (a) PSU L,
-  (b) relay board "L" terminal. The original board fused at 3 A; 3.15 A is
-  the nearest standard 5 × 20 value and time-delay rides out the PSU's
-  cold-start inrush (the LRS-35 datasheet quotes 45 A).
-- A PCB-mount 5 × 20 holder on the relay board works instead of a panel or
-  inline holder, but only with the same ordering: it must sit between the
-  board's incoming "L" terminal and the two COM pins, and the PSU's live
-  feed then has to be spurred off the **fused** side (a third mains terminal
-  on the board), not taken straight from the inlet. Otherwise the PSU
-  branch runs unfused. The current drawing does not include that holder or
-  the PSU spur; say the word and it goes in the layout.
+- **F1, T 3.15 A time-delay, sits on the relay board** in L, between the
+  incoming "L" terminal and both COM pins:
+
+  ```
+  inlet L → "L" terminal → F1 → ┬ relay A COM, relay B COM
+                                └ "24 V PSU" block, L  → PSU live
+  ```
+
+  So one fuse protects the heaters and the supply. The PSU's live must come
+  off that block, on the fused side of F1 — never straight from the inlet,
+  or that branch runs unfused. N passes through the board to the heaters and
+  to the PSU block without being switched or fused.
+- The original board fused at 3 A; 3.15 A is the nearest standard 5 × 20
+  value, and time-delay rides out the PSU's cold-start inrush (the LRS-35
+  datasheet quotes 45 A).
+- The clips are drawn on 22.86 mm centres (9 × 2.54 mm), which suits the
+  common 5 × 20 PCB clip pair. One-piece block holders are usually 22–23 mm
+  between pins; check the part in hand before drilling, as with the buck.
 - Each relay switches L only; N passes straight through.
 - Each heater carries its own one-shot thermal fuse (TCO) in series, in the
   switched L lead between the relay board's "L sw" terminal and the heater.

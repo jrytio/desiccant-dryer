@@ -1,5 +1,5 @@
-<svg width="183.33mm" height="245.17mm" viewBox="0 0 1100 1471" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
-<title>Desiccant dryer controller — protoboard layout (logic 90×70 mm, relay 70×50 mm)</title>
+<svg width="206.67mm" height="252.33mm" viewBox="0 0 1240 1514" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<title>Desiccant dryer controller — protoboard layout (logic 90×70 mm, relay 90×70 mm)</title>
 <defs>
   <pattern id="holes" x="0" y="0" width="2.54" height="2.54" patternUnits="userSpaceOnUse"><circle cx="0.93" cy="0.93" r="0.42" fill="#C9C3B2"/></pattern>
   <pattern id="hatch" width="1.2" height="1.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1.2" height="1.2" fill="#F4D9D9"/><line x1="0" y1="0" x2="0" y2="1.2" stroke="#B03A3A" stroke-width="0.35"/></pattern>
@@ -7,13 +7,13 @@
   <g id="tb2"><rect x="-2.55" y="-3.5" width="10.16" height="8" rx="0.4" fill="#2A5D8F" stroke="#183A5A" stroke-width="0.15"/><circle class="pad" cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle class="pad" cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
   <g id="tbm"><rect x="-2.55" y="-3.5" width="10.16" height="8" rx="0.4" fill="#7A2626" stroke="#4A1414" stroke-width="0.15"/><circle class="pad" cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle class="pad" cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
 </defs>
-<rect width="1100" height="1471" fill="#FFFFFF"/>
+<rect width="1240" height="1514" fill="#FFFFFF"/>
 <text x="20" y="26" font-size="15" font-weight="bold" fill="#2C2C2A">Desiccant dryer controller — protoboard layout (proposal)</text>
-<text x="20" y="45" font-size="11" fill="#444">Top view, component side; wiring on the underside. Left: logic + 24 V board, 90 × 70 mm. Right: mains relay board, 70 × 50 mm. Only a 4-wire logic-level harness links them.</text>
+<text x="20" y="45" font-size="11" fill="#444">Top view, component side; wiring on the underside. Left: logic + 24 V board, 90 × 70 mm. Right: mains relay board, also 90 × 70 mm. Only a 4-wire logic-level harness links them.</text>
 <text x="20" y="62" font-size="11" fill="#444">Prints 1:1 at 100 % (the SVG is sized in mm; 6 px/mm on screen): check the 10 mm bar measures 10 mm before using it as a drilling guide.</text>
 <g transform="translate(900,82)"><line x1="0" y1="0" x2="60" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-5" x2="0" y2="5" stroke="#000" stroke-width="1.5"/><line x1="60" y1="-5" x2="60" y2="5" stroke="#000" stroke-width="1.5"/><text x="70" y="4" font-size="11" fill="#000">10 mm</text></g>
 <text x="30" y="94" font-size="12" font-weight="bold" fill="#2C2C2A">LOGIC + 24 V BOARD (7 × 9 cm)</text>
-<text x="630" y="94" font-size="12" font-weight="bold" fill="#2C2C2A">RELAY BOARD (5 × 7 cm)</text>
+<text x="630" y="94" font-size="12" font-weight="bold" fill="#2C2C2A">RELAY BOARD (7 × 9 cm)</text>
 <g class="board logic" transform="translate(30,100) scale(6)" font-family="Helvetica, Arial, sans-serif">
 <rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
 <rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
@@ -344,12 +344,12 @@
 <text x="91.4" y="56.81" font-size="1.3" fill="#1B4332" text-anchor="middle" font-weight="bold" transform="rotate(-90 91.4 56.81)">CASE</text>
 </g>
 <g class="board relay" transform="translate(630,100) scale(6)" font-family="Helvetica, Arial, sans-serif">
-<rect x="0" y="0" width="70" height="50" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
-<rect x="2.2" y="2.2" width="65.6" height="45.6" fill="url(#holes)"/>
+<rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
+<rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
 <circle cx="2.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
-<circle cx="67.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
-<circle cx="2.5" cy="47.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
-<circle cx="67.5" cy="47.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="87.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="2.5" cy="67.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="87.5" cy="67.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
 <rect x="28.96" y="3.11" width="12.4" height="5.75" rx="0.3" fill="#F2EEE0" stroke="#555" stroke-width="0.15"/>
 <rect x="28.96" y="3.11" width="12.4" height="0.8" rx="0" fill="#999" stroke="none" />
 <circle cx="37.76" cy="13.63" r="3.15" fill="#2B2B40" fill-opacity="0.55" stroke="#000" stroke-width="0.15"/>
@@ -371,6 +371,11 @@
 <use href="#tbm" x="8.55" y="44.11"/>
 <use href="#tbm" x="31.41" y="44.11"/>
 <use href="#tbm" x="56.81" y="44.11"/>
+<rect x="27.81" y="53.75" width="30.06" height="11.2" rx="0.6" fill="#7A2626" stroke="#4A1414" fill-opacity="0.15" stroke-width="0.2"/>
+<rect x="29.81" y="56.15" width="3.2" height="6.4" rx="0.3" fill="#BBBBBB" stroke="#555" stroke-width="0.15"/>
+<rect x="52.67" y="56.15" width="3.2" height="6.4" rx="0.3" fill="#BBBBBB" stroke="#555" stroke-width="0.15"/>
+<rect x="32.84" y="56.85" width="20" height="5" rx="1.5" fill="#E2E2DA" stroke="#888" fill-opacity="0.8" stroke-width="0.15"/>
+<use href="#tbm" x="72.05" y="44.11"/>
 <circle class="pad" cx="31.41" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
 <circle class="pad" cx="33.95" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
 <circle class="pad" cx="36.49" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
@@ -401,6 +406,8 @@
 <circle class="pad" cx="51.73" cy="11.09" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
 <circle class="pad" cx="46.65" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
 <circle class="pad" cx="46.65" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="31.41" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="54.27" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
 <polyline points="13.63,3.47 56.81,3.47" fill="none" stroke="#333333" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
 <polyline points="13.63,16.17 56.81,16.17" fill="none" stroke="#D64545" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
 <polyline points="33.95,6.01 33.95,3.47" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
@@ -419,13 +426,16 @@
 <polyline points="47.92,13.63 47.92,14.9 44.46,14.9 44.46,26.31" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="56.46,26.31 56.46,20 56.81,20 56.81,16.17" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="39.03,6.01 39.03,4.74 50.46,4.74 50.46,11.09 51.73,11.09" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
-<polyline points="1.2,29.2 16.83,29.2 16.83,21.16 23.13,21.16 23.13,29.2 47.31,29.2 47.31,21.16 53.61,21.16 53.61,29.2 68.8,29.2" fill="none" stroke="#B03A3A" stroke-width="0.3" stroke-dasharray="2 0.6 0.4 0.6"/>
-<polyline points="31.41,44.11 31.41,31.75 19.98,31.75 19.98,24.31" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
-<polyline points="31.41,31.75 50.46,31.75 50.46,24.31" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="1.2,29.2 16.83,29.2 16.83,21.16 23.13,21.16 23.13,29.2 47.31,29.2 47.31,21.16 53.61,21.16 53.61,29.2 88.8,29.2" fill="none" stroke="#B03A3A" stroke-width="0.3" stroke-dasharray="2 0.6 0.4 0.6"/>
+<polyline points="31.41,44.11 31.41,59.35" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="54.27,59.35 66.97,59.35 66.97,31.75 50.46,31.75 50.46,24.31" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="50.46,31.75 19.98,31.75 19.98,24.31" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="66.97,44.11 72.05,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="13.98,38.51 13.98,42.84 13.63,42.84 13.63,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="56.46,38.51 56.46,42.84 56.81,42.84 56.81,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="36.49,44.11 36.49,41.57 8.55,41.57 8.55,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="36.49,41.57 61.89,41.57 61.89,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="61.89,41.57 77.13,41.57 77.13,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <text x="31.41" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">5V</text>
 <text x="33.95" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">GND</text>
 <text x="36.49" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">A</text>
@@ -471,6 +481,12 @@
 <text x="36.49" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
 <text x="56.81" y="47.11" font-size="0.95" fill="#FFF" text-anchor="middle">L sw</text>
 <text x="61.89" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
+<text x="42.84" y="59.85" font-size="1.3" fill="#4A1414" text-anchor="middle" font-weight="bold">F1   T 3.15 A</text>
+<text x="42.84" y="66.75" font-size="0.9" fill="#8B1A1A" text-anchor="middle">5 × 20 clips on 22.86 mm centres (9 × 2.54) — check your holder</text>
+<text x="72.05" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">L</text>
+<text x="77.13" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
+<text x="74.59" y="38.71" font-size="1.3" fill="#8B1A1A" text-anchor="middle" font-weight="bold">24 V PSU</text>
+<text x="74.59" y="40.41" font-size="1" fill="#8B1A1A" text-anchor="middle">(fused side)</text>
 </g>
 <text x="264.18" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">VALVE A ← GPIO11</text>
 <text x="264.18" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · SW</text>
@@ -489,103 +505,97 @@
 <text x="30" y="570" font-size="8" fill="#2C2C2A">ESP placement: vertical along the left edge,</text>
 <text x="30" y="580.8" font-size="8" fill="#2C2C2A">antenna end at the top edge, USB-C at the</text>
 <text x="30" y="591.6" font-size="8" fill="#2C2C2A">bottom edge, Qwiic cable exits left.</text>
-<rect x="630" y="412" width="420" height="126.5" rx="4" fill="#FDF3E3" stroke="#B03A3A" stroke-width="1.5"/>
-<text x="642" y="434" font-size="12" font-weight="bold" fill="#B03A3A">* PN2222A or P2N2222A? CHECK THE MARKING BEFORE FITTING</text>
-<text x="642" y="448" font-size="10" fill="#2C2C2A">Flat face toward the bottom of this drawing (toward the mains terminals):</text>
-<text x="642" y="461.5" font-size="10" fill="#2C2C2A">PN2222A is E B C, P2N2222A is C B E. They are mirror images and both are sold</text>
-<text x="642" y="475" font-size="10" fill="#2C2C2A">as a TO-92 “2N2222”, so the marking on the part is the only way to tell. The</text>
-<text x="642" y="488.5" font-size="10" fill="#2C2C2A">wrong way round swaps collector and emitter: the stage never switches and the</text>
-<text x="642" y="502" font-size="10" fill="#2C2C2A">base–emitter junction breaks down near 6 V. Read every part before it goes in</text>
-<text x="642" y="515.5" font-size="10" fill="#2C2C2A">and rotate a P2N2222A 180°. Bulk TO-92 leads are 1.27 mm pitch; this footprint</text>
-<text x="642" y="529" font-size="10" fill="#2C2C2A">is 2.54 mm (the formed-lead PN2222ATA/ATF and P2N2222ARL1G).</text>
-<text x="630" y="556.5" font-size="12" font-weight="bold" fill="#2C2C2A">Mains side (relay board)</text>
+<rect x="630" y="532" width="520" height="113" rx="4" fill="#FDF3E3" stroke="#B03A3A" stroke-width="1.5"/>
+<text x="642" y="554" font-size="12" font-weight="bold" fill="#B03A3A">* PN2222A or P2N2222A? CHECK THE MARKING BEFORE FITTING</text>
+<text x="642" y="568" font-size="10" fill="#2C2C2A">Flat face toward the bottom of this drawing (toward the mains terminals): PN2222A is E B C,</text>
+<text x="642" y="581.5" font-size="10" fill="#2C2C2A">P2N2222A is C B E. They are mirror images and both are sold as a TO-92 “2N2222”, so the marking on</text>
+<text x="642" y="595" font-size="10" fill="#2C2C2A">the part is the only way to tell. The wrong way round swaps collector and emitter: the stage never</text>
+<text x="642" y="608.5" font-size="10" fill="#2C2C2A">switches and the base–emitter junction breaks down near 6 V. Read every part before it goes in and</text>
+<text x="642" y="622" font-size="10" fill="#2C2C2A">rotate a P2N2222A 180°. Bulk TO-92 leads are 1.27 mm pitch; this footprint is 2.54 mm (the formed-</text>
+<text x="642" y="635.5" font-size="10" fill="#2C2C2A">lead PN2222ATA/ATF and P2N2222ARL1G).</text>
+<text x="630" y="663.0" font-size="12" font-weight="bold" fill="#2C2C2A">Mains side (relay board)</text>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="573.5" font-size="9.5" fill="#2C2C2A">L → COM; the contact wired to “L sw” is NO. Identify NC first: with the coil</text>
-<text x="640" y="586.33" font-size="9.5" fill="#2C2C2A">unpowered, NC has continuity to COM. NC is live whenever the heater is off; leave it</text>
-<text x="640" y="599.15" font-size="9.5" fill="#2C2C2A">unconnected. The relay switches L only; N passes through.</text>
-<circle cx="633" cy="570" r="1.8" fill="#2C2C2A"/>
+<text x="640" y="680" font-size="9.5" fill="#2C2C2A">L → COM; the contact wired to “L sw” is NO. Identify NC first: with the coil unpowered, NC has continuity</text>
+<text x="640" y="692.83" font-size="9.5" fill="#2C2C2A">to COM. NC is live whenever the heater is off; leave it unconnected. The relay switches L only; N passes</text>
+<text x="640" y="705.65" font-size="9.5" fill="#2C2C2A">through.</text>
+<circle cx="633" cy="676.5" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="614.98" font-size="9.5" fill="#2C2C2A">COM is at the coil end: 6.3 mm centre to centre from each coil pad, ≈4 mm pad edge to</text>
-<text x="640" y="627.8" font-size="9.5" fill="#2C2C2A">pad edge. The PN2222A / 1N4007 stage sits ≥ 3 hole rows (7.62 mm) from COM, NO and NC.</text>
-<circle cx="633" cy="611.48" r="1.8" fill="#2C2C2A"/>
+<text x="640" y="721.48" font-size="9.5" fill="#2C2C2A">COM is at the coil end: 6.3 mm centre to centre from each coil pad, ≈4 mm pad edge to pad edge. The PN2222A</text>
+<text x="640" y="734.3" font-size="9.5" fill="#2C2C2A">/ 1N4007 stage sits ≥ 3 hole rows (7.62 mm) from COM, NO and NC.</text>
+<circle cx="633" cy="717.98" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="643.63" font-size="9.5" fill="#2C2C2A">Relay pads are off the grid (datasheet, mm: COM (0, 0), coil (2.0, ±6.0), NO/NC (14.2,</text>
-<text x="640" y="656.45" font-size="9.5" fill="#2C2C2A">±6.0), 1.3 mm holes). Nearest grid fit: rows ±6.35, columns 12.7 apart, COM 2.54</text>
-<text x="640" y="669.28" font-size="9.5" fill="#2C2C2A">outboard (≈0.35–0.5 mm splay per pin). Drawn at the real positions: coil and NO/NC</text>
-<text x="640" y="682.1" font-size="9.5" fill="#2C2C2A">pins sit 0.35 mm inside hole columns 12.7 mm apart, and COM falls on the centreline</text>
-<text x="640" y="694.93" font-size="9.5" fill="#2C2C2A">between two columns, so drill its hole there. COM/NO/NC are 1.0–1.1 mm flat blades:</text>
-<text x="640" y="707.75" font-size="9.5" fill="#2C2C2A">ream those three holes to ≥ 1.2 mm.</text>
-<circle cx="633" cy="640.13" r="1.8" fill="#2C2C2A"/>
+<text x="640" y="750.13" font-size="9.5" fill="#2C2C2A">Relay pads are off the grid (datasheet, mm: COM (0, 0), coil (2.0, ±6.0), NO/NC (14.2, ±6.0), 1.3 mm</text>
+<text x="640" y="762.95" font-size="9.5" fill="#2C2C2A">holes). Nearest grid fit: rows ±6.35, columns 12.7 apart, COM 2.54 outboard (≈0.35–0.5 mm splay per pin).</text>
+<text x="640" y="775.78" font-size="9.5" fill="#2C2C2A">Drawn at the real positions: coil and NO/NC pins sit 0.35 mm inside hole columns 12.7 mm apart, and COM</text>
+<text x="640" y="788.6" font-size="9.5" fill="#2C2C2A">falls on the centreline between two columns, so drill its hole there. COM/NO/NC are 1.0–1.1 mm flat blades:</text>
+<text x="640" y="801.43" font-size="9.5" fill="#2C2C2A">ream those three holes to ≥ 1.2 mm.</text>
+<circle cx="633" cy="746.63" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="723.58" font-size="9.5" fill="#2C2C2A">Earthing: PSU FG → PE. Chassis, enclosure and heater sheaths bond to PE at a star</text>
-<text x="640" y="736.4" font-size="9.5" fill="#2C2C2A">point that is NOT on this board. 0 V bonds to PE at one point at the PSU, because the</text>
-<text x="640" y="749.23" font-size="9.5" fill="#2C2C2A">relay’s 1500 VAC coil–contact rating is basic insulation only. Fuse T 3.15 A (time-</text>
-<text x="640" y="762.05" font-size="9.5" fill="#2C2C2A">delay) in L at the inlet, ahead of BOTH the PSU and the heaters: inlet L → fuse → (a)</text>
-<text x="640" y="774.88" font-size="9.5" fill="#2C2C2A">PSU L, (b) this board’s “L” terminal. A PCB-mount 5 × 20 holder can replace the inline</text>
-<text x="640" y="787.7" font-size="9.5" fill="#2C2C2A">one, but then the PSU’s live must be spurred off the fused side, not the inlet, or</text>
-<text x="640" y="800.53" font-size="9.5" fill="#2C2C2A">that branch runs unfused.</text>
-<circle cx="633" cy="720.08" r="1.8" fill="#2C2C2A"/>
+<text x="640" y="817.25" font-size="9.5" fill="#2C2C2A">Earthing: PSU FG → PE. Chassis, enclosure and heater sheaths bond to PE at a star point that is NOT on this</text>
+<text x="640" y="830.08" font-size="9.5" fill="#2C2C2A">board. 0 V bonds to PE at one point at the PSU, because the relay’s 1500 VAC coil–contact rating is basic</text>
+<text x="640" y="842.9" font-size="9.5" fill="#2C2C2A">insulation only. F1, T 3.15 A time-delay, is on this board in L: inlet “L” terminal → F1 → both COM pins,</text>
+<text x="640" y="855.73" font-size="9.5" fill="#2C2C2A">with the 24 V PSU’s live spurred off the fused side of F1 at the “24 V PSU” block. One fuse therefore</text>
+<text x="640" y="868.55" font-size="9.5" fill="#2C2C2A">covers the heaters and the supply. Feed the PSU from that block, never straight from the inlet, or its</text>
+<text x="640" y="881.38" font-size="9.5" fill="#2C2C2A">branch runs unfused. Time-delay rides out the LRS-35’s 45 A cold-start inrush.</text>
+<circle cx="633" cy="813.75" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="816.35" font-size="9.5" fill="#2C2C2A">Mains wire: 18 AWG stranded, 300 V insulation, 105 °C, into the screw blocks only — 18</text>
-<text x="640" y="829.18" font-size="9.5" fill="#2C2C2A">AWG solid will not pass a 1 mm board hole, and no mains conductor belongs in one. Bus</text>
-<text x="640" y="842" font-size="9.5" fill="#2C2C2A">wire elsewhere is 22 AWG solid tinned.</text>
-<circle cx="633" cy="812.85" r="1.8" fill="#2C2C2A"/>
+<text x="640" y="897.2" font-size="9.5" fill="#2C2C2A">Mains wire: 18 AWG stranded, 300 V insulation, 105 °C, into the screw blocks only — 18 AWG solid will not</text>
+<text x="640" y="910.03" font-size="9.5" fill="#2C2C2A">pass a 1 mm board hole, and no mains conductor belongs in one. Bus wire elsewhere is 22 AWG solid tinned.</text>
+<circle cx="633" cy="893.7" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="857.83" font-size="9.5" fill="#2C2C2A">Each heater’s switched L lead carries a one-shot thermal fuse (TCO) between “L sw” and</text>
-<text x="640" y="870.65" font-size="9.5" fill="#2C2C2A">the heater — the only protection against a welded contact. The parts are SEFUSE</text>
-<text x="640" y="883.48" font-size="9.5" fill="#2C2C2A">SF129E, Tf 133 °C, 10 A / 250 VAC: clamp them to the pack body next to the DS18B20,</text>
-<text x="640" y="896.3" font-size="9.5" fill="#2C2C2A">NOT to the heater sheath, which runs far hotter and would open one on the first cycle.</text>
-<text x="640" y="909.13" font-size="9.5" fill="#2C2C2A">It holds continuously to Th 118 °C and opens at Tf 133 °C, so the firmware limit sits</text>
-<text x="640" y="921.95" font-size="9.5" fill="#2C2C2A">below Th at 110 °C (v1.2.0). Crimped leads.</text>
-<circle cx="633" cy="854.33" r="1.8" fill="#2C2C2A"/>
+<text x="640" y="925.85" font-size="9.5" fill="#2C2C2A">Each heater’s switched L lead carries a one-shot thermal fuse (TCO) between “L sw” and the heater — the</text>
+<text x="640" y="938.68" font-size="9.5" fill="#2C2C2A">only protection against a welded contact. The parts are SEFUSE SF129E, Tf 133 °C, 10 A / 250 VAC: clamp</text>
+<text x="640" y="951.5" font-size="9.5" fill="#2C2C2A">them to the pack body next to the DS18B20, NOT to the heater sheath, which runs far hotter and would open</text>
+<text x="640" y="964.33" font-size="9.5" fill="#2C2C2A">one on the first cycle. It holds continuously to Th 118 °C and opens at Tf 133 °C, so the firmware limit</text>
+<text x="640" y="977.15" font-size="9.5" fill="#2C2C2A">sits below Th at 110 °C (v1.2.0). Crimped leads.</text>
+<circle cx="633" cy="922.35" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="937.78" font-size="9.5" fill="#2C2C2A">Before wiring real heaters: make the four heater/valve switches internal: true</text>
-<text x="640" y="950.6" font-size="9.5" fill="#2C2C2A">(CLAUDE.md open item).</text>
-<circle cx="633" cy="934.28" r="1.8" fill="#2C2C2A"/>
-<text x="630" y="978.4250000000013" font-size="12" font-weight="bold" fill="#2C2C2A">Legend</text>
-<rect x="630" y="984.4250000000013" width="14" height="9" fill="#2A5D8F"/>
-<text x="650" y="992.4250000000013" font-size="9.5" fill="#2C2C2A">24 V screw terminals</text>
-<rect x="845" y="984.4250000000013" width="14" height="9" fill="#7A2626"/>
-<text x="865" y="992.4250000000013" font-size="9.5" fill="#2C2C2A">120 VAC screw terminals (mains-rated)</text>
-<rect x="630" y="999.4250000000013" width="14" height="9" fill="#2D6A4F"/>
-<text x="650" y="1007.4250000000013" font-size="9.5" fill="#2C2C2A">sensor screw terminals</text>
-<rect x="845" y="999.4250000000013" width="14" height="9" fill="#222"/>
-<text x="865" y="1007.4250000000013" font-size="9.5" fill="#2C2C2A">headers / sockets / JST-XH</text>
-<rect x="630" y="1014.4250000000013" width="14" height="9" fill="#D64545"/>
-<text x="650" y="1022.4250000000013" font-size="9.5" fill="#2C2C2A">JP-USB = jumper shunt, not a USB socket</text>
-<circle cx="852" cy="1018.9250000000013" r="4" fill="#C8923E" stroke="#6B4A1A"/>
-<text x="865" y="1022.4250000000013" font-size="9.5" fill="#2C2C2A">copper pad (solder point)</text>
-<rect x="630" y="1030.4250000000013" width="14" height="7" rx="2" fill="#D8C9A0" stroke="#8A7A4A"/>
-<text x="650" y="1037.4250000000013" font-size="9.5" fill="#2C2C2A">resistor</text>
-<rect x="845" y="1030.4250000000013" width="14" height="7" fill="#222"/><rect x="855" y="1030.4250000000013" width="2.5" height="7" fill="#DDD"/>
-<text x="865" y="1037.4250000000013" font-size="9.5" fill="#2C2C2A">1N4007 / Schottky, band = cathode</text>
-<circle cx="637" cy="1048.9250000000013" r="5.5" fill="#2B2B40" fill-opacity="0.55" stroke="#000"/><rect x="639.5" y="1045.4250000000013" width="2" height="7" fill="#BBB"/>
-<text x="650" y="1052.4250000000013" font-size="9.5" fill="#2C2C2A">100 µF 16 V, stripe = −, + marked</text>
-<line x1="845" y1="1048.9250000000013" x2="861" y2="1048.9250000000013" stroke="#333333" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="865" y="1052.4250000000013" font-size="9.5" fill="#2C2C2A">GND bus — bare wire on a hole row</text>
-<line x1="630" y1="1063.9250000000013" x2="646" y2="1063.9250000000013" stroke="#E08A2E" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="650" y="1067.4250000000013" font-size="9.5" fill="#2C2C2A">3V3 bus — bare wire</text>
-<line x1="845" y1="1063.9250000000013" x2="861" y2="1063.9250000000013" stroke="#2A5D8F" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="865" y="1067.4250000000013" font-size="9.5" fill="#2C2C2A">24V+ bus — bare wire</text>
-<line x1="630" y1="1078.9250000000013" x2="646" y2="1078.9250000000013" stroke="#D64545" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="650" y="1082.4250000000013" font-size="9.5" fill="#2C2C2A">5 V bus — bare wire (relay board)</text>
-<line x1="845" y1="1078.9250000000013" x2="861" y2="1078.9250000000013" stroke="#B8860B" stroke-width="1.9"/>
-<text x="865" y="1082.4250000000013" font-size="9.5" fill="#2C2C2A">signal — insulated hookup wire</text>
-<line x1="630" y1="1093.9250000000013" x2="646" y2="1093.9250000000013" stroke="#D64545" stroke-width="1.9"/>
-<text x="650" y="1097.4250000000013" font-size="9.5" fill="#2C2C2A">5 V / VBUS — insulated</text>
-<line x1="845" y1="1093.9250000000013" x2="861" y2="1093.9250000000013" stroke="#333333" stroke-width="1.9"/>
-<text x="865" y="1097.4250000000013" font-size="9.5" fill="#2C2C2A">GND — insulated</text>
-<line x1="630" y1="1108.9250000000013" x2="646" y2="1108.9250000000013" stroke="#2A5D8F" stroke-width="1.9"/>
-<text x="650" y="1112.4250000000013" font-size="9.5" fill="#2C2C2A">24 V — insulated</text>
-<line x1="845" y1="1108.9250000000013" x2="861" y2="1108.9250000000013" stroke="#E08A2E" stroke-width="1.9"/>
-<text x="865" y="1112.4250000000013" font-size="9.5" fill="#2C2C2A">3V3 — insulated</text>
-<line x1="630" y1="1123.9250000000013" x2="646" y2="1123.9250000000013" stroke="#8B1A1A" stroke-width="1.9"/>
-<text x="650" y="1127.4250000000013" font-size="9.5" fill="#2C2C2A">120 VAC — insulated, mains-rated</text>
-<line x1="845" y1="1123.9250000000013" x2="861" y2="1123.9250000000013" stroke="#B03A3A" stroke-width="1.8" stroke-dasharray="12 3.6 2.4 3.6"/>
-<text x="865" y="1127.4250000000013" font-size="9.5" fill="#2C2C2A">mains boundary (not a wire)</text>
-<rect x="630" y="1134.4250000000013" width="14" height="9" fill="url(#hatchpx)" stroke="#7A2626"/>
-<text x="650" y="1142.4250000000013" font-size="9.5" fill="#2C2C2A">ESP antenna / keep-out</text>
-<text x="630" y="1146.4250000000013" font-size="9.5" fill="#2C2C2A">grid dots = 2.54 mm hole centres at 3.47 + k·2.54 mm from the board edge</text>
+<text x="640" y="992.98" font-size="9.5" fill="#2C2C2A">Before wiring real heaters: make the four heater/valve switches internal: true (CLAUDE.md open item).</text>
+<circle cx="633" cy="989.48" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="1020.8000000000011" font-size="12" font-weight="bold" fill="#2C2C2A">Legend</text>
+<rect x="630" y="1026.800000000001" width="14" height="9" fill="#2A5D8F"/>
+<text x="650" y="1034.800000000001" font-size="9.5" fill="#2C2C2A">24 V screw terminals</text>
+<rect x="895" y="1026.800000000001" width="14" height="9" fill="#7A2626"/>
+<text x="915" y="1034.800000000001" font-size="9.5" fill="#2C2C2A">120 VAC screw terminals (mains-rated)</text>
+<rect x="630" y="1041.800000000001" width="14" height="9" fill="#2D6A4F"/>
+<text x="650" y="1049.800000000001" font-size="9.5" fill="#2C2C2A">sensor screw terminals</text>
+<rect x="895" y="1041.800000000001" width="14" height="9" fill="#222"/>
+<text x="915" y="1049.800000000001" font-size="9.5" fill="#2C2C2A">headers / sockets / JST-XH</text>
+<rect x="630" y="1056.800000000001" width="14" height="9" fill="#D64545"/>
+<text x="650" y="1064.800000000001" font-size="9.5" fill="#2C2C2A">JP-USB = jumper shunt, not a USB socket</text>
+<circle cx="902" cy="1061.300000000001" r="4" fill="#C8923E" stroke="#6B4A1A"/>
+<text x="915" y="1064.800000000001" font-size="9.5" fill="#2C2C2A">copper pad (solder point)</text>
+<rect x="630" y="1072.800000000001" width="14" height="7" rx="2" fill="#D8C9A0" stroke="#8A7A4A"/>
+<text x="650" y="1079.800000000001" font-size="9.5" fill="#2C2C2A">resistor</text>
+<rect x="895" y="1072.800000000001" width="14" height="7" fill="#222"/><rect x="905" y="1072.800000000001" width="2.5" height="7" fill="#DDD"/>
+<text x="915" y="1079.800000000001" font-size="9.5" fill="#2C2C2A">1N4007 / Schottky, band = cathode</text>
+<circle cx="637" cy="1091.300000000001" r="5.5" fill="#2B2B40" fill-opacity="0.55" stroke="#000"/><rect x="639.5" y="1087.800000000001" width="2" height="7" fill="#BBB"/>
+<text x="650" y="1094.800000000001" font-size="9.5" fill="#2C2C2A">100 µF 16 V, stripe = −, + marked</text>
+<line x1="895" y1="1091.300000000001" x2="911" y2="1091.300000000001" stroke="#333333" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="915" y="1094.800000000001" font-size="9.5" fill="#2C2C2A">GND bus — bare wire on a hole row</text>
+<line x1="630" y1="1106.300000000001" x2="646" y2="1106.300000000001" stroke="#E08A2E" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="650" y="1109.800000000001" font-size="9.5" fill="#2C2C2A">3V3 bus — bare wire</text>
+<line x1="895" y1="1106.300000000001" x2="911" y2="1106.300000000001" stroke="#2A5D8F" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="915" y="1109.800000000001" font-size="9.5" fill="#2C2C2A">24V+ bus — bare wire</text>
+<line x1="630" y1="1121.300000000001" x2="646" y2="1121.300000000001" stroke="#D64545" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="650" y="1124.800000000001" font-size="9.5" fill="#2C2C2A">5 V bus — bare wire (relay board)</text>
+<line x1="895" y1="1121.300000000001" x2="911" y2="1121.300000000001" stroke="#B8860B" stroke-width="1.9"/>
+<text x="915" y="1124.800000000001" font-size="9.5" fill="#2C2C2A">signal — insulated hookup wire</text>
+<line x1="630" y1="1136.300000000001" x2="646" y2="1136.300000000001" stroke="#D64545" stroke-width="1.9"/>
+<text x="650" y="1139.800000000001" font-size="9.5" fill="#2C2C2A">5 V / VBUS — insulated</text>
+<line x1="895" y1="1136.300000000001" x2="911" y2="1136.300000000001" stroke="#333333" stroke-width="1.9"/>
+<text x="915" y="1139.800000000001" font-size="9.5" fill="#2C2C2A">GND — insulated</text>
+<line x1="630" y1="1151.300000000001" x2="646" y2="1151.300000000001" stroke="#2A5D8F" stroke-width="1.9"/>
+<text x="650" y="1154.800000000001" font-size="9.5" fill="#2C2C2A">24 V — insulated</text>
+<line x1="895" y1="1151.300000000001" x2="911" y2="1151.300000000001" stroke="#E08A2E" stroke-width="1.9"/>
+<text x="915" y="1154.800000000001" font-size="9.5" fill="#2C2C2A">3V3 — insulated</text>
+<line x1="630" y1="1166.300000000001" x2="646" y2="1166.300000000001" stroke="#8B1A1A" stroke-width="1.9"/>
+<text x="650" y="1169.800000000001" font-size="9.5" fill="#2C2C2A">120 VAC — insulated, mains-rated</text>
+<line x1="895" y1="1166.300000000001" x2="911" y2="1166.300000000001" stroke="#B03A3A" stroke-width="1.8" stroke-dasharray="12 3.6 2.4 3.6"/>
+<text x="915" y="1169.800000000001" font-size="9.5" fill="#2C2C2A">mains boundary (not a wire)</text>
+<rect x="630" y="1176.800000000001" width="14" height="9" fill="url(#hatchpx)" stroke="#7A2626"/>
+<text x="650" y="1184.800000000001" font-size="9.5" fill="#2C2C2A">ESP antenna / keep-out</text>
+<text x="630" y="1188.800000000001" font-size="9.5" fill="#2C2C2A">grid dots = 2.54 mm hole centres at 3.47 + k·2.54 mm from the board edge</text>
 <text x="30" y="610" font-size="12" font-weight="bold" fill="#2C2C2A">Build order (logic board)</text>
 <text x="30" y="0" font-size="1" fill="none"></text>
 <text x="40" y="627" font-size="10.5" fill="#2C2C2A">Before fitting JP-USB or the ESP: power the 24 V input, set the MP1584 module’s trimmer to 5.00–5.10 V</text>
@@ -634,39 +644,39 @@
 <text x="40" y="1094.72" font-size="10.5" fill="#2C2C2A">SHT45 on the ESP’s Qwiic connector. 24 V PSU → 24 V IN. Three DS18B20 cables → the green block, each probe</text>
 <text x="40" y="1108.9" font-size="10.5" fill="#2C2C2A">on its own 3V3 / DQ / GND triple.</text>
 <circle cx="33" cy="1091.22" r="1.8" fill="#2C2C2A"/>
-<text x="30" y="1164.4250000000013" font-size="12" font-weight="bold" fill="#2C2C2A">Caveats (numbers from docs/datasheets/, see its README)</text>
+<text x="30" y="1206.800000000001" font-size="12" font-weight="bold" fill="#2C2C2A">Caveats (numbers from docs/datasheets/, see its README)</text>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1181.43" font-size="10" fill="#2C2C2A">ESP geometry is verified from SparkFun’s Eagle files (mcu/sparkfun-esp32-s2-thing-plus.brd/.sch and the dimension drawing): PCB 64.77 × 22.86 mm, rows 20.32 mm apart and ending 12.70 mm before the antenna</text>
-<text x="40" y="1194.93" font-size="10" fill="#2C2C2A">end, 16-pin pin 1 (EN) 13.97 mm and 12-pin pin 1 (BAT) 24.13 mm from the USB end, Qwiic at the USB end on the 12-pin edge, mounting holes only at the USB end. Component side up with USB-C at the left, the</text>
-<text x="40" y="1208.43" font-size="10" fill="#2C2C2A">12-pin row is on top. The USB-C shell’s width is drawn approximately; only its centring and 1.1 mm overhang are from the files. The antenna (last 6.3 mm) is at the board’s top edge; USB-C face 3.2 mm inside</text>
-<text x="40" y="1221.93" font-size="10" fill="#2C2C2A">the bottom edge.</text>
-<circle cx="33" cy="1177.93" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1223.8" font-size="10" fill="#2C2C2A">ESP geometry is verified from SparkFun’s Eagle files (mcu/sparkfun-esp32-s2-thing-plus.brd/.sch and the dimension drawing): PCB 64.77 × 22.86 mm, rows 20.32 mm apart and ending 12.70 mm before the antenna</text>
+<text x="40" y="1237.3" font-size="10" fill="#2C2C2A">end, 16-pin pin 1 (EN) 13.97 mm and 12-pin pin 1 (BAT) 24.13 mm from the USB end, Qwiic at the USB end on the 12-pin edge, mounting holes only at the USB end. Component side up with USB-C at the left, the</text>
+<text x="40" y="1250.8" font-size="10" fill="#2C2C2A">12-pin row is on top. The USB-C shell’s width is drawn approximately; only its centring and 1.1 mm overhang are from the files. The antenna (last 6.3 mm) is at the board’s top edge; USB-C face 3.2 mm inside</text>
+<text x="40" y="1264.3" font-size="10" fill="#2C2C2A">the bottom edge.</text>
+<circle cx="33" cy="1220.3" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1240.43" font-size="10" fill="#2C2C2A">The buck module footprint (22 × 17 mm, pad positions) is UNVERIFIED: “MP1584 mini” boards vary by vendor. Measure the one you have before drilling. Don’t cut metal from this drawing.</text>
-<circle cx="33" cy="1236.93" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1282.8" font-size="10" fill="#2C2C2A">The buck module footprint (22 × 17 mm, pad positions) is UNVERIFIED: “MP1584 mini” boards vary by vendor. Measure the one you have before drilling. Don’t cut metal from this drawing.</text>
+<circle cx="33" cy="1279.3" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1258.93" font-size="10" fill="#2C2C2A">PN2222A, flat face toward viewer: E B C (P2N2222A is C B E — check the datasheet of the part you have). Drawn at 2.54 mm pitch; bulk TO-92 parts are 1.27 mm (the formed-lead PN2222ATA/ATF and P2N2222ARL1G</text>
-<text x="40" y="1272.43" font-size="10" fill="#2C2C2A">are 2.54 mm). Here the flat face points toward the mains terminals.</text>
-<circle cx="33" cy="1255.43" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1301.3" font-size="10" fill="#2C2C2A">PN2222A, flat face toward viewer: E B C (P2N2222A is C B E — check the datasheet of the part you have). Drawn at 2.54 mm pitch; bulk TO-92 parts are 1.27 mm (the formed-lead PN2222ATA/ATF and P2N2222ARL1G</text>
+<text x="40" y="1314.8" font-size="10" fill="#2C2C2A">are 2.54 mm). Here the flat face points toward the mains terminals.</text>
+<circle cx="33" cy="1297.8" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1290.93" font-size="10" fill="#2C2C2A">Relay pads are the only intentional exceptions to the grid. Alternative, not chosen: take the contacts off the protoboard, with screw-terminal relay sockets or an off-the-shelf 2-channel 5 V relay module</text>
-<text x="40" y="1304.43" font-size="10" fill="#2C2C2A">fed from 3V3 with its JD-VCC jumper removed.</text>
-<circle cx="33" cy="1287.43" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1333.3" font-size="10" fill="#2C2C2A">Relay pads are the only intentional exceptions to the grid. Alternative, not chosen: take the contacts off the protoboard, with screw-terminal relay sockets or an off-the-shelf 2-channel 5 V relay module</text>
+<text x="40" y="1346.8" font-size="10" fill="#2C2C2A">fed from 3V3 with its JD-VCC jumper removed.</text>
+<circle cx="33" cy="1329.8" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1322.93" font-size="10" fill="#2C2C2A">Bare bus wire runs along hole rows and never crosses another bare bus; insulated hookup wire may cross anything. Mains wiring on the relay board is insulated wire rated for 120 VAC.</text>
-<circle cx="33" cy="1319.43" r="1.8" fill="#2C2C2A"/>
-<text x="30" y="1349.4250000000013" font-size="12" font-weight="bold" fill="#2C2C2A">Open items (questions for review)</text>
+<text x="40" y="1365.3" font-size="10" fill="#2C2C2A">Bare bus wire runs along hole rows and never crosses another bare bus; insulated hookup wire may cross anything. Mains wiring on the relay board is insulated wire rated for 120 VAC.</text>
+<circle cx="33" cy="1361.8" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="1391.800000000001" font-size="12" font-weight="bold" fill="#2C2C2A">Open items (questions for review)</text>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1366.43" font-size="10" fill="#2C2C2A">Creepage: two empty rows are 5.6 mm pad edge to pad edge, and undrilled plated pads between mains and logic reduce it further; a cleared band or slot along the boundary, or contacts off the protoboard, is</text>
-<text x="40" y="1379.93" font-size="10" fill="#2C2C2A">needed.</text>
-<circle cx="33" cy="1362.93" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1408.8" font-size="10" fill="#2C2C2A">Creepage: two empty rows are 5.6 mm pad edge to pad edge, and undrilled plated pads between mains and logic reduce it further; a cleared band or slot along the boundary, or contacts off the protoboard, is</text>
+<text x="40" y="1422.3" font-size="10" fill="#2C2C2A">needed.</text>
+<circle cx="33" cy="1405.3" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1398.43" font-size="10" fill="#2C2C2A">The 24 V input has no reverse-polarity protection, fuse or bulk input capacitor.</text>
-<circle cx="33" cy="1394.93" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1440.8" font-size="10" fill="#2C2C2A">The 24 V input has no reverse-polarity protection, fuse or bulk input capacitor.</text>
+<circle cx="33" cy="1437.3" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1416.93" font-size="10" fill="#2C2C2A">No hardware over-temperature cutout backs up the firmware if a relay contact welds; check what the original Azco board/packs provided.</text>
-<circle cx="33" cy="1413.43" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1459.3" font-size="10" fill="#2C2C2A">No hardware over-temperature cutout backs up the firmware if a relay contact welds; check what the original Azco board/packs provided.</text>
+<circle cx="33" cy="1455.8" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
-<text x="40" y="1435.43" font-size="10" fill="#2C2C2A">Stock DS18B20 probe leads are rated under 100 °C and the SMC VDW22 valve is rated 50 °C, both on a 90 °C pack; verify or change parts.</text>
-<circle cx="33" cy="1431.93" r="1.8" fill="#2C2C2A"/>
+<text x="40" y="1477.8" font-size="10" fill="#2C2C2A">Stock DS18B20 probe leads are rated under 100 °C and the SMC VDW22 valve is rated 50 °C, both on a 90 °C pack; verify or change parts.</text>
+<circle cx="33" cy="1474.3" r="1.8" fill="#2C2C2A"/>
 </svg>
