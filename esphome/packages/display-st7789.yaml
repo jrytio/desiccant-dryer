@@ -32,6 +32,14 @@
 # server and the screen mirror, so treat the absolutes as indicative for
 # production and the 322 ms delta between them as the reliable number: it is
 # one extra writer pass, and matches the measured 321 ms/band directly.
+#
+# This file is shared by production, virtual and hw-test, so every key below
+# is emitted for all three. Nothing here requires a particular ESPHome
+# version: buffer_size and color_depth both exist in 2026.8.2. The
+# min_version: 2026.9.0 in packages/production.yaml is a release pin (the
+# version CI and the release workflow build with), not a dependency of this
+# driver, which is why the bench builds carry no floor while using the same
+# keys.
 
 substitutions:
   display_buffer_size: "100%"

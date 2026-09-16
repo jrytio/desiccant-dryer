@@ -10,8 +10,13 @@
 # Screen: no /screen.png mirror in production; the test builds keep
 #         packages/screen-mirror.yaml.
 
-# mipi_spi's buffer_size needs 2026.9. Only the production selector carries
-# this floor; the bench builds still run on an older CLI.
+# 2026.9.0 is the version the release images are built and tested with, and
+# the version CI and the release workflow pin. The floor records that, not a
+# feature requirement: mipi_spi's buffer_size and color_depth both exist in
+# 2026.8.2, and packages/display-st7789.yaml (shared by every build) emits
+# them for the bench builds too. Only the production selector carries the
+# floor because only it is released; the bench builds are free to run on
+# whatever CLI is to hand.
 esphome:
   min_version: 2026.9.0
 
@@ -25,9 +30,12 @@ esphome:
 # how often the blocking redraw happens, rather than speculatively
 # optimising draw_ui(). That means a fault or overtemp indication can be up
 # to 10s stale on the panel of a mains appliance. Control ticks are not
-# affected: measured on the bench over 236 s (48 publishes), the 5s tick
+# affected: measured on the bench over 236 s (48 publishes) on a build with
+# this production config plus WiFi and no panel attached, the 5s tick
 # (base.yaml) held a median of 5.00s with a worst case of 5.36s and no
-# skipped ticks, while the ~700ms redraw ran once per 10s throughout.
+# skipped ticks, while the ~700ms redraw ran once per 10s throughout. Those
+# are the only conditions the numbers cover; they have not been re-measured
+# with real glass on the SPI bus.
 substitutions:
   display_buffer_size: "50%"
   display_update_interval: 10s

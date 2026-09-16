@@ -12,11 +12,20 @@ streams without a compressor). Home Assistant's Generic Camera accepts only
 PNG, JPEG, GIF, SVG and WebP stills, which is why it is not a BMP.
 
 The endpoint does not read the display driver's frame buffer. It re-renders
-the UI itself, a 24-row band at a time into its own ~5.8 KB scratch buffer,
-from the state the panel captured on its last redraw. So it works whatever
-the driver's colour depth, buffer size or rotation are, and it costs a few
-kilobytes rather than a frame. The image is the drawing as of the last panel
-redraw, so it can be up to one redraw interval behind the panel.
+the UI itself, an 80-row band at a time into its own 19,200-byte scratch
+buffer, from the state the panel captured on its last redraw. So it works
+whatever the driver's colour depth, buffer size or rotation are. The image
+is the drawing as of the last panel redraw, so it can be up to one redraw
+interval behind the panel.
+
+**It is cheap in RAM, not in CPU.** Each band is a complete `draw_ui()`
+pass, so one fetch runs three of them back to back on the web-server task —
+roughly 300 ms each on the S2, so on the order of **1 s of CPU per fetch**.
+(Before the band was widened to 80 rows it was ten passes and about 3 s,
+which was enough to time out a fetch when three were issued with no gap.)
+Control ticks are driven by their own ESPHome interval and were not seen to
+slip, but do not treat `/screen.png` as free: leave a comfortable gap
+between fetches so two never overlap.
 
 ## Image entity
 
@@ -36,8 +45,13 @@ Settings, Devices & services, Helpers, Create helper, **Template**,
 | Verify SSL certificate | off (plain HTTP) |
 
 A template image only refetches when its URL changes, and a template using
-`now()` re-renders on its own only once a minute. An automation forces a
-re-render every 2 s, matching the display's redraw:
+`now()` re-renders on its own only once a minute. An automation forces the
+re-render. **Use 10 s** — not the display's 5 s redraw interval and
+certainly not 2 s: a fetch costs about a second of CPU (above), and at a
+short interval fetches queue up behind each other. This endpoint exists to
+check what the screen is doing without a board in front of you, so a
+screenshot that is a few seconds stale is fine. 5 s is the shortest worth
+using; 2 s overlaps.
 
 ```yaml
 alias: Dryer Screen refresh
@@ -45,7 +59,7 @@ mode: single
 max_exceeded: silent
 triggers:
   - trigger: time_pattern
-    seconds: "/2"
+    seconds: "/10"
 actions:
   - action: homeassistant.update_entity
     target:
@@ -74,16 +88,18 @@ on the LAN it is usable. Tapping the card opens the entity's more-info
 dialog.
 
 Home Assistant fetches the board only when someone is viewing, and viewers
-share one fetch per refresh. The cost is a recorded state change every 2 s
-for both the image entity and the automation. The production unit gets its
-own image entity and automation pointed at its own address.
+share one fetch per refresh. The cost is a recorded state change every 10 s
+for both the image entity and the automation, plus about a second of the
+board's CPU per fetch. The production unit has no `/screen.png` endpoint at
+all, so it gets neither.
 
 ## Camera entity (LAN only)
 
 A Generic Camera on the same URL (Still Image URL
 `http://<board>/screen.png`, no stream source, content type
-`image/png`, frame rate `0.5` Hz) also works on the LAN, but not remotely
-at its useful rate. A Picture Entity card with `camera_view: live` holds
+`image/png`, frame rate `0.1` Hz — keep it low for the same CPU reason)
+also works on the LAN, but not remotely at its useful rate. A Picture
+Entity card with `camera_view: live` holds
 an endless MJPEG response open (`/api/camera_proxy_stream/...`); through
 the Cloudflare tunnel the card stays blank, and the Cloudflared app logs
 each attempt as `stream ... canceled by remote`. The default

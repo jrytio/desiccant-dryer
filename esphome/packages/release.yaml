@@ -63,6 +63,10 @@ improv_serial:
 web_server:
   ota: false
 
+# Safe mode still stops a boot loop from bricking the unit, but it is NOT a
+# recovery route on this image: there is no inbound OTA server, so nothing
+# can push a working firmware to a unit sitting in safe mode. Recovery is a
+# USB reflash either way (see docs/releasing.md).
 safe_mode:
 
 # Diagnostics for remote bring-up: what image is running, why it last

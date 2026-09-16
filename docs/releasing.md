@@ -78,13 +78,21 @@ contiguous heap to install; 1.1.0 has no updater at all, because updates
 were handed to ESPHome Device Builder in that release. 1.1.0 is what is
 actually in the field today.
 
-- A **stock 1.1.0 image** has no inbound OTA server either, so the only way
-  forward is USB: reflash 1.2.0 or later once with web.esphome.io, and the
-  unit self-updates from then on.
-- A **1.1.0 unit still adopted in Device Builder** can be pushed to 1.2.0
-  one last time through that add-on before it is retired, which avoids the
-  USB trip. After that the on-device updater takes over and the adoption is
-  no longer used.
+**USB is the only way forward for them, adopted or not.** A stock 1.1.0
+image has no inbound OTA server, so nothing can be pushed to it. A 1.1.0
+unit still adopted in ESPHome Device Builder does have one, but there is
+nothing to push: `esphome/desiccant-dryer-adopt.yaml` is gone from `main` as
+of 1.2.0, so an adopted config pointing at
+`...desiccant-dryer-adopt.yaml@main` stops building. Repointing it at
+`@v1.1.0` does build — the file still exists at that tag — but a remote
+package resolves its whole include tree at the ref it was fetched from, so
+that rebuilds **1.1.0**, updater and all, which leaves the unit exactly
+where it started. There is no remote-safe selector for 1.2.0: the production
+selector pulls `packages/ui-code-local.yaml`, a local external component a
+remote package cannot read.
+
+So: reflash 1.2.0 or later once over USB with web.esphome.io, and the unit
+self-updates from then on.
 
 ## Recovery
 
@@ -152,12 +160,17 @@ should be protected accordingly.
 
 ## Notes
 
-- ESPHome 2026.9.0 or newer is required to build the production selector
-  (`min_version` in `packages/production.yaml`; `mipi_spi`'s `buffer_size`
-  needs it); CI and the release workflow pin that version. Homebrew may
-  still ship an older ESPHome, in which case build the production image
-  with the Docker image (`ghcr.io/esphome/esphome:2026.9.0`) or pipx. The
-  bench builds (virtual, host, hw-test, scenarios) carry no floor.
+- The production selector sets `min_version: 2026.9.0`
+  (`packages/production.yaml`). That is the version CI and the release
+  workflow pin, and therefore the only version the release images are built
+  and tested with — it is not a feature requirement. Nothing in the config
+  needs 2026.9 specifically: `mipi_spi`'s `buffer_size` and `color_depth`
+  are both present in 2026.8.2, and `packages/display-st7789.yaml` is shared
+  by the production, virtual and hw-test builds, so it emits those keys for
+  all of them. The bench builds (virtual, host, hw-test, scenarios) carry no
+  floor only because they are never released. Homebrew may still ship an
+  older ESPHome, in which case build the production image with the Docker
+  image (`ghcr.io/esphome/esphome:2026.9.0`) or pipx.
 - `provisioning:` (ESPHome 2026.9) closes the window in which the API key
   may be set. It is not used here: adoption can happen days after the unit
   is flashed, and closing the window would also shut down the setup access
@@ -188,5 +201,8 @@ should be protected accordingly.
 
 - To test the update path before publishing a release, serve a manifest and
   `.ota.bin` built from your branch at any HTTPS URL the unit can reach and
-  override `update_manifest_url` (`-s update_manifest_url <url>`) on a test
-  build.
+  override `update_manifest_url` (`-s update_manifest_url <url>`). The
+  substitution is defined in `packages/release.yaml`, which only the
+  production selector includes, so override it on `desiccant-dryer.yaml`
+  itself — the virtual, host, hw-test and scenarios builds have no updater
+  and no such substitution.

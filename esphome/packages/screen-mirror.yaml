@@ -1,6 +1,10 @@
-# Serves the panel's frame buffer as /screen.png on the web server so Home
-# Assistant's Generic Camera can show the live screen. Device builds only:
-# the host build has no web server. See docs/screen-in-ha.md.
+# Serves /screen.png on the web server: it does not read the panel's frame
+# buffer, it re-renders the UI with draw_ui() from the state the panel
+# captured on its last redraw. Home Assistant shows it through the
+# image.dryer_screen template image. Device builds only (the host build has
+# no web server) and test builds only (production carries no mirror). Each
+# fetch costs three full draw_ui() passes on the web-server task -- see
+# docs/screen-in-ha.md before choosing a refresh interval.
 # `path` is relative to the config directory, so this is esphome/components.
 
 external_components:

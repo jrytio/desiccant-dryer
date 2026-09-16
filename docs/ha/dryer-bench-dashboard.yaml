@@ -22,9 +22,11 @@
 #     the pack temperatures on an imperial install.
 #   - image.dryer_screen: template image helper, URL
 #     http://<board>/screen.png?t={{ now().timestamp() | int }} with
-#     verify_ssl off, re-rendered every 2 s by automation.dryer_screen_refresh
-#     (time_pattern /2 s -> homeassistant.update_entity). A still image works
-#     through the Cloudflare tunnel; a live camera stream does not.
+#     verify_ssl off, re-rendered every 10 s by automation.dryer_screen_refresh
+#     (time_pattern /10 s -> homeassistant.update_entity). A still image works
+#     through the Cloudflare tunnel; a live camera stream does not. Keep the
+#     interval at 10 s: each fetch re-renders the whole screen on the board
+#     and costs about a second of CPU (docs/screen-in-ha.md).
 #
 # Entity ids are the ones ESPHome gives the virtual build on the dev
 # instance. The production unit would be desiccant_dryer_* and has no

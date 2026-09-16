@@ -13,9 +13,13 @@ namespace screen_mirror {
 
 static const char *const TAG = "screen_mirror";
 
-// Rows rendered per pass. 24 rows x 240 px = 5,760 bytes, and 240 divides
-// evenly by 24 so no pass is short.
-static const int BAND_ROWS = 24;
+// Rows rendered per pass. Every band costs one full draw_ui() pass on the
+// web-server task, so this is a CPU/RAM trade, not just a buffer size:
+// 80 rows x 240 px = 19,200 bytes and three passes per fetch, where the
+// earlier 24 rows cost 5,760 bytes but ten passes. 240 divides evenly by
+// 80, so no pass is short. Only the hw-test and virtual builds carry this
+// component, and they have the heap to spare; production has no mirror.
+static const int BAND_ROWS = 80;
 
 namespace {
 
@@ -135,11 +139,19 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
   idat_head[9] = 0x01;  // no preset dictionary, fastest level
 
   // Snapshot by value: ui_draw mutates the UiState singleton in place on the
-  // main loop while this handler (on the httpd task) walks it across ~10
-  // band renders. A by-reference binding would risk a use-after-free if any
-  // of its std::string members reallocate mid-render, and would also let a
-  // fetch straddle a state change and render a torn frame. Assets are left
-  // by reference: they hold only pointers, which are stable once set.
+  // main loop while this handler (on the httpd task) walks it across every
+  // band render. Copying it means all bands render one coherent frame and
+  // no std::string member can reallocate out from under a later band.
+  //
+  // This NARROWS the race, it does not close it. The three std::string
+  // members are still mutated in place on the main loop, so a write that
+  // lands during this copy is itself unsynchronised; the window is now just
+  // the copy rather than the whole multi-band render. There is no lock to
+  // take (ui_draw runs from an ESPHome interval, this runs on the httpd
+  // task), and the consequence of losing the race is a garbled string in
+  // one screenshot. Test builds only -- production carries no mirror.
+  //
+  // Assets are left by reference: they hold only pointers, stable once set.
   const dryer_ui::UiState state = dryer_ui::last_state();
   const dryer_ui::UiAssets &assets = dryer_ui::last_assets();
 
@@ -186,7 +198,7 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
         // No explicit clear here: draw_ui() always opens with it.fill(BLACK),
         // which now goes through BandDisplay::fill() and clears exactly this
         // band directly. A second clear here would just redo that work on
-        // every one of the ~10 bands per fetch -- the redundant memset this
+        // every one of the three bands per fetch -- the redundant memset this
         // component's earlier revision relied on before BandDisplay had its
         // own fill() override.
         dryer_ui::draw_ui(band, state, assets);
