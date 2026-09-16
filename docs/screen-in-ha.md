@@ -1,6 +1,6 @@
 # The dryer screen in Home Assistant
 
-The hw-test and virtual builds serve the panel's frame buffer as an image
+The hw-test and virtual builds serve the dryer screen as an image
 (the production build does not):
 
 ```bash
@@ -8,15 +8,15 @@ curl -o screen.png "http://<board>/screen.png"     # <board>: the board's IP add
 ```
 
 It is a 240x240 8-bit indexed PNG, 58,688 bytes (uncompressed, so it
-streams without a compressor), exactly what the ST7789 is showing,
-palette rounding included. Home Assistant's Generic Camera accepts only
-PNG, JPEG, GIF, SVG and WebP stills, which is why it is not a BMP. The
-board streams it straight from the display buffer, so a request never
-copies the frame or allocates a buffer. Each redraw clears the buffer and
-repaints it over a few hundred milliseconds, so fetches and redraws take
-turns: a fetch waits for a redraw in progress to finish, and a redraw that
-falls due during a fetch (about 0.6 s) runs as soon as the fetch ends. The
-panel can therefore lag by up to one fetch while something is watching.
+streams without a compressor). Home Assistant's Generic Camera accepts only
+PNG, JPEG, GIF, SVG and WebP stills, which is why it is not a BMP.
+
+The endpoint does not read the display driver's frame buffer. It re-renders
+the UI itself, a 24-row band at a time into its own ~5.8 KB scratch buffer,
+from the state the panel captured on its last redraw. So it works whatever
+the driver's colour depth, buffer size or rotation are, and it costs a few
+kilobytes rather than a frame. The image is the drawing as of the last panel
+redraw, so it can be up to one redraw interval behind the panel.
 
 ## Image entity
 
@@ -111,12 +111,13 @@ workshop on 2026-09-15.
 
 ## Limits
 
-- The image is the drawing as the driver holds it. The panel's
-  `invert_colors`, `transform` and any offset are applied by the panel, not
-  the buffer, so they do not appear here.
+- The image is the drawing, not the panel. The panel's `invert_colors`,
+  `transform` and any offset are applied by the panel, so they do not
+  appear here.
 - No authentication beyond what `web_server` applies; the web server is
   already open on the LAN.
 - The host preview build has no web server and no endpoint; use its
   window instead (`docs/host-preview.md`).
-- The endpoint returns HTTP 500 with a short message if the display is
-  not in `color_palette: 8BIT` or is rotated. Both device builds are.
+- Before the panel's first redraw there is no captured state to render, so
+  the endpoint returns HTTP 500 "screen has not been drawn yet" rather than
+  a blank frame.

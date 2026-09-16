@@ -70,8 +70,9 @@ display:
     # ili9xxx defaulted to 40MHz; mipi_spi defaults to 10MHz and the ST7789V
     # model sets no override, so the driver swap quartered the SPI clock.
     data_rate: 40MHz
-    # RGB 3-3-2, the same grid color_palette: 8BIT used and the grid every
-    # designed colour already sits on. Only valid on a single-wire SPI bus.
+    # RGB 3-3-2: the same grid the 1.0.x ili9xxx 8-bit palette used, and the
+    # grid every designed colour already sits on. Only valid on a single-wire
+    # SPI bus.
     color_depth: 8bit
     buffer_size: ${display_buffer_size}
     update_interval: ${display_update_interval}

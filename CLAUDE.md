@@ -16,8 +16,12 @@ based on measured outlet humidity and measured pack temperatures instead.
 - **Board: SparkFun ESP32-S2 Thing Plus (WRL-17743).** Single core, 320 KB RAM,
   no PSRAM, no Bluetooth, CP2102 UART for flashing. The full 16-bit 240x240
   display buffer (~115 KB) does not allocate once WiFi, API and the web server
-  are up (seen on the first bench flash), so the display runs
-  `color_palette: 8BIT` (~58 KB). The logger must use `hardware_uart: UART0`;
+  are up (seen on the first bench flash), so the display runs `mipi_spi` with
+  `color_depth: 8bit`. Production uses `buffer_size: 50%` to leave the S2 the
+  ~16,749-byte contiguous block mbedTLS needs for on-device updates; the test
+  builds use 100%. `mipi_spi` re-runs the writer once per band, so
+  `buffer_size` multiplies redraw cost — see `packages/display-st7789.yaml`.
+  The logger must use `hardware_uart: UART0`;
   ESPHome's S2 default of USB_CDC is the unconnected native-USB pins.
 - **Heaters are 120 VAC (~117 W, 123 Ω each)**, switched by Songle SRD-05VDC
   relays driven by PN2222A low-side stages (TO-92 E-B-C; a P2N2222A is C-B-E).
@@ -46,11 +50,10 @@ calls; the `display_lambda` substitution just runs that script; the art path
 is the `display_assets` substitution) plus `packages/ui-code-local.yaml`,
 which loads the `dryer_ui` component from this checkout, plus a driver,
 `packages/display-st7789.yaml` (real panel) or `packages/display-sdl.yaml`
-(window on the Mac); both give the display id `panel`. `packages/screen-mirror.yaml` (hw-test and virtual builds only) serves the panel's frame buffer as `/screen.png` through the local component `esphome/components/screen_mirror`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`,
+(window on the Mac); both give the display id `panel`. `packages/screen-mirror.yaml` (hw-test and virtual builds only) serves the screen as `/screen.png` through the local component `esphome/components/screen_mirror`, which re-renders `draw_ui()` into its own band buffer rather than reading the driver's. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`,
 `desiccant-dryer-hw-test.yaml` and `desiccant-dryer-host.yaml` are short
-selectors; the production one wraps `packages/production.yaml`, which
-`desiccant-dryer-adopt.yaml` also wraps with the component and art taken from
-GitHub at the release tag for ESPHome Device Builder adoption (docs/releasing.md); `desiccant-dryer-scenarios.yaml`
+selectors; the production one wraps `packages/production.yaml`
+(docs/releasing.md); `desiccant-dryer-scenarios.yaml`
 is a fourth, host-only build that swaps the controller for a fixed table of
 twelve screen states (`packages/display-scenarios.yaml`) so
 `scripts/scenario-shots.sh` can render them all through the panel's palette
@@ -133,9 +136,9 @@ service 180 min) are untested guesses meant to get first cycles logging.
   grid); the host build shows the same drawing live but in full colour.
 - The hw-test and virtual builds (not production) serve the live screen at `http://<board>/screen.png`
   for Home Assistant's `image.dryer_screen` template image
-  (docs/screen-in-ha.md). It streams from the ST7789's 8-bit buffer, taking
-  turns with redraws; keep `color_palette: 8BIT` and rotation 0 or the
-  endpoint returns 500.
+  (docs/screen-in-ha.md). It re-renders the UI from the last captured state
+  into its own band buffer, so it does not read the driver's frame buffer and
+  does not care about the driver's colour depth, buffer size or rotation.
 - The bench Home Assistant dashboard (virtual board) is
   `docs/ha/dryer-bench-dashboard.yaml`; its header lists what it needs on
   the HA side (HACS Tabdeck Card, the Dryer Screen card resource from
@@ -144,29 +147,22 @@ service 180 min) are untested guesses meant to get first cycles logging.
   automation). Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
-- Only `packages/production.yaml` (wrapped by `desiccant-dryer.yaml` and
-  `desiccant-dryer-adopt.yaml`) includes `esphome/version.yaml` (semver,
-  bumped in the PR) and `packages/release.yaml` (project version, Improv
-  and captive-portal provisioning, safe mode, debug sensors). It has no
+- Only `packages/production.yaml` (wrapped by `desiccant-dryer.yaml`)
+  includes `esphome/version.yaml` (semver, bumped in the PR) and
+  `packages/release.yaml` (project version, Improv and captive-portal
+  provisioning, safe mode, debug sensors, the update entity). It has no
   ESPHome OTA server and the web server's upload page is off
   (unauthenticated reflash of a mains controller); the API reboot watchdog
-  is off. Updates come from ESPHome Device Builder: `dashboard_import`
-  points at `desiccant-dryer-adopt.yaml`, and the owner only supplies WiFi.
-  `packages/api-provisioned.yaml` (bare `api: encryption: {}`) belongs to
-  the flashed image only; the adopt selector omits it so Device Builder
-  mints a key, and takes `packages/ota-adopted.yaml`, whose keyless
-  `encryption:` inherits that key and makes OTA encryption required. The
-  adopt selector failing standalone validation with "encryption key to
-  inherit" is intended — that string is what triggers the mint. Do not bring back an on-device
-  `update: platform: http_request`: the S2 never has the ~17 KB contiguous
-  block a TLS firmware download needs (1.0.x). Anything the adopt selector
-  reads from this repository must be remote-safe (no `esphome: includes`,
-  local external components or local image paths outside the
-  `ui-code-*`/`display_assets` switch), and its tag must exist, so run
-  `scripts/release.sh` right after the version bump merges. The production
-  build contains no secrets and must validate with no `secrets.yaml`
-  present: WiFi, the API key and the OTA password of the test builds live
-  in `packages/dev-secrets.yaml`. See docs/releasing.md. The 1.x production
+  is off. Updates are pull-only: the unit polls the esp-web-tools manifest
+  on GitHub Pages and installs over HTTPS, so the owner only supplies WiFi
+  and Home Assistant sets the API key. This needs the contiguous heap that
+  `mipi_spi`'s reduced buffer frees — do not raise production's
+  `display_buffer_size` back to 100% without re-testing an install. There
+  is deliberately no second update route: a unit whose updater cannot
+  reach a working manifest needs USB. The production build contains no
+  secrets and must validate with no `secrets.yaml` present: WiFi, the API
+  key and the OTA password of the test builds live in
+  `packages/dev-secrets.yaml`. See docs/releasing.md. The 1.x production
   builds log at DEBUG on purpose.
 - To prove a refactor changed nothing, dump `esphome config` before and
   after and diff through `scripts/normalize-config.py`.

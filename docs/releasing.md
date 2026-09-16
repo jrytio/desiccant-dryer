@@ -1,101 +1,126 @@
 # Releasing the production firmware
 
 The real dryer runs numbered releases. An owner installs the first one over
-USB and later ones from ESPHome Device Builder over WiFi. Test builds
+USB and the unit installs every later one itself, over HTTPS, from the
+manifest published on this repository's GitHub Pages site. Test builds
 (virtual, host, hw-test) are flashed by hand and never go through this.
 
 ## How it works
 
 - `esphome/version.yaml` holds the semantic version. The production build
-  (`packages/production.yaml`) includes it.
-- Two selectors wrap `packages/production.yaml`:
-  - `esphome/desiccant-dryer.yaml` takes the screen's drawing component
-    (`components/dryer_ui`) and SVG art from this checkout. CI compiles it
-    and the release workflow builds the published images from it.
-  - `esphome/desiccant-dryer-adopt.yaml` takes both from GitHub at the tag
-    `v<version>`. It is what Device Builder imports: a remote package cannot
-    reach files inside this repository by relative path (includes, local
-    external components and image files resolve next to the owner's YAML).
-    It only validates once that tag exists, so CI does not build it.
+  (`packages/production.yaml`) includes it, and one selector wraps that
+  build: `esphome/desiccant-dryer.yaml`, which takes the screen's drawing
+  component (`components/dryer_ui`) and SVG art from this checkout. CI
+  compiles it and the release workflow builds the published images from it.
 - `esphome/packages/release.yaml` gives the firmware a project name and
-  version, Improv serial provisioning, safe mode and diagnostics (free
-  heap, largest free block, loop time, reset reason, running version).
+  version, Improv serial provisioning, safe mode, diagnostics (free heap,
+  largest free block, loop time, reset reason, running version) and the
+  `Firmware` update entity.
 - **The release image carries no secrets.** WiFi credentials, the API
   encryption key and the OTA password of the test builds live in
   `packages/dev-secrets.yaml`, which the release never includes. A released
-  dryer gets its WiFi from its owner at flash time. It has no OTA server
-  and the web server's firmware-upload page is off: unauthenticated, either
-  would let anyone on the LAN upload firmware to a mains controller. The
-  captive portal can still take firmware, but only while the unit has no
-  WiFi and is broadcasting its setup access point.
-- **Updates come from Device Builder, not from the device.** The production
-  firmware carries `dashboard_import` pointing at
-  `github://jrytio/desiccant-dryer/esphome/desiccant-dryer-adopt.yaml@main`.
-  Adopting writes a short YAML on the owner's Home Assistant holding only
-  the WiFi secrets, the package reference and a freshly minted API
-  encryption key. Device Builder compiles it and pushes it with ESPHome's
-  native OTA, authenticated by that key, with no TLS on the device.
-- **The owner edits no YAML.** Device Builder mints an API key only when the
-  resolved package does not already enable encryption, so
-  `packages/api-provisioned.yaml` (the bare `api: encryption: {}`, key from
-  Home Assistant at runtime) is included by `desiccant-dryer.yaml` — the
-  image an owner flashes — and *not* by the adopt selector. The adopt
-  selector instead takes `packages/ota-adopted.yaml`, whose keyless
-  `encryption:` inherits the minted key; its presence is what compiles OTA
-  encryption as **required** rather than merely offered.
-- **The adopt selector deliberately fails to validate on its own**, with
-  "'ota' encryption has no key and there is no 'api' encryption key to
-  inherit". Device Builder matches that exact wording as "only the api key
-  is missing": it keeps the imported file, mints the key and revalidates.
-  Do not add a key to the package to silence it — a key in a public
-  repository protects nothing, and Device Builder refuses to mint when the
-  package supplies its own OTA key.
-- Why not the on-device updater (1.0.x had `update: platform: http_request`):
-  the S2 has no PSRAM and a 58 KB display buffer, and never had the ~17 KB
-  contiguous block that mbedTLS needs to receive a firmware download over
-  HTTPS. Dynamic buffers checked the manifest but failed on the first full
-  record of the `.ota.bin`; static buffers could not open the connection
-  at all. The release download URL was worse still (a redirect to an RSA
-  host through a ~900-byte signed URL). `Largest Free Block` shows the
-  headroom.
+  dryer gets its WiFi from its owner at flash time, and Home Assistant sets
+  the API encryption key when it adopts the device
+  (`packages/api-provisioned.yaml`).
+- **There is no inbound OTA server, and the web server's firmware-upload
+  page is off.** Either would be an unauthenticated LAN reflash path into a
+  mains controller. Updates are pull-only. The one exception is the captive
+  portal's own upload handler — see **Recovery** below; it is not a small
+  footnote.
+- **The unit updates itself.** `ota: platform: http_request` plus
+  `update: platform: http_request` in `packages/release.yaml` poll
+  `https://jrytio.github.io/desiccant-dryer/firmware/manifest.json` every
+  6 h. When the manifest's version differs from the running `${version}`,
+  Home Assistant shows an update on the `Firmware` entity; installing pulls
+  the `.ota.bin` over HTTPS (relative path, resolved next to the manifest)
+  and checks its md5.
+  - GitHub Pages, not the GitHub Release download URL: that one redirects to
+    an RSA-certificate host behind a ~900-byte signed URL, and the S2 has
+    too little free heap for the second handshake. `follow_redirects: false`
+    enforces that rather than assuming it.
+  - This only became possible when the panel moved from `ili9xxx` to
+    `mipi_spi` with `buffer_size: 50%` (`packages/display-st7789.yaml`).
+    `ili9xxx` could not buffer less than a full frame, and the S2 then never
+    had the ~16,749-byte contiguous block mbedTLS needs for a TLS record —
+    which is why 1.0.x could check the manifest but never install. Do not
+    raise production's `display_buffer_size` back to 100% without re-testing
+    an install; `Largest Free Block` shows the headroom.
+  - Installing an update reboots the unit, possibly mid drying-cycle. That
+    fails safe: all outputs use `restore_mode: ALWAYS_OFF` and are forced
+    off in `on_boot`, so the reboot drops the heaters and valves.
 - Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`, which
   refuses to build unless the tag equals the version in `version.yaml`,
   compiles `desiccant-dryer.yaml`, writes an esp-web-tools manifest with
   `scripts/make-manifest.sh`, attaches everything to a GitHub Release and
   copies the same files to `firmware/` on the `gh-pages` branch (GitHub
-  Pages), where web.esphome.io can install them.
+  Pages). The copy on `gh-pages` is what web.esphome.io installs from and
+  what deployed units poll; the GitHub Release is for humans.
 
 ## Installing a release on a dryer (owner)
 
 1. Open https://web.esphome.io in Chrome or Edge, plug the board in over
    USB, and install the release's `.factory.bin` (from the GitHub Release)
-   or point it at `https://jrytio.github.io/desiccant-dryer/firmware/manifest.json`.
-   Enter the WiFi network when asked (Improv over the USB serial port), or
+   or point it at
+   `https://jrytio.github.io/desiccant-dryer/firmware/manifest.json`.
+2. Enter the WiFi network when asked (Improv over the USB serial port), or
    join the open `Desiccant Dryer Setup` access point the board raises when
    it has no network and enter the WiFi there.
-2. Install the ESPHome Device Builder add-on in Home Assistant if it is not
-   there. The dryer shows up as discovered; click **Adopt**. That is the
-   whole configuration step: Device Builder writes the YAML, mints the API
-   encryption key, and the unit's OTA server inherits it. Adopt may report
-   "the remote package didn't validate: 'ota' encryption has no key…" —
-   expected, and resolved by the key it mints immediately afterwards.
+3. Accept the device in Home Assistant under Settings → Devices & services →
+   ESPHome. Home Assistant generates and stores the API encryption key; the
+   owner edits no YAML.
+4. From then on the unit checks for new releases itself every 6 h. When one
+   appears, install it from the `Firmware` update entity in Home Assistant.
+   The unit downloads and flashes it with no computer involved.
 
-   ESPHome also warns that OTA encryption does not cover the web_server OTA
-   platform. It does not apply here: `web_server: ota: false` compiles
-   `/update` to refuse uploads unless the setup access point is active.
-3. Install the adopted YAML **over USB once** (Device Builder → Install →
-   Plug into the computer running ESPHome Device Builder, or download the
-   binary and flash it with web.esphome.io). The released image has no OTA
-   server, so this first adopted install cannot go over WiFi. Every later
-   release installs wirelessly.
-4. Accept the device in Home Assistant under Settings → Devices → ESPHome,
-   with the key Device Builder minted (it offers to copy it).
-5. From then on, install new releases from Device Builder → **Install** →
-   Wirelessly. Home Assistant does not announce them; watch the GitHub
-   releases.
+Units still on 1.0.x cannot install anything over WiFi (they have neither an
+OTA server nor a working updater): bring them to 1.2.0 or later over USB
+once, and they self-update after that.
 
-Units still on 1.0.x update the same way: they need the one USB install of
-the adopted YAML (1.0.x cannot install anything over WiFi).
+## Recovery
+
+**There is no second update route.** The released image has no inbound OTA
+server on the normal LAN path, so nothing can push firmware to a running,
+provisioned unit. If the updater cannot reach a working manifest — GitHub
+Pages down, `gh-pages` publishing a broken or mismatched build, the unit's
+own network gone, or a release that boots but breaks networking — the only
+way back is to reflash the board over USB with web.esphome.io. That means
+physical access, and on an installed unit it means opening the enclosure.
+Weigh that before publishing a release.
+
+Two security properties of this arrangement were raised during the 1.2.0
+work and **deliberately accepted** rather than fixed. They are recorded here
+so that anyone maintaining the fleet knows what they are relying on.
+
+### Accepted risk 1: unauthenticated firmware upload over the fallback AP
+
+Production ships an **open** access point named `"<friendly name> Setup"`
+(no password) together with `captive_portal:`. `captive_portal:` AUTO_LOADs
+`ota.web_server`, whose `POST /update` handler stays reachable whenever the
+captive portal is active. Setting `web_server: ota: false` does **not** close
+it — ESPHome's own source says so explicitly
+(`web_server/ota/ota_web_server.cpp`).
+
+Stated plainly: while that portal is up, anyone within WiFi range can join
+the AP with no credential and flash arbitrary firmware onto a unit switching
+two 120 VAC heaters.
+
+The portal is up on any unprovisioned unit, and whenever the configured
+network is unreachable. An attacker can force the latter, so this is not
+only a rare-outage window. This is a deliberate trade for provisioning
+convenience, not an oversight. The two ways to close it are to password the
+access point, or to drop `captive_portal:`; this repo does neither.
+
+### Accepted risk 2: the update trust root is push access to `gh-pages`
+
+The `update:` entity fetches the manifest and the md5 it verifies comes from
+that same manifest. The md5 therefore proves only that the download was not
+corrupted in transit; it proves nothing about who produced the binary.
+`ota: platform: http_request` supports no code signing of any kind.
+
+Consequently, **anyone who can push to the `gh-pages` branch can run
+arbitrary firmware on every deployed unit within one 6 h poll interval.**
+Push access to that branch is the security boundary for the whole fleet, and
+should be protected accordingly.
 
 ## Cutting a release (developer)
 
@@ -103,59 +128,55 @@ the adopted YAML (1.0.x cannot install anything over WiFi).
    for new behaviour or tunables, major for anything that changes wiring
    or breaks the HA entities). Describe the user-visible changes in the
    PR; the release notes are generated from the merged PRs.
-2. Merge, and tag straight away from any checkout:
+2. Merge, and tag from any checkout:
 
    ```bash
    scripts/release.sh
    ```
 
-   It tags `origin/main` as `vX.Y.Z` and pushes the tag. Until the tag
-   exists, an owner's Device Builder build of `main` fails to fetch the
-   `dryer_ui` component and art for the new version. Watch the run with
+   It tags `origin/main` as `vX.Y.Z` and pushes the tag. Watch the run with
    `gh run list --workflow release.yml`.
-3. Acceptance: an adopted unit installs the new version from Device Builder
-   over WiFi and reports it in `Firmware Version`. Verified on the bench
-   2026-09-16 against v1.1.0: USB install of the adopted YAML, then an
-   encrypted OTA push (14 s upload, back in 6 s, reset reason "Reboot
-   request from esphome.ota", controller running, no fault).
+3. Acceptance: a deployed unit shows the new version on its `Firmware`
+   update entity within 6 h (or immediately after a manual entity refresh),
+   installs it, and reports the new number in `Firmware Version`.
 
 ## Notes
 
-- ESPHome 2026.9.0 or newer is required to build the production and adopt
-  selectors (`min_version` in `packages/production.yaml`); CI and the
-  release workflow pin that version. Homebrew may still ship an older
-  ESPHome, in which case build the production image with the Docker image
-  (`ghcr.io/esphome/esphome:2026.9.0`) or pipx. The bench builds (virtual,
-  host, hw-test, scenarios) carry no floor.
+- ESPHome 2026.9.0 or newer is required to build the production selector
+  (`min_version` in `packages/production.yaml`; `mipi_spi`'s `buffer_size`
+  needs it); CI and the release workflow pin that version. Homebrew may
+  still ship an older ESPHome, in which case build the production image
+  with the Docker image (`ghcr.io/esphome/esphome:2026.9.0`) or pipx. The
+  bench builds (virtual, host, hw-test, scenarios) carry no floor.
 - `provisioning:` (ESPHome 2026.9) closes the window in which the API key
   may be set. It is not used here: adoption can happen days after the unit
   is flashed, and closing the window would also shut down the setup access
   point, which may be the unit's only way back onto a network.
 - Release binaries carry exactly the version in `version.yaml`. There is no
-  `-dev` suffix. A test flash can relabel it, but with the adopt selector
-  `ui_ref` and `display_assets` are derived from `version`, so pin them to
-  the real tag as well or the build looks for a tag that does not exist:
+  `-dev` suffix. A test flash can relabel it:
 
   `-s` is a global option: it must come before the subcommand, or ESPHome
   exits with "unrecognized arguments".
 
   ```bash
-  esphome -s version 1.1.0-test -s ui_ref v1.1.0 \
-    -s display_assets https://raw.githubusercontent.com/jrytio/desiccant-dryer/v1.1.0/esphome/assets/display \
-    run --device <board> desiccant-dryer.yaml
+  esphome -s version 1.2.0-test run --device <board> desiccant-dryer.yaml
   ```
+- Production redraws the panel every 10 s and each redraw blocks for about
+  699 ms, because the halved frame buffer makes `mipi_spi` run the writer
+  twice (`packages/display-st7789.yaml` has the measurements). A fault or
+  overtemp indication can therefore be up to 10 s stale on the panel.
 - The first 1.x releases log at DEBUG (set in `packages/production.yaml`)
   so the unit can be brought up and tested remotely through `esphome logs`,
   the web server on port 80 and Home Assistant; a later release lowers it.
-- There is no `/screen.png` mirror in production (its local component
-  would not resolve from a remote package either). The hw-test and virtual
+- There is no `/screen.png` mirror in production. The hw-test and virtual
   builds keep it.
 - To dry-run the packaging locally:
 
   ```bash
-  esphome compile esphome/desiccant-dryer.yaml && scripts/make-manifest.sh 1.1.0 esphome/.esphome/build/desiccant-dryer/build /tmp/site
+  esphome compile esphome/desiccant-dryer.yaml && scripts/make-manifest.sh 1.2.0 esphome/.esphome/build/desiccant-dryer/build /tmp/site
   ```
 
-- To test adoption before a tag exists, write an adopted-style YAML that
-  pulls `esphome/desiccant-dryer-adopt.yaml` from a branch and overrides
-  `ui_ref` and `display_assets` to that branch.
+- To test the update path before publishing a release, serve a manifest and
+  `.ota.bin` built from your branch at any HTTPS URL the unit can reach and
+  override `update_manifest_url` (`-s update_manifest_url <url>`) on a test
+  build.

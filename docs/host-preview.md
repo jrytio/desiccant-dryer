@@ -82,8 +82,8 @@ SCENARIO=9 esphome/.esphome/build/desiccant-dryer-scenarios/.pioenvs/desiccant-d
 The window renders the drawing, not the panel. These only show on the
 real screen (or in the scenario PNGs, which apply the palette):
 
-- 8-bit palette rounding (`color_palette: 8BIT`), so colours are slightly
-  richer in the window.
+- 8-bit palette rounding (the device driver's `color_depth: 8bit`, RGB
+  3-3-2), so colours are slightly richer in the window.
 - `invert_colors`, `offset_height` and `offset_width`.
 - Backlight level; there is no `Display Backlight` entity on host.
 

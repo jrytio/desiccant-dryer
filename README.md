@@ -27,8 +27,10 @@ esphome run esphome/desiccant-dryer-host.yaml          # no board; brew install 
 
 CI compiles all of these on every pull request. Pushing a `vX.Y.Z` tag
 (`scripts/release.sh`) publishes the production build; owners install it
-with web.esphome.io and update it from ESPHome Device Builder
-(`esphome/desiccant-dryer-adopt.yaml`); see `docs/releasing.md`.
+once over USB with web.esphome.io, and the unit then installs later
+releases itself from the published manifest, on a 6 h poll, through the
+`Firmware` update entity in Home Assistant. See `docs/releasing.md`,
+which also records the accepted security trade-offs of that arrangement.
 
 ## License
 
