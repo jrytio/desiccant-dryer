@@ -23,6 +23,14 @@
 esphome:
   min_version: 2026.9.0
 
+# The production unit installs its own firmware over HTTPS, which needs a
+# ~16,749-byte contiguous block for a TLS record. Halving the frame buffer
+# frees roughly 29 KB. The cost is that the writer runs twice per redraw;
+# see packages/display-st7789.yaml.
+substitutions:
+  display_buffer_size: "50%"
+  display_update_interval: 5s
+
 packages:
   version: !include ../version.yaml
   base: !include base.yaml

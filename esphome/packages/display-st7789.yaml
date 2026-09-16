@@ -1,8 +1,23 @@
-# ST7789 1.54" 240x240 display on SPI, shared by both device builds. On the
-# virtual build nothing is attached; the driver still runs so the frame
-# buffer allocation on the S2 gets exercised. The drawing itself is
-# ${display_lambda} from packages/display-draw.yaml.
+# ST7789 1.54" 240x240 display on SPI, shared by the production, virtual and
+# hw-test builds. On the virtual build nothing is attached; the driver still
+# runs so the frame buffer allocation on the S2 gets exercised. The drawing
+# itself is ${display_lambda} from packages/display-draw.yaml.
 #   GPIO36/35 SPI SCK/MOSI, GPIO5 CS, GPIO9 DC, GPIO14 RST, GPIO17 backlight
+#
+# mipi_spi, not ili9xxx, because ili9xxx cannot buffer less than a full frame
+# (get_buffer_length_() is width * height, so 57,600 B is its floor) and that
+# leaves the S2 without the ~16,749-byte contiguous block mbedTLS needs for a
+# TLS record. With no such block the on-device updater can never install.
+#
+# The cost is that MipiSpiBuffer::update() re-runs the whole writer lambda
+# once per band, so ${display_buffer_size} multiplies draw cost: 50% draws
+# twice, 25% draws four times. Production trades draw time for the heap;
+# the test builds keep 100% because they never self-update. Override both
+# substitutions from the selector.
+
+substitutions:
+  display_buffer_size: "100%"
+  display_update_interval: 5s
 
 spi:
   clk_pin: GPIO36
@@ -22,7 +37,7 @@ light:
     default_transition_length: 0s
 
 display:
-  - platform: ili9xxx
+  - platform: mipi_spi
     id: panel
     model: ST7789V
     dimensions:
@@ -34,10 +49,10 @@ display:
     dc_pin: GPIO9
     reset_pin: GPIO14
     invert_colors: true    # most 1.54" IPS modules need this
-    # 8-bit palette halves the frame buffer to ~58 KB. The full 16-bit buffer
-    # (~115 KB) failed to allocate on the S2 with WiFi, API and web server up
-    # (seen on the first virtual-build flash: "Could not allocate buffer").
-    color_palette: 8BIT
-    update_interval: 2s
+    # RGB 3-3-2, the same grid color_palette: 8BIT used and the grid every
+    # designed colour already sits on. Only valid on a single-wire SPI bus.
+    color_depth: 8bit
+    buffer_size: ${display_buffer_size}
+    update_interval: ${display_update_interval}
     auto_clear_enabled: false   # draw_ui() fills the frame itself
     lambda: ${display_lambda}

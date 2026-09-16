@@ -7,6 +7,10 @@
 substitutions:
   name: desiccant-dryer-virtual
   friendly_name: Desiccant Dryer (Virtual)
+  # No on-device updater here, so the panel keeps a full frame buffer and
+  # the writer runs once per redraw.
+  display_buffer_size: "100%"
+  display_update_interval: 5s
 
 packages:
   base: !include packages/base.yaml
