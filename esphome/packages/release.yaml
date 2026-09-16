@@ -10,13 +10,23 @@
 # The released image has no ESPHome OTA *server*, and the normal LAN path
 # is strictly pull-based, through the update entity below.
 #
-# That is not the whole story: `captive_portal:` (packages/platform-esp32.yaml)
-# AUTO_LOADs `ota.web_server`, whose POST /update handler stays reachable
-# whenever the captive portal is active — i.e. during a WiFi outage, over
-# the open "${friendly_name} Setup" fallback AP. That is an accepted trade
-# for provisioning convenience, not an oversight; it is closed by either
-# passwording the AP or dropping `captive_portal:`, neither of which this
-# repo currently does.
+# That is not the whole story, and the exception matters: `captive_portal:`
+# (packages/platform-esp32.yaml) AUTO_LOADs `ota.web_server`, whose
+# POST /update handler stays reachable whenever the captive portal is
+# active — `web_server: ota: false` does not close it (ESPHome's own
+# web_server/ota/ota_web_server.cpp says so explicitly).
+#
+# Stated plainly: while that portal is up, anyone within WiFi range can
+# join the open "${friendly_name} Setup" AP with no credential and flash
+# arbitrary firmware onto a unit switching two 120 VAC heaters.
+#
+# The portal is up on any unprovisioned unit, and whenever the configured
+# network is unreachable — which an attacker can force, so this is not
+# only a rare-outage window.
+#
+# This is an accepted trade for provisioning convenience, not an oversight.
+# It is closed by passwording the AP or by dropping `captive_portal:`;
+# this repo deliberately does neither. See docs/releasing.md.
 #
 # 1.0.x tried this and failed: with ili9xxx's mandatory full frame buffer
 # the S2 never had the ~16,749-byte contiguous block a TLS record needs.
@@ -47,8 +57,9 @@ api:
 
 improv_serial:
 
-# The web server's own firmware-upload page is the same unauthenticated
-# LAN reflash path; the status pages and controls stay.
+# The web server's own firmware-upload page is an unauthenticated LAN
+# reflash path, so it is off; the status pages and controls stay. Note this
+# does NOT disable the captive portal's own POST /update — see the header.
 web_server:
   ota: false
 
@@ -90,12 +101,13 @@ http_request:
   buffer_size_rx: 1024
   # Pages answers directly. Enforce that rather than assume it: following a
   # redirect is how 1.0.x ended up at a ~900-byte signed URL that neither the
-  # buffer below nor the S2's heap could take.
+  # buffer above nor the S2's heap could take.
   follow_redirects: false
 
-# The download backend for the update entity below. This is not an OTA
-# *server*: nothing listens, so no LAN host can push firmware to a mains
-# controller. Updates are strictly pull-based.
+# The download backend for the update entity below. It is not an OTA
+# *server*: this block opens no listener, so the normal LAN path is strictly
+# pull-based. That is not the same as "nothing listens" — `captive_portal:`
+# pulls in its own POST /update handler; see the header of this file.
 ota:
   - platform: http_request
 
