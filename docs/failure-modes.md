@@ -376,7 +376,7 @@ when no existing issue fits. Every row must appear in exactly one issue —
 `scripts/failure-modes-report.py` prints each row's issue number, and a blank
 one means this table has gone stale.
 
-Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds the config-lint CI job (T-F15, T-J04). Record each new GitHub issue number here when it is opened.
+Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds the config-lint CI job (T-F15, T-J04); #36 builds the host runner for the logic, detect and infer cases (T-B01, T-C07 first). Record each new GitHub issue number here when it is opened.
 
 | # | Issue title | IDs | Highest Pri |
 |---|---|---|---|
