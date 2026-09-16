@@ -71,6 +71,12 @@ jobs:
           docker run --rm -v "$PWD:/config" -w /config \
             --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
             -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null && python3 tests/run_cases.py'
+      # The container compiles as root on a cache miss. Nothing is saved from
+      # here (the compile host job owns that key), but the next checkout would
+      # trip over a root-owned build tree.
+      - name: Hand the build directory back to the runner user
+        if: always()
+        run: '[ -d esphome/.esphome ] && sudo chown -R "$(id -u):$(id -g)" esphome/.esphome || true'
 
   compile:
     name: compile ${{ matrix.variant }}

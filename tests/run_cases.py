@@ -152,13 +152,21 @@ class Device:
         survives and ALWAYS_OFF state does not.
         """
         await self.press("Restart")
+        # Let the process finish writing to the API socket before dropping the
+        # connection: disconnecting first earns it a SIGPIPE on the way out,
+        # which is indistinguishable from a crash.
+        with contextlib.suppress(asyncio.TimeoutError):
+            await asyncio.wait_for(self.proc.wait(), 15)
         with contextlib.suppress(Exception):
             await self.client.disconnect(force=True)
         self.client = None
-        with contextlib.suppress(asyncio.TimeoutError):
-            await asyncio.wait_for(self.proc.wait(), 15)
         if self.proc.returncode is None:
             raise CaseFailure("the host build did not exit when Restart was pressed")
+        # App.reboot() is exit(0) on host. Anything else is a crash during the
+        # simulated reboot, not a reboot; reconnecting would hide it.
+        if self.proc.returncode != 0:
+            raise CaseFailure(f"the host build crashed on Restart "
+                              f"(exit {self.proc.returncode}) instead of rebooting cleanly")
         self.logfile.close()
         await self.start()
 
@@ -371,8 +379,15 @@ async def main_async(argv, keep_logs):
             continue
         except CaseFailure as err:
             reason = str(err)
-        except Exception as err:                      # a runner bug, not a case result
-            reason = f"{type(err).__name__}: {err}"
+        except Exception as err:
+            # The runner itself broke: not a verdict on the firmware, so it is
+            # never "the failure a red case expects". Always a CI failure.
+            print(f"{case['id']:8} {case['status']:6} ERR  UNEXPECTED")
+            print(f"           {type(err).__name__}: {err}")
+            for line in case.get("_tail", []):
+                print(f"           | {line}")
+            failures.append(f"{case['id']}: the runner failed to run the case")
+            continue
 
         passed = reason is None
         expected = case["status"] == "green"
