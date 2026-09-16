@@ -19,6 +19,10 @@
 - `esphome/secrets.yaml` is gitignored and **already holds the real dev credentials** in this worktree (copied from the main checkout, which was not modified). Do NOT overwrite it with `secrets.ci.yaml`: the CI file's SSIDs are placeholders and the board will never join WiFi. Before writing to that path for any reason, run `test -L esphome/secrets.yaml && echo SYMLINK-STOP` — if it prints `SYMLINK-STOP`, stop; writing would clobber the main checkout's credentials through the symlink.
 - The ESP builds are native ESP-IDF (CMake/Ninja), **not** PlatformIO. Firmware lands at `esphome/.esphome/build/<name>/build/firmware.factory.bin` — there is no `.pioenvs` directory.
 - `esptool` is on PATH as a standalone command; `python -m esptool` is not installed.
+- **No real device or Home Assistant IPs in tracked files.** Write `<board>` and
+  substitute the address at the shell. Find the board's address from its boot
+  log, not from a hard-coded value — it changes when the unit moves between the
+  home and workshop networks.
 - The production build must validate with **no** `secrets.yaml` present.
 - `components/dryer_ui/display_ui.h` must contain **no `id()` calls** and use only the generic `display::Display` API.
 - Nothing WiFi, OTA, SPI or LEDC related may go into `base.yaml` or `display-draw.yaml` — the host build has none of those.
@@ -179,7 +183,7 @@ chmod +x scripts/check-screen-png.py
 
 The board currently runs a throwaway `mipi_spi` build, so the old `ili9xxx` mirror is not serving a valid frame.
 
-Run: `scripts/check-screen-png.py 10.42.14.100`
+Run: `scripts/check-screen-png.py <board>`
 Expected: FAIL — a `urllib.error.HTTPError: HTTP Error 500`, a connection error, or an `AssertionError`. Record which.
 
 - [ ] **Step 3: Rewrite the header**
@@ -547,7 +551,7 @@ esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x
 
 Then, once the board has joined WiFi:
 
-Run: `scripts/check-screen-png.py 10.42.14.100 /tmp/screen-task1.png`
+Run: `scripts/check-screen-png.py <board> /tmp/screen-task1.png`
 Expected: `OK 240x240 indexed PNG, <N> distinct colours, <M> bytes` with N well above 4.
 
 Open `/tmp/screen-task1.png` and confirm it shows the dryer UI — two cylinders, the gauge and the status strip — not noise or a partial frame.
@@ -755,7 +759,7 @@ esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x
   esphome/.esphome/build/desiccant-dryer-hw-test/build/firmware.factory.bin
 ```
 
-Run: `scripts/check-screen-png.py 10.42.14.100 /tmp/screen-task2.png`
+Run: `scripts/check-screen-png.py <board> /tmp/screen-task2.png`
 Expected: `OK 240x240 indexed PNG, ...`
 
 Then compare `/tmp/screen-task2.png` with `/tmp/screen-task1.png` from Task 1. They should be **pixel-identical**: the mirror renders from `draw_ui()` and never touches the driver, so swapping drivers must not change it. Any difference means something other than the driver changed.
@@ -1411,8 +1415,8 @@ Record the count. Then confirm from the log that the 5 s control tick is still r
 Flash and check each in turn:
 
 ```bash
-scripts/check-screen-png.py 10.42.14.100 /tmp/screen-virtual.png
-scripts/check-screen-png.py 10.42.14.100 /tmp/screen-hwtest.png
+scripts/check-screen-png.py <board> /tmp/screen-virtual.png
+scripts/check-screen-png.py <board> /tmp/screen-hwtest.png
 ```
 
 Expected: `OK 240x240 indexed PNG, ...` for both.
