@@ -72,9 +72,19 @@ manifest published on this repository's GitHub Pages site. Test builds
    appears, install it from the `Firmware` update entity in Home Assistant.
    The unit downloads and flashes it with no computer involved.
 
-Units still on 1.0.x cannot install anything over WiFi (they have neither an
-OTA server nor a working updater): bring them to 1.2.0 or later over USB
-once, and they self-update after that.
+Units on **1.0.x or 1.1.0** cannot install anything over WiFi by themselves.
+1.0.x has an updater that can check the manifest but never allocate enough
+contiguous heap to install; 1.1.0 has no updater at all, because updates
+were handed to ESPHome Device Builder in that release. 1.1.0 is what is
+actually in the field today.
+
+- A **stock 1.1.0 image** has no inbound OTA server either, so the only way
+  forward is USB: reflash 1.2.0 or later once with web.esphome.io, and the
+  unit self-updates from then on.
+- A **1.1.0 unit still adopted in Device Builder** can be pushed to 1.2.0
+  one last time through that add-on before it is retired, which avoids the
+  USB trip. After that the on-device updater takes over and the adoption is
+  no longer used.
 
 ## Recovery
 
