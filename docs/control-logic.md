@@ -131,14 +131,15 @@ All defaults are guesses. The old board used a fixed 20 min per pack, so
 regeneration at this heater power is known to complete within 20 min.
 
 `overtemp` dropped from 120 °C to 110 °C in 1.2.0. Each heater carries a
-one-shot thermal fuse (SEFUSE SF129E, Tf 133 °C) clamped to the pack body as
-the backstop for a welded relay contact, and a thermal fuse holds
-continuously only some way below Tf. The firmware limit has to sit under
-that holding temperature so the software always faults first: clearing a
-fault is a button press, replacing a blown fuse means opening the pack.
-Confirm the datasheet holding figure — if it is near 105 °C, this default
-belongs at 100 °C instead. See the heater over-temp cutout notes in
-[hardware.md](hardware.md).
+one-shot thermal fuse (SEFUSE SF129E) clamped to the pack body as the
+backstop for a welded relay contact, and its datasheet
+([datasheets/README.md](datasheets/README.md)) gives a holding temperature
+of 118 °C — the most it may sit at continuously — against a functioning
+temperature of 133 °C. The firmware limit has to stay under that holding
+figure so the software always faults first: clearing a fault is a button
+press, replacing a blown fuse means opening the pack. 110 °C clears Th by
+8 °C and still sits 20 °C above the 90 °C regen setpoint. See the heater
+over-temp cutout notes in [hardware.md](hardware.md).
 
 These entities are `restore_value: true`, so a unit that has already run
 keeps the value it stored. The new default only applies to a fresh install:
