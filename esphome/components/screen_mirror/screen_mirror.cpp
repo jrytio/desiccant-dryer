@@ -139,8 +139,10 @@ void ScreenMirror::dump_config() {
 }
 
 bool ScreenMirror::canHandle(AsyncWebServerRequest *request) const {
-  // url() already strips any ?query, so a cache-busting suffix still matches.
-  return request->method() == HTTP_GET && request->url() == this->path_;
+  // url_to() writes the decoded URL without its ?query, so a cache-busting
+  // suffix still matches. It replaces url(), which 2026.9.0 removed.
+  char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
+  return request->method() == HTTP_GET && request->url_to(url_buf) == this->path_;
 }
 
 void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {

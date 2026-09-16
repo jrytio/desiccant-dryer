@@ -12,7 +12,7 @@ on:
       - '**/*.md'
 
 env:
-  ESPHOME_VERSION: 2026.8.2
+  ESPHOME_VERSION: 2026.9.0
   # Workspace-relative so it needs no home-directory assumptions on the runner.
   TOOL_CACHE: .ci-cache/tools
 
