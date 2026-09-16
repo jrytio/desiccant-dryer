@@ -2,9 +2,10 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 
 # The screen's drawing code (display_ui.h) as a component rather than an
-# `esphome: includes:` file, so it can be shared via packages across the
-# production, virtual, hw-test and host selectors. packages/ui-code-local.yaml
-# chooses the source.
+# `esphome: includes:` file: a component gets a real dependency on `display`
+# and is compiled once per build with its include path set up, rather than
+# relying on every selector spelling out the same include. It is wired in by
+# packages/ui-code-local.yaml.
 
 CODEOWNERS = []
 DEPENDENCIES = ["display"]

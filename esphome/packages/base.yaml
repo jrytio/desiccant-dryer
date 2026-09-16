@@ -76,8 +76,7 @@ logger:
 # The dev builds merge a static key in from secrets.yaml
 # (packages/dev-secrets.yaml, and platform-host.yaml on the host); the
 # released image takes packages/api-provisioned.yaml (empty block, key from
-# Home Assistant at runtime); the adopt selector takes neither, so ESPHome
-# Device Builder mints one into the owner's YAML. See docs/releasing.md.
+# Home Assistant at runtime when it adopts the device). See docs/releasing.md.
 
 # ---------------------------------------------------------------- globals
 globals:

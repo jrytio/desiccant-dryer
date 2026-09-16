@@ -7,9 +7,8 @@
 #         diagnostics). No secrets: the owner sets WiFi at flash time,
 #         Home Assistant sets the API key on adoption, and the unit
 #         installs later releases itself. See docs/releasing.md.
-# Screen: no /screen.png mirror in production. Its local external component
-#         would not resolve from a remote package either; the test builds
-#         keep screen-mirror.yaml.
+# Screen: no /screen.png mirror in production; the test builds keep
+#         packages/screen-mirror.yaml.
 
 # mipi_spi's buffer_size needs 2026.9. Only the production selector carries
 # this floor; the bench builds still run on an older CLI.
