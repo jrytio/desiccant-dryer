@@ -1,11 +1,12 @@
 # Human inspection checklist
 
-The visual and hands-on checks for the ESP32 desiccant dryer controller, the
-replacement for the original control board in an Azco VMD-08 dryer. Every
-item here is an `inspect` row from `docs/failure-modes.md` (the ID in bold
-is the failure mode it guards against), expanded into what to look at and
-what "pass" means. Nothing here is a runtime test; those live in the
-verify suite.
+The visual and hands-on checks for the ESP32 desiccant dryer controller that
+replaces the original control board in an Azco VMD-08 dryer. Every `inspect`
+row in `docs/failure-modes.md` appears here exactly once (the ID in bold is
+the failure mode the check guards against), expanded into what to look at and
+what "pass" means. Nothing here is a runtime test; those live in the verify
+suite. Adding an `inspect` row to the catalogue means adding its item here in
+the same change.
 
 Work the stages in order. Stages 1 to 5 are done with **mains disconnected
 and the 24 V supply off**. Stage 6 is the first energised check. Stage 7 is
@@ -48,6 +49,8 @@ Reference: `docs/hardware.md` relay board section, `docs/datasheets/thermal-fuse
 - [ ] **A-17** Mains conductors near the packs. **Pass:** 18 AWG stranded, 300 V, 105 °C or better; silicone with fibreglass sleeve on the last run to the pack; no PVC touching a pack surface. *(eyes, wire marking)*
 - [ ] **G-13** Strain relief at the pack. **Pass:** heater tails and fuse leads are clamped so that tugging the loom does not move the conductor at the crimp. *(hands)*
 - [ ] **A-13** Heater elements cold. **Pass:** about 123 Ω across each heater; more than 1 MΩ from each heater terminal to its sheath. *(meter)*
+- [ ] **A-30** Heater current sensing. **Pass:** either a current sense is fitted in the switched-L lead and its reading reaches Home Assistant, or `docs/hardware.md` records the decision not to fit one, accepting that a welded contact (A-01) or an open element (A-22) is visible only as a temperature symptom. *(eyes, docs)*
+- [ ] **A-31** Over-temperature backstop. **Pass:** either a self-resetting cutout is fitted in series ahead of the SF129E, or `docs/hardware.md` records that the one-shot fuse alone is accepted and the enclosure carries a label saying a trip means opening the pack to replace it. *(eyes, docs)*
 
 ## Stage 3 · Mains wiring, creepage and earthing (mains off)
 
@@ -60,6 +63,7 @@ Reference: `docs/hardware.md` relay board section, `docs/datasheets/thermal-fuse
 - [ ] **G-12** Enclosure. **Pass:** metal enclosure bonded to PE; every mains lead that passes an edge or a panel has a grommet or sleeve; lid closes without pinching a lead. *(eyes, meter)*
 - [ ] **G-10** Routing. **Pass:** mains L/N run as a twisted or tightly paired loom, at least 25 mm from the 1-wire, I2C and SPI cables, crossing at right angles where they must cross. *(eyes)*
 - [ ] **A-06** Relay-to-heater identity. **Pass:** relay A (GPIO13, harness pin 3) feeds the heater on pack A, relay B (GPIO12, pin 4) feeds pack B, matched to the DS18B20 and valve labelled for the same pack. *(continuity, labels)*
+- [ ] **G-16** Labelling. **Pass:** each pack, its heater tail, its DS18B20 lead and its valve carry a permanent A or B label that agrees with the relay and GPIO map, so a later reassembly cannot cross a pair. No unlabelled member of a pair. *(eyes)*
 - [ ] **A-24** Relay harness. **Pass:** JST-XH 4-way plugged home with the latch engaged; pin 1 = 5 V, 2 = GND, 3 = GPIO13, 4 = GPIO12 at both ends. *(eyes, continuity)*
 
 ## Stage 4 · Sensors and placement (mains off)
@@ -85,6 +89,8 @@ Reference: `CLAUDE.md` invariants, `docs/releasing.md`.
 - [ ] **J-05** DS18B20 addresses. **Pass:** the three `address:` values in `hw-real.yaml` match the three ROM codes in **this** board's first-boot log. *(log vs file)*
 - [ ] **J-06** Sensor ids. **Pass:** `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`, `case_temp` all resolve in the config dump to real sensors, not to fallback templates. *(config dump)*
 - [ ] **J-07** Tick interval. **Pass:** the control `interval` in `base.yaml` is 5 s, and the no-rise fault window is still 300 s and the probe timeout still 5 ticks. *(read base.yaml)*
+- [ ] **H-20** Panic behaviour. **Pass:** nothing in the config or `sdkconfig_options` sets the ESP-IDF panic handler to halt or to the GDB stub; it stays at the reboot default, so a crash cannot leave the relays in their last state. *(grep config dump)*
+- [ ] **J-11** Persisted state compatibility. **Pass:** the firmware being flashed uses the same `standby_state` and `active_pack` numbering and the same counter units as the one it replaces; otherwise the unit's globals are erased as part of the update. *(diff `base.yaml` globals, release notes)*
 - [ ] **B-19 / B-20** Tunables on this unit. **Pass:** in Home Assistant, `Pack overtemp limit` reads 110 °C or lower (below the SF129E holding temperature of 118 °C); `regen_temp` is below `overtemp`; `cooldown_temp` is below `regen_temp`; `arm_rh` is below `swap_rh`. *(HA entities)*
 - [ ] **K-10** Adoption selector. **Pass:** `desiccant-dryer-adopt.yaml` references the release tag that exists on GitHub and the same component version as the flashed image. *(read file, `git tag`)*
 - [ ] **F-10** JP-USB discipline. **Pass:** the shunt is **removed** before any USB-C cable is connected to the board, and refitted before the lid goes on. Write this on the enclosure. *(eyes, label)*
