@@ -54,6 +54,18 @@ Useful screen states and how to reach them:
 | OFF on both packs, nothing lit, strip "Disabled" | Dryer Enabled off |
 | Red strip "FAULT · ...", the faulted pack solid red | Sim Heater Max Temp 130, wait for heating |
 
+## No window (CI, or a terminal over SSH)
+
+```bash
+SDL_VIDEODRIVER=dummy esphome/.esphome/build/desiccant-dryer-host/.pioenvs/desiccant-dryer-host/program
+```
+
+SDL's dummy video driver renders into memory instead of a window, so the
+same binary runs where no display server exists. Nothing about the build
+changes: the drawing code still runs every frame. That is how the
+`host-cases` CI job runs `tests/run_cases.py` against this build; see the
+Harness section of `docs/verification-plan.md`.
+
 ## Persisted state
 
 Everything the board would keep in flash (active pack, counters, Sim

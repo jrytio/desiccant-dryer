@@ -5,6 +5,7 @@ status: red            # needs Sim Relay Stuck On A and a heater-off-still-heati
 setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5
+  Sim RH Rise Rate: 5       # 0.1 %/min (the default) would take 45 sim min to reach arm_rh
   Dryer Enabled: on
 steps:
   - wait_until: {Standby State: heating}
