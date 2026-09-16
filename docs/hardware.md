@@ -18,6 +18,7 @@
 | Buck | MP1584 "mini" 24 V → 5 V module (22 × 17 mm, trimmer), or a fixed-5 V module | Feeds board USB pin (through the Schottky) and relay coils; set to 5.00–5.10 V |
 | USB-pin Schottky | SS34 (SMD) or 1N5819 (axial) | Buck 5 V → J-USB → board USB pin |
 | Heaters | 2× 120 VAC, 123 Ω (~117 W) | Existing packs; switched by relay contacts |
+| Heater over-temp cutouts | 2× one-shot thermal fuse (TCO), Tf ≈ 140 °C (standard 141 °C part), ≥ 2 A / 250 VAC | In series with each heater's switched L lead, clamped to the pack; sizing in [Mains and earthing](#mains-and-earthing) |
 
 Protoboard build (see [Protoboard layout](#protoboard-layout-proposal)), in
 addition to the parts above:
@@ -113,7 +114,8 @@ up with USB-C at the left, the 12-pin row is on top.
   back-fed (the MP1584 is non-synchronous and cannot sink current; a higher
   host VBUS just stops it switching), but a buck set above the host's VBUS
   sources current into the computer's port, up to the MP1584's 4–4.7 A
-  current limit. The protoboard adds a series Schottky for that direction
+  current limit. Only pulling the wire (or J-USB on the protoboard) prevents
+  that; the protoboard's series Schottky blocks the other direction only
   (see J-USB below).
 - Display: GND/VCC to top rails; SCL→36, SDA→35, RES→14, DC→9, CS→5, BLK→17.
 - DS18B20 ×3: all GND to top GND, all VDD to top 3.3 V, all DQ tied together
@@ -177,7 +179,9 @@ Geometry sources, all in [datasheets/](datasheets/README.md):
    off; leave it unconnected. Ream the COM, NO and NC holes to ≥ 1.2 mm
    (those pins are 1.0–1.1 mm flat blades; the coil pins are 0.6 mm round).
 4. Before wiring real heaters: make the four heater/valve switches
-   `internal: true` with read-only mirrors (the open item in CLAUDE.md).
+   `internal: true` with read-only mirrors (the open item in CLAUDE.md), and
+   fit a thermal fuse in each heater's switched L lead at the pack (sizing
+   under [Mains and earthing](#mains-and-earthing)).
 
 ### J-USB and the Schottky
 
@@ -190,13 +194,23 @@ plugged in is the buck, if it is above the host's VBUS, sourcing current
 into the computer's port, up to the MP1584's 4–4.7 A current limit.
 
 The layout puts a series Schottky (SS34 or 1N5819) from buck 5 V to J-USB,
-which blocks that direction, and keeps J-USB. With the buck at 5.0 V the
-AP2112 still has ≥ 0.39 V dropout margin at the 430 mA peak, using the
-worst-case drops from the BAT20J and AP2112 datasheets. Two conditions:
+but it does **not** block that direction: buck → USB pin is the diode's
+forward direction, which is how the board is powered. What the Schottky does
+is stop a host from back-feeding the buck's output node, the 5 V bus and the
+relay coils, for a 0.3–0.4 V drop; with the buck at 5.0 V the AP2112 still
+has ≥ 0.39 V dropout margin at the 430 mA peak, using the worst-case drops
+from the BAT20J and AP2112 datasheets.
 
+So J-USB, not the diode, is what keeps the buck off a computer's USB port:
+
+- pull J-USB before plugging in a USB-C cable, every time;
 - the buck stays at or below 5.1 V;
-- a USB-C host may refuse to attach while VBUS is pre-biased, so J-USB
-  remains the manual disconnect: pull it to flash over USB.
+- a USB-C host may also refuse to attach while VBUS is pre-biased, which is
+  another reason J-USB comes out first.
+
+Making the USB port safe with J-USB fitted would need a real power path (an
+ideal-diode/load-switch ORing the two sources), not a series diode. That is
+not in this layout.
 
 ### Harness and off-board wiring
 
@@ -253,8 +267,8 @@ worst-case drops from the BAT20J and AP2112 datasheets. Two conditions:
 | Coil A − / coil B − | PN2222A collector | Relay coil pin (other side), 1N4007 anode |
 | L | 120 VAC IN L | Relay A COM, relay B COM |
 | N | 120 VAC IN N | Heater A N, heater B N (passes through, never switched) |
-| L sw A | Relay A NO | Heater A "L sw" |
-| L sw B | Relay B NO | Heater B "L sw" |
+| L sw A | Relay A NO | Heater A "L sw" → thermal fuse at pack A → heater A |
+| L sw B | Relay B NO | Heater B "L sw" → thermal fuse at pack B → heater B |
 | NC A / NC B | — | Unconnected (live when the heater is off) |
 | PE | Not on the protoboard | Inlet PE → PSU FG, chassis, enclosure, heater sheaths at a star point; 0 V bonded to PE at the PSU |
 
@@ -268,6 +282,30 @@ worst-case drops from the BAT20J and AP2112 datasheets. Two conditions:
   coil–contact rating is a basic-insulation barrier only.
 - Fuse T 3.15 A in L at the inlet, ahead of the PSU and heaters.
 - Each relay switches L only; N passes straight through.
+- Each heater carries its own one-shot thermal fuse (TCO) in series, in the
+  switched L lead between the relay board's "L sw" terminal and the heater,
+  clamped to the pack body like the DS18B20 so it senses the pack and not
+  the air. This is the only protection against a welded relay contact: the
+  firmware cannot clear that failure, and the standby pack's heater would
+  otherwise stay energised.
+- Sizing, from the numbers the firmware already uses: a pack runs up to
+  `regen_temp` (default 90 °C) and the firmware latches a fault above
+  `overtemp` (default 120 °C — see [control-logic.md](control-logic.md)).
+  The fuse therefore has to hold at 120 °C without drifting and open not far
+  above it, so Tf ≈ 140 °C (the standard 141 °C part) with the datasheet's
+  maximum continuous holding temperature at or above 120 °C; on most TCOs
+  that holding figure is Tf minus 15–25 °C, so check the part in hand rather
+  than assuming. Each heater draws 117 W / 120 VAC ≈ 1 A, so a 2 A (or the
+  common 10 A) 250 VAC rating is ample.
+- Crimp or clamp the fuse leads; soldering near the body can trip it.
+  Sleeve the leads in high-temperature insulation. A tripped TCO is not
+  resettable and means opening the pack, so a resettable bimetal thermostat
+  of the same temperature class is the alternative if nuisance trips matter
+  more than the one-shot guarantee.
+- Unverified: the maximum temperature the pack, its desiccant and the probe
+  and valve leads can take. Tf has to sit below that as well as above the
+  firmware limit. Record the fuses actually fitted, with their Tf, holding
+  temperature and current rating, here.
 - COM is mains and sits at the coil end of the relay: 6.3 mm centre to
   centre from each coil pin, which leaves about 4 mm pad edge to pad edge.
   The drawing's mains boundary goes around COM, and the PN2222A/1N4007 stage
@@ -283,8 +321,10 @@ worst-case drops from the BAT20J and AP2112 datasheets. Two conditions:
   slot along the boundary, or contacts off the protoboard, is needed.
 - The 24 V input has no reverse-polarity protection, fuse or bulk input
   capacitor.
-- No hardware over-temperature cutout backs up the firmware if a relay
-  contact welds; check what the original Azco board/packs provided.
+- The thermal fuses above are specified but not yet fitted or verified:
+  confirm the pack's safe maximum temperature (Tf must sit below it), the
+  fuse's holding temperature at the 120 °C firmware limit, and what the
+  original Azco board/packs provided.
 - Stock DS18B20 probe leads are rated under 100 °C and the SMC VDW22 valve
   is rated 50 °C, both on a 90 °C pack; verify or change parts.
 - The buck module footprint is unverified; measure the module before
