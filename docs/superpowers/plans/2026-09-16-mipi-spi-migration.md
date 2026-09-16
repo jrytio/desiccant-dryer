@@ -836,6 +836,22 @@ This task is **capped by explicit user decision**: take the obvious wins, then r
 - Consumes: nothing. This task measures and, at most, changes one substitution value.
 - Produces: the redraw measurements quoted in the PR.
 
+**This task closes two evidence gaps left open by Task 2's review, and that is
+as important as the measurement:**
+
+1. *The 50% buffer has never run on hardware.* Task 2's runtime evidence is all
+   hw-test at `100%` — the configuration closest to the old `ili9xxx`
+   behaviour. The reduced buffer is the entire point of the project and so far
+   exists only as `"buffer_size": 0.5` in a config dump. Step 1 flashes a 50%
+   build, which is the first time the real setting runs.
+2. *Nothing has exercised the driver's multi-band path.* Task 2's `/screen.png`
+   seam check proves `screen_mirror`'s own 24-row banding, not the driver's:
+   the mirror re-renders from `dryer_ui::last_state()` and never reads the
+   driver buffer, and at `1/1` the driver has no bands to stitch. Step 1 is
+   the first run where `MipiSpiBuffer` actually splits a frame.
+
+Record both explicitly in the report.
+
 - [ ] **Step 0: Restore the SPI clock the driver swap silently dropped**
 
 Found during Task 2's normalised-config diff: SPI `data_rate` went from
@@ -861,6 +877,22 @@ below `invert_colors`:
 If the panel ever shows corruption at 40 MHz on real glass, this is the first
 thing to lower — but note no panel was attached when this was set, so 40 MHz is
 **restored, not re-validated**. Record that.
+
+While in this file, clear two review findings about it:
+
+- The refresh rate went from 2s to 5s for every build in Task 2 with no
+  explanation anywhere. Say why, in the `substitutions:` comment block:
+
+```yaml
+# 5s, not the 2s ili9xxx used: a redraw now blocks the loop for longer (the
+# writer runs once per band), and the screen shows slow thermal state that
+# does not need a 2s refresh. Task 3 measured the cost; see docs/releasing.md.
+```
+
+- `esphome/packages/display-sdl.yaml` still claims "same refresh as the
+  ST7789" while hard-coded to 2s. Either match it to 5s or correct the
+  comment to say the host preview deliberately refreshes faster. Prefer
+  correcting the comment: a fast host preview is useful and costs nothing.
 
 - [ ] **Step 1: Build a VERBOSE production image to read the band timings**
 
