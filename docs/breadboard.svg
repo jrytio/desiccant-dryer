@@ -89,7 +89,7 @@
 <rect x="74" y="452" width="52" height="40" rx="3"/><rect x="190" y="452" width="52" height="40" rx="3"/><rect x="306" y="452" width="52" height="40" rx="3"/><rect x="422" y="452" width="52" height="40" rx="3"/><rect x="538" y="452" width="52" height="40" rx="3"/>
 </g>
 <g font-size="11" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">
-<text x="100" y="472">2N2222</text><text x="216" y="472">2N2222</text><text x="332" y="472">IRLZ44N</text><text x="448" y="472">IRLZ44N</text><text x="564" y="472">IRLZ44N</text>
+<text x="100" y="472">PN2222A</text><text x="216" y="472">PN2222A</text><text x="332" y="472">IRLZ44N</text><text x="448" y="472">IRLZ44N</text><text x="564" y="472">IRLZ44N</text>
 </g>
 <g font-size="11" fill="#2C2C2A" dominant-baseline="central">
 <text x="110" y="416">1k</text><text x="226" y="416">1k</text><text x="342" y="416">100</text><text x="458" y="416">100</text><text x="574" y="416">100</text>

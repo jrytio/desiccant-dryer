@@ -2,7 +2,7 @@
 
 Bring-up of a board wired into real hardware. Bench state for the first run
 (2026-09-15): three DS18B20s, both valves, the fan and the display
-connected; 2N2222 heater driver stages wired but no relays; no SHT45.
+connected; PN2222A heater driver stages wired but no relays; no SHT45.
 Everything here is safe with mains disconnected, and nothing switches mains
 until the relays exist.
 

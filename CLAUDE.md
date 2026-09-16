@@ -20,7 +20,8 @@ based on measured outlet humidity and measured pack temperatures instead.
   `color_palette: 8BIT` (~58 KB). The logger must use `hardware_uart: UART0`;
   ESPHome's S2 default of USB_CDC is the unconnected native-USB pins.
 - **Heaters are 120 VAC (~117 W, 123 Ω each)**, switched by Songle SRD-05VDC
-  relays driven by 2N2222 low-side stages. Mains stays off the ESP board.
+  relays driven by PN2222A low-side stages (TO-92 E-B-C; a P2N2222A is C-B-E).
+  Mains stays off the ESP board.
 - **Valves are two SMC VDW22 2-port NC solenoids (24 VDC, 3 W)**, one per pack,
   driven by IRLZ44N low-side MOSFETs. Both closed = safe/idle state.
 - **Case fan is 24 V on/off** (not PWM), thermostat-controlled from a DS18B20.
