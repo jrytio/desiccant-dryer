@@ -22,8 +22,33 @@
 - Nothing WiFi, OTA, SPI or LEDC related may go into `base.yaml` or `display-draw.yaml` — the host build has none of those.
 - Board on USB at `/dev/cu.usbserial-210`. USB flash command:
   `python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 <firmware.factory.bin>`
+- **The bench board has NO display attached.** The driver still allocates its
+  buffer and still clocks pixels out over SPI, so heap figures and redraw
+  timings are real and valid. What cannot be checked on this board is how the
+  image *looks*: colour, banding, tearing, offset. Every such check is
+  deferred, not skipped — see "Deferred: panel sign-off" below.
 - Never invent a measurement. Anything not measured is marked untested.
 - Commit messages end with `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
+
+## Deferred: panel sign-off
+
+Acceptance criterion 4 (*"the user confirms the physical panel looks right — no
+banding or tearing with a partial buffer and `auto_clear_enabled: false`"*)
+**cannot be met in this plan.** The bench board has no panel attached.
+
+What this does NOT block: buffer allocation, `Largest Free Block`, redraw and
+SPI timings, control-tick behaviour, the on-device install, and `/screen.png` —
+the mirror re-renders from `dryer_ui::last_state()` and never touches the panel,
+so it is a full check of the *drawing*, just not of the *glass*.
+
+What stays open: colour fidelity, banding, tearing and image offset on real
+hardware. The PR must say so plainly and must not claim criterion 4 met. Carry
+it as a release blocker until someone runs a build on a board with the 1.54"
+panel wired per `packages/display-st7789.yaml`.
+
+Where the plan says "ask the user to look at the physical panel", substitute:
+compare `/screen.png` against the reference PNGs in `docs/display/` and record
+that the glass check is outstanding.
 
 ## Design deviation from the spec — read this first
 
@@ -731,9 +756,20 @@ python -m esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 writ
 Run: `scripts/check-screen-png.py 10.42.14.100 /tmp/screen-task2.png`
 Expected: `OK 240x240 indexed PNG, ...`
 
-Then compare `/tmp/screen-task2.png` with `/tmp/screen-task1.png` from Task 1. They should show the same UI with the same colours; a colour shift means the RGB332 assumption is wrong and must be fixed before going further.
+Then compare `/tmp/screen-task2.png` with `/tmp/screen-task1.png` from Task 1. They should be **pixel-identical**: the mirror renders from `draw_ui()` and never touches the driver, so swapping drivers must not change it. Any difference means something other than the driver changed.
 
-**Ask the user to look at the physical panel** and confirm: correct colours, no banding, no tearing, nothing shifted or cropped. This is acceptance criterion 4 and cannot be checked from here.
+```bash
+cmp /tmp/screen-task1.png /tmp/screen-task2.png && echo "IDENTICAL - driver swap did not affect drawing"
+```
+
+No panel is attached to this board, so the glass check (colour, banding, tearing, offset) is deferred — see "Deferred: panel sign-off". Confirm instead from the log that the driver came up and allocated its buffer:
+
+```bash
+python -m esphome logs esphome/desiccant-dryer-hw-test.yaml --device /dev/cu.usbserial-210 2>&1 | tee /tmp/task2.log
+grep -iE "mipi_spi|Buffer bytes|Buffer fraction|Buffer allocation failed|setup failed" /tmp/task2.log
+```
+
+Expected: the dump_config shows `Buffer pixels: 8 bits`, a `Buffer fraction` matching the selector, and **no** `Buffer allocation failed`.
 
 - [ ] **Step 9: Commit**
 
@@ -1385,9 +1421,13 @@ scripts/check-screen-png.py 10.42.14.100 /tmp/screen-hwtest.png
 
 Expected: `OK 240x240 indexed PNG, ...` for both.
 
-- [ ] **Step 7: Ask the user for the panel sign-off**
+- [ ] **Step 7: Record the panel sign-off as outstanding**
 
-Show them the physical panel on the production image and ask them to confirm: correct colours, no banding, no tearing, nothing shifted. Record their answer. **Do not mark acceptance criterion 4 met without it.**
+No panel is attached to the bench board, so criterion 4 cannot be met here.
+Compare `/tmp/screen-virtual.png` against the reference PNGs in `docs/display/`
+to confirm the drawing itself is right, and record in the PR that the glass
+check — colour, banding, tearing, offset on real hardware — is **outstanding**.
+**Do not mark acceptance criterion 4 met.**
 
 - [ ] **Step 8: Open the PR**
 
@@ -1419,7 +1459,15 @@ driver and with a partial buffer.
 - `took a long time for an operation` warnings after update:
 - On-device install:
 - Rollback after reboot:
-- Physical panel checked by the user:
+- Physical panel checked by the user: **NOT DONE — no panel on the bench board**
+
+## Outstanding
+
+The glass has not been looked at. `mipi_spi` with a partial buffer and
+`auto_clear_enabled: false` is exactly the combination that could band or tear,
+and no board in this change had a panel attached. Colour fidelity, banding,
+tearing and image offset must be confirmed on hardware before this ships to the
+production unit.
 
 ## Trade-off accepted
 
