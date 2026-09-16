@@ -44,30 +44,46 @@ esphome:
   # already-set-up components while it waits for WiFi during setup, so a low
   # priority here would let the control tick run first.
   on_boot:
-    priority: 700
-    then:
-      - lambda: |-
-          // Everything off until the state machine has run once.
-          id(heater_a).turn_off();
-          id(heater_b).turn_off();
-          id(valve_a).turn_off();
-          id(valve_b).turn_off();
-          id(case_fan).turn_off();
-          id(last_tick_ms) = millis();
-          // Restored ints index arrays and drive the state machine; clamp them in
-          // case flash held garbage.
-          if (id(active_pack) < 0 || id(active_pack) > 2) id(active_pack) = 0;
-          if (id(standby_state) < 0 || id(standby_state) > 3) id(standby_state) = 0;
-          if (id(fault_code) < 0 || id(fault_code) > 3) id(fault_code) = 0;
-          // A regen interrupted by a reboot restarts from scratch: the pack may
-          // have cooled during the outage, and resuming the old timer would
-          // trip the "not heating" check.
-          if (id(standby_state) == 1) {
-            id(reset_regen_counters).execute();
-          }
-          ESP_LOGI("cycle", "Boot: active pack %d, standby state %d, fault %d",
-                   id(active_pack), id(standby_state), id(fault_code));
-          id(boot_done) = true;
+    - priority: 700
+      then:
+        - lambda: |-
+            // Everything off until the state machine has run once.
+            id(heater_a).turn_off();
+            id(heater_b).turn_off();
+            id(valve_a).turn_off();
+            id(valve_b).turn_off();
+            id(case_fan).turn_off();
+            id(last_tick_ms) = millis();
+            // Restored ints index arrays and drive the state machine; clamp them in
+            // case flash held garbage.
+            if (id(active_pack) < 0 || id(active_pack) > 2) id(active_pack) = 0;
+            if (id(standby_state) < 0 || id(standby_state) > 3) id(standby_state) = 0;
+            if (id(fault_code) < 0 || id(fault_code) > 3) id(fault_code) = 0;
+            // A regen interrupted by a reboot restarts from scratch: the pack may
+            // have cooled during the outage, and resuming the old timer would
+            // trip the "not heating" check.
+            if (id(standby_state) == 1) {
+              id(reset_regen_counters).execute();
+            }
+            ESP_LOGI("cycle", "Boot: active pack %d, standby state %d, fault %d",
+                     id(active_pack), id(standby_state), id(fault_code));
+            id(boot_done) = true;
+    # Runs after every component has set up, so the restored value of a
+    # `restore_value: true` number is already in place. A unit commissioned
+    # under a build whose ceiling was 125 °C can hold a limit above the
+    # SF129E's 118 °C holding temperature, which the new range no longer
+    # allows to be entered; bring it back inside the range once, on boot.
+    - priority: -100
+      then:
+        - lambda: |-
+            const float max_ot = id(overtemp).traits.get_max_value();
+            if (!isnan(id(overtemp).state) && id(overtemp).state > max_ot) {
+              ESP_LOGW("cycle", "Restored overtemp limit %.0f C is above the %.0f C maximum; clamping",
+                       id(overtemp).state, max_ot);
+              auto call = id(overtemp).make_call();
+              call.set_value(max_ot);
+              call.perform();
+            }
 
 logger:
   level: INFO
@@ -231,14 +247,16 @@ number:
     id: overtemp
     unit_of_measurement: "°C"
     min_value: 60
-    max_value: 125
+    max_value: 118
     step: 1
-    # 110 °C, not 125: the heater thermal fuse (SEFUSE SF129E) is clamped to
-    # the pack body, and its datasheet holding temperature — the most it may
-    # sit at continuously — is 118 °C, with a functioning temperature of
-    # 133 °C. The firmware must fault below that so it always trips before
-    # the one-shot fuse; clearing a fault is a button press, replacing a
-    # blown fuse means opening the pack.
+    # 110 °C default, 118 °C ceiling: the heater thermal fuse (SEFUSE SF129E)
+    # is clamped to the pack body, and its datasheet holding
+    # temperature — the most it may sit at continuously — is 118 °C, with a
+    # functioning temperature of 133 °C. The firmware must fault at or below
+    # that so it always trips before the one-shot fuse; clearing a fault is a
+    # button press, replacing a blown fuse means opening the pack. A unit that
+    # stored a higher limit under an earlier build is re-clamped on boot (see
+    # the second on_boot block).
     initial_value: 110
     restore_value: true
     optimistic: true

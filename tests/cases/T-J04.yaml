@@ -7,4 +7,4 @@ selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
 assert:
   - heater_a.interlock includes heater_b and heater_b.interlock includes heater_a
   - valve_a.interlock includes valve_b and valve_b.interlock includes valve_a
-  - interlock_wait_time is 500ms on all four
+  - every switch in [heater_a, heater_b, valve_a, valve_b] has interlock_wait_time 500ms
