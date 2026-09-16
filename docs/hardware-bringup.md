@@ -142,7 +142,10 @@ Device Builder installs updates over WiFi. Expect `Firmware Version` to
 match the release. Remove the HW Test entry from HA first if it uses the
 same host.
 
-The test board (2026-09-15) ran this path with an adopted-style YAML built
-from a branch: USB install of 1.1.0, then a Device Builder-equivalent
-native OTA push (`esphome run --device <board>`) to a relabelled build,
-which rebooted into it with the controller running and no fault.
+The test board ran this path twice. On 2026-09-15 with an adopted-style
+YAML built from a branch, and on 2026-09-16 with the YAML ESPHome Device
+Builder itself wrote for the adopted unit (remote package at `@main`, plus
+an `ota:` block with an encryption key): USB install of 1.1.0, then a
+native OTA push over WiFi to a relabelled build (14 s upload, back in 6 s,
+reset reason "Reboot request from esphome.ota", controller running, no
+fault).

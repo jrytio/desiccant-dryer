@@ -117,7 +117,10 @@ the adopted YAML (1.0.x cannot install anything over WiFi).
    `dryer_ui` component and art for the new version. Watch the run with
    `gh run list --workflow release.yml`.
 3. Acceptance: an adopted unit installs the new version from Device Builder
-   over WiFi and reports it in `Firmware Version`.
+   over WiFi and reports it in `Firmware Version`. Verified on the bench
+   2026-09-16 against v1.1.0: USB install of the adopted YAML, then an
+   encrypted OTA push (14 s upload, back in 6 s, reset reason "Reboot
+   request from esphome.ota", controller running, no fault).
 
 ## Notes
 
@@ -135,6 +138,9 @@ the adopted YAML (1.0.x cannot install anything over WiFi).
   `-dev` suffix. A test flash can relabel it, but with the adopt selector
   `ui_ref` and `display_assets` are derived from `version`, so pin them to
   the real tag as well or the build looks for a tag that does not exist:
+
+  `-s` is a global option: it must come before the subcommand, or ESPHome
+  exits with "unrecognized arguments".
 
   ```bash
   esphome -s version 1.1.0-test -s ui_ref v1.1.0 \
