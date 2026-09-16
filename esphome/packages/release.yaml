@@ -3,16 +3,29 @@
 #
 # The release image carries no credentials (packages/dev-secrets.yaml is
 # only in the test builds). The owner sets WiFi through Improv on the USB
-# serial port (web.esphome.io does this) or the fallback access point, then
-# adopts the unit in ESPHome Device Builder. The adopted YAML holds the
-# owner's API key and OTA password, and Device Builder pushes updates with
-# ESPHome's native OTA.
+# serial port (web.esphome.io does this) or the fallback access point, and
+# Home Assistant sets the API encryption key when it adopts the device.
+# Later updates come from the update entity below; no add-on is needed.
 #
-# The released image itself has no OTA server: without a password it would
-# let any host on the LAN upload firmware to a mains controller. It also
-# has no on-device HTTP updater. 1.0.x tried one: the S2 (no PSRAM, 58 KB
-# display buffer) never had the ~17 KB contiguous block a TLS firmware
-# download needs, with dynamic or static mbedTLS buffers.
+# The released image has no OTA *server*: without a password it would let
+# any host on the LAN upload firmware to a mains controller. Updates are
+# pull-only, through the update entity below.
+#
+# 1.0.x tried this and failed: with ili9xxx's mandatory full frame buffer
+# the S2 never had the ~16,749-byte contiguous block a TLS record needs.
+# Moving the panel to mipi_spi with a reduced buffer freed it. See
+# packages/display-st7789.yaml.
+
+# The device polls this esp-web-tools manifest on the repository's GitHub
+# Pages site and reports an update to Home Assistant when the manifest's
+# version differs from ${version}. Installing pulls the .ota.bin over HTTPS
+# (the relative path in the manifest resolves next to it) and checks its md5.
+#
+# Pages, not the GitHub Release download URL: that one redirects to an
+# RSA-certificate host with a ~900-byte signed URL, and the S2 has too
+# little free heap for the second handshake.
+substitutions:
+  update_manifest_url: https://jrytio.github.io/desiccant-dryer/firmware/manifest.json
 
 esphome:
   project:
@@ -60,3 +73,23 @@ sensor:
       name: "Largest Free Block"
     loop_time:
       name: "Loop Time"
+
+http_request:
+  verify_ssl: true
+  timeout: 10s
+  # GitHub Pages answers directly with no redirect, so the request and
+  # response headers stay short. Kept a little above the 512-byte default
+  # for header headroom.
+  buffer_size_rx: 1024
+
+# The download backend for the update entity below. This is not an OTA
+# *server*: nothing listens, so no LAN host can push firmware to a mains
+# controller. Updates are strictly pull-based.
+ota:
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: "Firmware"
+    source: ${update_manifest_url}
+    update_interval: 6h
