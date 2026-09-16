@@ -4,8 +4,9 @@ Reference copies of the manufacturer documents for the parts in the
 [hardware BOM](../hardware.md#bill-of-materials), so the driver-stage numbers
 and the protoboard layout can be checked against datasheets without leaving
 the repo, and so a later re-check sees the same revision. All files were
-retrieved on 2026-09-15 from the source in the table; the SHA-256 prefix is
-there to tell whether a file was replaced. Manufacturer datasheets stay
+retrieved on 2026-09-15 from the source in the table, except the SEFUSE
+thermal-cutoff catalogue (2026-09-16); the SHA-256 prefix is there to tell
+whether a file was replaced. Manufacturer datasheets stay
 their owners' copyright and are kept here for reference only; SparkFun's
 hardware files are CC BY-SA 4.0 (`mcu/SPARKFUN-LICENSE.md`).
 
@@ -22,6 +23,7 @@ download, the table says whose copy this is.
 | [mcu/espressif-esp32-s2-wroom-datasheet.pdf](mcu/espressif-esp32-s2-wroom-datasheet.pdf) | ESP32-S2-WROOM module on the Thing Plus | Espressif datasheet v1.1 (2020), SparkFun's copy | [link](https://github.com/sparkfun/ESP32-S2_Thing_Plus/blob/main/Documents/esp32-s2-wroom_esp32-s2-wroom-i_datasheet_en.pdf) | 27 | `f9521959bb886423` | Module pinout, antenna keep-out (Fig. 3, Fig. 8), current consumption (Tables 7–8: 310 mA peak) |
 | [mcu/espressif-esp32-s2-datasheet.pdf](mcu/espressif-esp32-s2-datasheet.pdf) | ESP32-S2 chip | Espressif datasheet v1.1 (2020), SparkFun's copy | [link](https://github.com/sparkfun/ESP32-S2_Thing_Plus/blob/main/Documents/esp32-s2_datasheet_en.pdf) | 45 | `58cc0a634ddb939a` | Strapping pins, GPIO drive strength (Table 10), USB pins 19/20 |
 | [relay/songle-srd-relay.pdf](relay/songle-srd-relay.pdf) | Songle SRD-05VDC-SL-C heater relays | Songle SRD series datasheet (2-page mirror hosted by circuitbasics.com) | [link](https://www.circuitbasics.com/wp-content/uploads/2015/11/SRD-05VDC-SL-C-Datasheet.pdf) | 2 | `9967e9a62db84c57` | Coil table (5 V: 70 Ω, 71.4 mA for the 0.36 W "L" coil), contact ratings, 1500 VAC coil–contact, outline and hole pattern |
+| [thermal-fuse/nec-sefuse-thermal-cutoff.pdf](thermal-fuse/nec-sefuse-thermal-cutoff.pdf) | SEFUSE SF129E heater over-temp cutouts (sold as BOJACK SF129E) | NEC SCHOTT SEFUSE thermal cutoff catalogue, SF/SM series; distributor copy (Selli Fuse). The site answers a scripted download with a JavaScript challenge page, so this copy came from a browser download |  [link](http://www.sellifuse.com/pdf/NEC%20SEFUSE%20Thermal%20Cutoff.pdf) | 16 | `80c1d5b3843ec457` | SF/E standard rating table: SF129E is Tf 133 °C, operating 129 ± 2 °C, holding temperature Th 118 °C, maximum Tm 159 °C, 10 A / 250 VAC. Th is what the firmware `overtemp` limit has to stay below |
 | [discretes/onsemi-pn2222a.pdf](discretes/onsemi-pn2222a.pdf) | PN2222A relay driver (the usual "2N2222" in TO-92) | onsemi PN2222/PN2222A, Rev. 1.1.0 | [link](https://web.archive.org/web/2022id_/https://www.onsemi.com/pdf/datasheet/pn2222a-d.pdf) | 8 | `f1eda8482f5f227f` | TO-92 pin order is E-B-C (flat face toward you, legs down); hFE and V<sub>CE(sat)</sub> tables |
 | [discretes/onsemi-p2n2222a.pdf](discretes/onsemi-p2n2222a.pdf) | P2N2222A, an alternative TO-92 "2N2222" with the REVERSE pin order | onsemi P2N2222A, Rev. 7 | [link](https://cdn.sparkfun.com/datasheets/Components/General/P2N2222A-D.PDF) | 6 | `e8d9dd9bde7e379f` | Pin 1 is the collector: C-B-E. Check which part you have before fitting |
 | [discretes/infineon-irlz44n.pdf](discretes/infineon-irlz44n.pdf) | IRLZ44N valve and fan drivers | Infineon / IR IRLZ44NPbF, PD-94831 | [link](https://www.infineon.com/dgdl/irlz44npbf.pdf?fileId=5546d462533600a40153567217c32129) | 10 | `b4f1361a4486b8ec` | V<sub>GS(th)</sub>, R<sub>DS(on)</sub> at 4 V and 5 V, transfer characteristic (3.3 V drive is not a specified point), TO-220 pin order G-D-S |

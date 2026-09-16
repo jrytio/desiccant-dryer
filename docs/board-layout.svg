@@ -524,11 +524,11 @@
 <circle cx="633" cy="720.08" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
 <text x="640" y="777.88" font-size="9.5" fill="#2C2C2A">Each heater’s switched L lead carries a one-shot thermal fuse (TCO) between “L sw” and</text>
-<text x="640" y="790.7" font-size="9.5" fill="#2C2C2A">the heater — the only protection against a welded contact. The fuses ordered trip at</text>
-<text x="640" y="803.53" font-size="9.5" fill="#2C2C2A">133 °C: clamp them to the pack body next to the DS18B20, NOT to the heater sheath,</text>
-<text x="640" y="816.35" font-size="9.5" fill="#2C2C2A">which runs far hotter and would open one on the first cycle. A TCO holds at roughly Tf</text>
-<text x="640" y="829.18" font-size="9.5" fill="#2C2C2A">− 15–25 °C, i.e. near the 120 °C firmware latch, so check the datasheet and keep the</text>
-<text x="640" y="842" font-size="9.5" fill="#2C2C2A">firmware limit below it. ≥ 2 A / 250 VAC, crimped leads.</text>
+<text x="640" y="790.7" font-size="9.5" fill="#2C2C2A">the heater — the only protection against a welded contact. The parts are SEFUSE</text>
+<text x="640" y="803.53" font-size="9.5" fill="#2C2C2A">SF129E, Tf 133 °C, 10 A / 250 VAC: clamp them to the pack body next to the DS18B20,</text>
+<text x="640" y="816.35" font-size="9.5" fill="#2C2C2A">NOT to the heater sheath, which runs far hotter and would open one on the first cycle.</text>
+<text x="640" y="829.18" font-size="9.5" fill="#2C2C2A">It holds continuously to Th 118 °C and opens at Tf 133 °C, so the firmware limit sits</text>
+<text x="640" y="842" font-size="9.5" fill="#2C2C2A">below Th at 110 °C (v1.2.0). Crimped leads.</text>
 <circle cx="633" cy="774.38" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
 <text x="640" y="857.83" font-size="9.5" fill="#2C2C2A">Before wiring real heaters: make the four heater/valve switches internal: true</text>

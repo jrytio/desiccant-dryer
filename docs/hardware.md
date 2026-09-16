@@ -18,7 +18,7 @@
 | Buck | MP1584 "mini" 24 V → 5 V module (22 × 17 mm, trimmer), or a fixed-5 V module | Feeds board USB pin (through the Schottky) and relay coils; set to 5.00–5.10 V |
 | USB-pin Schottky | SS34 (SMD) or 1N5819 (axial) | Buck 5 V → J-USB → board USB pin |
 | Heaters | 2× 120 VAC, 123 Ω (~117 W) | Existing packs; switched by relay contacts |
-| Heater over-temp cutouts | 2× one-shot thermal fuse (TCO), Tf 133 °C (ordered), ≥ 2 A / 250 VAC | In series with each heater's switched L lead, clamped to the pack body next to the DS18B20. Check its holding temperature against the `overtemp` latch — see [Mains and earthing](#mains-and-earthing) |
+| Heater over-temp cutouts | 2× SEFUSE SF129E one-shot thermal fuse (TCO), Tf 133 °C, Th 118 °C, 10 A / 250 VAC | In series with each heater's switched L lead, clamped to the pack body next to the DS18B20. Its holding temperature sets the `overtemp` latch — see [Mains and earthing](#mains-and-earthing) |
 
 Protoboard build (see [Protoboard layout](#protoboard-layout-proposal)), in
 addition to the parts above:
@@ -288,36 +288,41 @@ not in this layout.
   This is the only protection against a welded relay contact: the firmware
   cannot clear that failure, and the standby pack's heater would otherwise
   stay energised indefinitely.
-- The fuses ordered trip at **133 °C**. That is close enough to the control
-  loop's own numbers to protect the pack, not merely prevent a fire:
-  `regen_temp` defaults to 90 °C and the firmware latches a fault above
-  `overtemp`, 120 °C (see [control-logic.md](control-logic.md)). A stuck-on
-  heater therefore passes the firmware's limit and then opens the fuse,
-  which is the behaviour wanted.
+- The parts are **SEFUSE SF129E**: Tf 133 °C, 10 A / 250 VAC. That is close
+  enough to the control loop's own numbers to protect the pack, not merely
+  prevent a fire: `regen_temp` defaults to 90 °C and the firmware latches a
+  fault above `overtemp` (see [control-logic.md](control-logic.md)). A
+  stuck-on heater therefore passes the firmware's limit and then opens the
+  fuse, which is the behaviour wanted.
 - **Clamp it to the pack body, next to the pack's DS18B20 — not to the
   heater sheath.** The sheath runs far hotter than the pack during a normal
   regen cycle and would open a 133 °C fuse on the first cycle. (A 212 °C
   part would have wanted the opposite mounting; this one does not.)
-- Mind the holding temperature. A TCO holds continuously at roughly Tf
-  minus 15–25 °C, so a 133 °C part holds somewhere near 110–118 °C — at or
-  below the firmware's 120 °C latch. Take the real figure from the
-  datasheet of the parts that arrive. The intended order of protection is:
+- Mind the holding temperature. A TCO holds continuously only some way below
+  Tf. From the SEFUSE datasheet
+  ([datasheets/thermal-fuse/](datasheets/README.md)), the SF129E row reads:
+  functioning temperature Tf 133 °C, operating temperature 129 ± 2 °C,
+  holding temperature Th **118 °C**, maximum temperature limit Tm 159 °C,
+  rated 10 A / 250 VAC. Th is the number the firmware limit has to clear.
+  The intended order of protection is:
 
   ```
-  regen setpoint 90 °C  <  firmware `overtemp` latch  <  fuse holding temp
-                        <  fuse Tf 133 °C  <  whatever damages the pack
+  regen 90 °C  <  `overtemp` 110 °C  <  Th 118 °C  <  Tf 133 °C
+               <  Tm 159 °C  <  whatever damages the pack (unknown)
   ```
 
-  With the stock 120 °C latch and a ~115 °C holding figure that order is
-  violated: the fuse could drift or open before the firmware ever faults,
-  and a one-shot fuse means opening the pack. Either confirm the part holds
-  above 120 °C, or lower `overtemp` to about 110 °C. That is a firmware
-  change and is not in this PR.
+  The stock 120 °C latch did not honour that order: it sat above Th 118 °C,
+  so the one-shot fuse could have drifted or opened before the firmware ever
+  faulted, and replacing it means opening the pack. The firmware default
+  therefore drops to 110 °C in this PR (version 1.2.0), which clears Th by
+  8 °C and sits 20 °C above the 90 °C regen setpoint. These number entities
+  are `restore_value: true`, so a dryer that has already run keeps its
+  stored 120 °C: set `Pack overtemp limit` by hand in Home Assistant.
 - Two measurements, still to be made: the peak temperature at the mounting
   point during a normal regen cycle (must sit below the holding
   temperature), and that a stuck-on heater really carries the pack past
   133 °C. With a pack-body mount the second follows from the firmware
-  already faulting at 120 °C, but measure it rather than assume it. Run it
+  already faulting at 110 °C, but measure it rather than assume it. Run it
   supervised, with a hard power cut-off in reach.
 - Current and voltage: each heater draws 117 W / 120 VAC ≈ 1 A, so confirm
   the fuse is rated at least 2 A at 250 VAC (many are 10 A).
@@ -341,12 +346,12 @@ not in this layout.
   slot along the boundary, or contacts off the protoboard, is needed.
 - The 24 V input has no reverse-polarity protection, fuse or bulk input
   capacitor.
-- The 133 °C thermal fuses are on order, not fitted or verified. Confirm the
-  datasheet holding temperature, measure the regen peak at the mounting
-  point, and decide whether `overtemp` drops from 120 °C to about 110 °C so
-  the firmware always acts before the one-shot fuse does. The pack's own
-  safe maximum temperature, and what the original Azco board/packs
-  provided, are still unknown.
+- The SF129E fuses are on order and not yet fitted. Their ratings are now
+  known from the datasheet, so what is left is measurement: the peak
+  temperature at the mounting point during a normal regen cycle must stay
+  below Th 118 °C, and a stuck-on heater must carry the pack past Tf 133 °C.
+  The pack's own safe maximum temperature, and what the original Azco
+  board/packs provided, are still unknown.
 - Stock DS18B20 probe leads are rated under 100 °C and the SMC VDW22 valve
   is rated 50 °C, both on a 90 °C pack; verify or change parts.
 - The buck module footprint is unverified; measure the module before
