@@ -26,10 +26,15 @@ esphome:
 # The production unit installs its own firmware over HTTPS, which needs a
 # ~16,749-byte contiguous block for a TLS record. Halving the frame buffer
 # frees roughly 29 KB. The cost is that the writer runs twice per redraw;
-# see packages/display-st7789.yaml.
+# see packages/display-st7789.yaml. Task 3 measured a ~700ms total redraw at
+# 50% (bench, no panel attached; SPI clock restored to 40MHz but not
+# re-validated against real glass) against a ~500ms target that was missed,
+# so the interval is doubled to 10s to halve how often the blocking redraw
+# happens rather than speculatively optimising draw_ui(). See
+# .superpowers/sdd/task-3-report.md.
 substitutions:
   display_buffer_size: "50%"
-  display_update_interval: 5s
+  display_update_interval: 10s
 
 packages:
   version: !include ../version.yaml

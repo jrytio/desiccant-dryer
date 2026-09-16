@@ -14,6 +14,10 @@
 # twice, 25% draws four times. Production trades draw time for the heap;
 # the test builds keep 100% because they never self-update. Override both
 # substitutions from the selector.
+#
+# 5s, not the 2s ili9xxx used: a redraw now blocks the loop for longer (the
+# writer runs once per band), and the screen shows slow thermal state that
+# does not need a 2s refresh. Task 3 measured the cost; see docs/releasing.md.
 
 substitutions:
   display_buffer_size: "100%"
@@ -49,6 +53,9 @@ display:
     dc_pin: GPIO9
     reset_pin: GPIO14
     invert_colors: true    # most 1.54" IPS modules need this
+    # ili9xxx defaulted to 40MHz; mipi_spi defaults to 10MHz and the ST7789V
+    # model sets no override, so the driver swap quartered the SPI clock.
+    data_rate: 40MHz
     # RGB 3-3-2, the same grid color_palette: 8BIT used and the grid every
     # designed colour already sits on. Only valid on a single-wire SPI bus.
     color_depth: 8bit
