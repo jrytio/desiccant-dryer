@@ -125,10 +125,24 @@ its heater off.
 | `regen_max_min` | 60 min | Heater safety timeout |
 | `cooldown_temp` | 40 °C | Pack temp below which it may take air |
 | `max_service_min` | 180 min | Fallback swap timer (sensor-drift guard) |
-| `overtemp` | 120 °C | Hard heater cutoff |
+| `overtemp` | 110 °C | Hard heater cutoff |
 
 All defaults are guesses. The old board used a fixed 20 min per pack, so
 regeneration at this heater power is known to complete within 20 min.
+
+`overtemp` dropped from 120 °C to 110 °C in 1.2.0. Each heater carries a
+one-shot thermal fuse (SEFUSE SF129E, Tf 133 °C) clamped to the pack body as
+the backstop for a welded relay contact, and a thermal fuse holds
+continuously only some way below Tf. The firmware limit has to sit under
+that holding temperature so the software always faults first: clearing a
+fault is a button press, replacing a blown fuse means opening the pack.
+Confirm the datasheet holding figure — if it is near 105 °C, this default
+belongs at 100 °C instead. See the heater over-temp cutout notes in
+[hardware.md](hardware.md).
+
+These entities are `restore_value: true`, so a unit that has already run
+keeps the value it stored. The new default only applies to a fresh install:
+on an existing dryer, set `Pack overtemp limit` by hand in Home Assistant.
 
 ## Observability
 

@@ -387,7 +387,7 @@ views:
                               Simulator only, to fake how the packs heat and cool on this test unit. **Remembered after a restart.**
 
                               - **Room temp** (default 25 °C): idle packs cool toward it. The case warms toward it, 8 °C more while a heater is on; the case fan runs above 36.5 °C.
-                              - **Heater top temp** (110 °C): where a heating pack levels off. 130 °C takes the spare past the 120 °C overheat limit.
+                              - **Heater top temp** (110 °C): where a heating pack levels off. 130 °C takes the spare past the 110 °C overheat limit. At the default 110 the pack peaks about 109 °C during a normal recharge, just under the limit, so raising the hold time or the warm-up time can trip a real overheat fault here.
                               - **Warm-up/cool-down time** (5 min): higher is slower. At 5 a pack heats to 90 °C in about 7 minutes and cools to 40 °C in about 9. Near 30 it can warm too slowly and trip "not heating".
 
                       - type: vertical-stack
@@ -611,7 +611,7 @@ views:
 
                               - **Heater time limit** (default 60 min): if the hold has not finished once the heater has run this long, heating stops and the pack moves on to cooling anyway.
                               - **Max time in use** (180 min): a wet spare starts heating at this minus the heater time limit (120 min) even if humidity has not risen, and the packs switch at 180 min once the spare is ready.
-                              - **Overheat limit** (120 °C): a pack above this turns the heaters off and shows a fault. The cycle pauses until you clear it, but air keeps flowing.
+                              - **Overheat limit** (110 °C): a pack above this turns the heaters off and shows a fault. The cycle pauses until you clear it, but air keeps flowing. It sits below the heater thermal fuse's holding temperature so the software always trips before the fuse, which is one-shot.
 
               # ---------------------------------------------------- How to test
               - name: How to test
@@ -631,7 +631,7 @@ views:
                     | Spare not ready in time | **Then gets damper by** 1, speed 60 | Humidity passes 10 % while B is still heating and Status ends "(waiting)". Within about 5 seconds of "B ready", the air switches to B | Then gets damper by back to 0.1, speed back to 1 |
                     | Switch by hand | Speed 10. When Status shows "Air via A, B heating", tap **Switch packs now** and confirm | B's glow goes off, then "Air via B, A wet". B is in use without finishing its recharge. No fault | Speed back to 1 |
                     | Turn the dryer off | Turn **Dryer on** off | "Disabled". The Screen shows both valves closed and nothing heating. Timers go to 0 | Turn it back on: "Air via A, B wet" within 5 seconds |
-                    | Spare overheats | **Heater top temp** 130, speed 60, wait for "B heating" | Once pack B passes 120 °C: Fault badge and "Standby pack overtemp", Spare pack "cooling", air still via A, Pack in use for keeps counting | Heater top temp back to 110, then clear the fault. B cools, shows ready and the cycle carries on. Speed back to 1 |
+                    | Spare overheats | **Heater top temp** 130, speed 60, wait for "B heating" | Once pack B passes 110 °C: Fault badge and "Standby pack overtemp", Spare pack "cooling", air still via A, Pack in use for keeps counting | Heater top temp back to 110, then clear the fault. B cools, shows ready and the cycle carries on. Speed back to 1 |
                     | Heater failure | **Fake heater failure** on, speed 60, wait for humidity to reach 5 % | A few seconds after "B heating" (5 dryer-minutes): fault "Standby heater not heating", Spare pack "wet" | Fake heater failure off, then clear the fault. B heats again (humidity is past 5 %), recharges, cools, then shows ready. If you clear it with the failure still on, it faults again 5 dryer-minutes after "B heating" and never shows ready. Speed back to 1 |
                     | Pack in use overheats | At speed 1, turn on **Set pack temps by hand**, then set **Pack A temp** to 125 | Within 5 seconds: fault "Active pack overtemp", heaters off, air still via A | Pack A temp back to 25 first (or it faults again), then clear the fault, then Set pack temps by hand off |
                     | Case fan | **Room temp** 40, speed 60 | Case temp (Diagnostics tab) passes 36.5 °C and the FAN icon on the Screen turns green | Room temp back to 25: the fan stops once the case is below 33.5 °C and it has run at least 60 seconds. Speed back to 1 |
