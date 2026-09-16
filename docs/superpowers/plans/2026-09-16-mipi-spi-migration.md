@@ -1469,7 +1469,28 @@ Read the `Largest Free Block` diagnostic sensor, either in Home Assistant or fro
 
 Expected: **comfortably above 16,749 B with margin.** Record the actual number. The throwaway 25% build measured 55,296 B; a 50% buffer should land lower but still well clear. If it is under ~25,000 B, report that rather than proceeding to Step 3 — an install that barely fits is not a pass.
 
-- [ ] **Step 3: Install a published release on-device**
+- [ ] **Step 3: Install a published release on-device — read this first, the direction is backwards on purpose**
+
+There is a sequencing trap here. The only published release is **1.1.0**, and
+1.1.0's firmware is exactly the build that has **no updater** (it was removed in
+that version) and still uses `ili9xxx`. This branch builds **1.2.0**. So the
+update entity, which compares versions by string inequality, will see 1.1.0 in
+the manifest, decide it differs from 1.2.0, and offer to install **1.1.0** — a
+downgrade.
+
+**Run it anyway, deliberately.** It exercises precisely the path that has never
+worked on this hardware: manifest fetch over TLS, the ~16,749-byte contiguous
+allocation, the HTTPS download of the `.ota.bin`, the md5 check, the flash and
+the reboot. That is the acceptance criterion, and installing 1.1.0 proves it as
+well as installing anything else would.
+
+What it does NOT prove: that a *future* 1.2.0 → 1.3.0 update works. The
+mechanism is identical, but the forward direction cannot be tested until 1.2.0
+is published. Say so in the report; do not imply the forward path was tested.
+
+Expect the unit to be running the OLD firmware afterwards. **Reflash 1.2.0 over
+USB once the check is done** — the installed 1.1.0 has no updater and cannot
+climb back on its own.
 
 From Home Assistant, install from the `Firmware` update entity.
 
@@ -1484,7 +1505,18 @@ esphome logs esphome/desiccant-dryer.yaml --device /dev/cu.usbserial-210 2>&1 | 
 grep -iE "rollback|Rolled back|boot partition|Firmware Version" /tmp/postupdate.log
 ```
 
-Expected: the running `Firmware Version` matches the installed release, and **no** `OTA rollback detected! Rolled back from partition 'app1'`. A rollback is a **failure**, not a success — report it as such.
+Expected: the running `Firmware Version` reads **1.1.0** (the release that was
+installed, not this branch's 1.2.0 — see Step 3), and **no**
+`OTA rollback detected! Rolled back from partition 'app1'`. A rollback is a
+**failure**, not a success — report it as such.
+
+Then reflash this branch's 1.2.0 over USB before continuing, so the board is
+back on the firmware under test:
+
+```bash
+esptool --chip esp32s2 --port /dev/cu.usbserial-210 --baud 460800 write_flash 0x0 \
+  esphome/.esphome/build/desiccant-dryer/build/firmware.factory.bin
+```
 
 - [ ] **Step 5: Confirm the control loop is not starved**
 
@@ -1541,7 +1573,8 @@ driver and with a partial buffer.
 - Largest Free Block (production, 50% buffer):
 - Redraw, per-band draw / SPI write / total:
 - `took a long time for an operation` warnings after update:
-- On-device install:
+- On-device install (1.2.0 -> published 1.1.0, a deliberate downgrade; the
+  forward direction cannot be tested until 1.2.0 is published):
 - Rollback after reboot:
 - Physical panel checked by the user: **NOT DONE — no panel on the bench board**
 
