@@ -4,9 +4,11 @@ The visual and hands-on checks for the ESP32 desiccant dryer controller that
 replaces the original control board in an Azco VMD-08 dryer. Every `inspect`
 row in `docs/failure-modes.md` appears here exactly once (the ID in bold is
 the failure mode the check guards against), expanded into what to look at and
-what "pass" means. Nothing here is a runtime test; those live in the verify
-suite. Adding an `inspect` row to the catalogue means adding its item here in
-the same change.
+what "pass" means. A few bench and live rows (for example G-08, A-13,
+A-01/A-19 and the buck preset) are included too, because a human does them
+with a meter at the same visit; they are the commissioning subset, and the
+automated verify suite still owns them. Adding an `inspect` row to the
+catalogue means adding its item here in the same change.
 
 Work the stages in order. Stages 1 to 5 are done with **mains disconnected
 and the 24 V supply off**. Stage 6 is the first energised check. Stage 7 is
