@@ -1,7 +1,7 @@
 id: T-B20
 covers: [B-20, J-09]
 type: lint
-status: red            # max_value is 125 today, above the SF129E holding temperature of 118 C
+status: green          # max_value is 118, the SF129E holding temperature (issue #34)
 harness: ci-lint
 selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
 assert:

@@ -143,8 +143,8 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | B-16 | Case DS18B20 reports NaN; the `Case Fan Thermostat` climate component's behaviour on an unavailable sensor is undefined in `base.yaml` and no fallback forces the fan on, so it may never start. E-03 is the same probe reading plausibly low instead | 🟠 P1 | FW | virtual | ✱ |
 | B-17 | DS18B20 counterfeit with poor accuracy above 85 °C; regen hold judged wrongly | 🔵 P3 | HW | bench |  |
 | B-18 | Ambient above `cooldown_temp` (40 °C); standby never becomes READY, max-service fallback never fires (documented open item, see I-08) | 🟡 P2 | FW | virtual |  |
-| B-19 | A `restore_value: true` tunable keeps its old, less safe value through a firmware upgrade: a running unit stays at `overtemp` 120 °C after 1.2.0 ships 110 °C, above the SF129E's 118 °C holding temperature. Fixed only by re-entering it in Home Assistant; applies to any tunable default change | 🟠 P1 | CFG | bench |  |
-| B-20 | `overtemp` set by hand up to its 125 °C maximum, above the fuse holding temperature | 🟠 P1 | CFG | virtual |  |
+| B-19 | A `restore_value: true` tunable keeps its old value through a firmware upgrade that lowers the default: only `overtemp` is re-clamped on boot, and only to its maximum, so every other tunable still needs re-entering in Home Assistant | 🟠 P1 | CFG | bench |  |
+| B-20 | `overtemp` set by hand above the SF129E's 118 °C holding temperature, so the one-shot fuse opens before the firmware faults | 🟠 P1 | CFG | virtual |  |
 | B-21 | `regen_temp` set at or above `overtemp`; every regen faults, or overtemp check races the hold timer | 🔵 P3 | CFG | virtual |  |
 | B-22 | Both packs' probes fail while one is HEATING; heater cut after 25 s but no fault latched, silent stall | 🟡 P2 | FW | virtual |  |
 | B-23 | Temperature rises on the *active* pack while the standby heater is on (cross-talk, wrong valve routing hot purge air); no plausibility check compares the two packs | 🟠 P1 | FW | virtual | ✱ |
@@ -318,7 +318,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | J-06 | Sensor id renamed in `hw-real.yaml` without base.yaml following; config fails, or falls back to a template with NaN | 🟡 P2 | CFG | inspect |  |
 | J-07 | Interval changed from 5 s; fault timing constants (300 s, 5 ticks) no longer mean what the docs say | 🟡 P2 | CFG | inspect |  |
 | J-08 | NVS full or erased on a flash update; all tunables back to defaults mid-run, no notification | 🔵 P3 | FW | bench |  |
-| J-09 | `number` entity min/max allow physically unsafe values (`overtemp` up to 125 °C — above the SF129E's 118 °C holding temperature — `regen_hold_min` down to 0); no firmware validation narrows these ranges below what the datasheet allows | 🟠 P1 | CFG | virtual | ✱ |
+| J-09 | `number` entity min/max allow physically unsafe values (`regen_hold_min` down to 0, `regen_temp` above `overtemp`); only `overtemp` has been bounded by its datasheet limit, and no firmware validation checks one tunable against another | 🟠 P1 | CFG | virtual | ✱ |
 | J-10 | Two controllers with the same hostname/API key on one network; HA writes tunables to the wrong unit | 🟡 P2 | OPS | bench |  |
 | J-11 | Persisted globals are restored by key with no schema version, so renumbering `standby_state` or changing a counter's units in a later firmware silently misreads stored state after an update | 🟡 P2 | CFG | inspect | ✱ |
 

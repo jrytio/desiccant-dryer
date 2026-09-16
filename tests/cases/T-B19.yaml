@@ -1,0 +1,17 @@
+id: T-B19
+covers: [B-19]
+type: logic
+status: green
+harness: host
+# Only the in-range half is expressed here. The other half of the row — a
+# stored value ABOVE the maximum being re-clamped on boot — cannot be set up
+# through the API, because the number entity now rejects anything over 118.
+# Reaching it needs a pre-seeded NVS value, which no harness can write yet;
+# see the note on the T-B19 row in docs/verification-plan.md.
+setup:
+  Dryer Enabled: on
+steps:
+  - set: {Pack overtemp limit: 115}
+  - restart:
+  - expect:
+      Pack overtemp limit: 115

@@ -355,9 +355,13 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
   so the one-shot fuse could have drifted or opened before the firmware ever
   faulted, and replacing it means opening the pack. The firmware default
   therefore drops to 110 °C in this PR (version 1.2.0), which clears Th by
-  8 °C and sits 20 °C above the 90 °C regen setpoint. These number entities
-  are `restore_value: true`, so a dryer that has already run keeps its
-  stored 120 °C: set `Pack overtemp limit` by hand in Home Assistant.
+  8 °C and sits 20 °C above the 90 °C regen setpoint. In 1.2.1 the entity's
+  maximum drops to 118 °C as well, so Th can no longer be entered by hand.
+  These number entities are `restore_value: true`, so a dryer that has
+  already run keeps its stored value; a stored `Pack overtemp limit` above
+  118 °C is re-clamped to 118 °C on boot, but anything at or below it —
+  including a stored 115 °C — survives, so returning to the 110 °C default
+  is still a manual change in Home Assistant.
 - Two measurements, still to be made: the peak temperature at the mounting
   point during a normal regen cycle (must sit below the holding
   temperature), and that a stuck-on heater really carries the pack past

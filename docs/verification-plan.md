@@ -39,10 +39,39 @@ agent can add one without touching the runner. The runner exits non-zero
 if any `green` case fails or any `red` case unexpectedly passes (that
 means a gap closed and the case status must be updated to `green`).
 
-**Config lint.** `tests/lint_config.py` (to be written) runs
-`esphome config` for the production and hw-test selectors and asserts the
-invariants listed in the `lint` tests. It runs in `build.yml` beside the
-compile jobs.
+**Config lint.** `tests/lint_config.py` runs `esphome config` for each
+case's `selectors` and evaluates its `assert` lines against the dump. It
+runs every case file with `harness: ci-lint`, and exits non-zero if a
+`green` case fails or a `red` case passes. It runs in the `lint-config` job
+in `build.yml`, beside the compile jobs, inside the same ESPHome image.
+
+A `lint` case adds `selectors` and `assert` instead of `setup`/`steps`:
+
+```yaml
+# tests/cases/T-B20.yaml
+id: T-B20
+covers: [B-20, J-09]
+type: lint
+status: green
+harness: ci-lint
+selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
+assert:
+  - number overtemp has max_value <= 118
+  - number overtemp has initial_value <= max_value
+```
+
+Assertion lines are joined with ` and ` and take one of three shapes, all
+resolved against the `id:` in the config dump:
+
+| Shape | Example |
+|---|---|
+| `<domain> <id> has <key> [<op>] <value>` | `number overtemp has max_value <= 118` |
+| `every <domain> in [<ids>] has <key> [<op>] <value>` | `every switch in [heater_a, heater_b] has restore_mode ALWAYS_OFF` |
+| `<id>.<key> includes <id>` | `heater_a.interlock includes heater_b` |
+
+`<op>` is `<=`, `>=`, `<`, `>` or omitted for equality. A `<value>` that
+names another key of the same entity compares the two (`initial_value <=
+max_value`).
 
 **Needed before the host runner can run in CI**: a headless variant of the
 host build (the current one opens an SDL window), and the plant-model
@@ -143,8 +172,8 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-B16 | detect | B-16 | host | `Sim Case Probe Fault` on (case_temp NaN) while ambient is warm enough that cooling would normally be called for | `case_temp` NaN forces the fan on within 2 ticks (fail-safe) and logs a warning | red |
 | T-B17 | hil | B-17 | bench | Bench rig: substitute a counterfeit DS18B20 above 85C and compare its reading against a reference thermometer | accuracy degrades enough to misjudge the regen hold as complete early or late | later |
 | T-B18 | infer | B-18, I-08 | host | `Sim Ambient Temp` set to 45 (above `cooldown_temp` 40) for the full test; let standby complete HEATING and enter COOLING | standby stuck below READY with service past `max_service_min` forces a swap with a warning or raises `Fault`; the active pack never runs indefinitely | red |
-| T-B19 | logic | B-19 | host | Set `Pack overtemp limit` to 120 via the API (simulating a unit that ran under the old default), then reboot | value persists at 120 through reboot (`restore_value: true`); no automatic re-clamp to the new 110C default occurs | green |
-| T-B20 | lint | B-20, J-09 | ci-lint | Script parses `overtemp` number's `min_value`/`max_value` from `esphome config` output | `Pack overtemp limit` `max_value` is at or below 118 in the config dump, so a value above the SF129E holding temperature cannot be set | red |
+| T-B19 | logic | B-19 | host | Write a stored `Pack overtemp limit` above the 118C maximum (a unit commissioned under the 125C range), then reboot | the second `on_boot` block re-clamps the restored value to 118C and logs a warning; a stored value inside the range (say 115C) still survives the reboot unchanged. `tests/cases/T-B19.yaml` covers only the in-range half: seeding a stored value above the maximum needs an NVS write no harness can do yet | green |
+| T-B20 | lint | B-20, J-09 | ci-lint | Script parses `overtemp` number's `min_value`/`max_value` from `esphome config` output | `Pack overtemp limit` `max_value` is at or below 118 in the config dump, so a value above the SF129E holding temperature cannot be set | green |
 | T-B21 | logic | B-21 | host | Set `Regen temp` to 115 (above `overtemp` 110) via the API, run standby A into HEATING | fault 1 (active-pack unrelated) does not apply; standby's own overtemp path is not separately checked here, so it heats until `overtemp` trips fault 2 instead of ever reaching a "regen complete" hold | green |
 | T-B22 | logic | B-22 | host | `Sim Probe A Fault` and `Sim Probe B Fault` both on while pack A is standby HEATING; wait 30s | heater A cut after the tolerance window elapses; `Fault Code` remains 0, no fault latched despite the stall | green |
 | T-B23 | infer | B-23 | host | `Sim Manual Temps` on, raise `Sim Pack A Temp` while pack A is active (heater off) and pack B is standby HEATING | active pack rising more than 5 C over 5 sim min with its heater commanded off raises `Fault` and turns both heaters off | red |

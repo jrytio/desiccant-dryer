@@ -32,6 +32,22 @@ env:
 #   rebuilds ESP-IDF; that is expected, and the ccache absorbs most of it.
 # The container writes both as root; they are chowned back before saving.
 jobs:
+  lint-config:
+    name: config lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Provide dummy secrets
+        run: cp esphome/secrets.ci.yaml esphome/secrets.yaml
+      # No toolchain or build cache: `esphome config` only validates YAML, so
+      # this finishes in seconds and gates the much slower compile jobs' worth
+      # of design invariants (tests/cases/*.yaml with `harness: ci-lint`).
+      - name: Run the ci-lint verification cases
+        run: |
+          docker run --rm -v "$PWD:/config" -w /config \
+            --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
+            -c 'python3 tests/lint_config.py'
+
   compile:
     name: compile ${{ matrix.variant }}
     runs-on: ubuntu-latest
