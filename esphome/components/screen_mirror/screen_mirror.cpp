@@ -1,43 +1,23 @@
 #include "screen_mirror.h"
 
 #include <esp_http_server.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 
 #include <algorithm>
-#include <cinttypes>
 #include <cstring>
 
-#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
+#include "esphome/components/dryer_ui/display_ui.h"
 
 namespace esphome {
 namespace screen_mirror {
 
 static const char *const TAG = "screen_mirror";
 
-// A redraw takes a few hundred milliseconds; one still running after this
-// long means something is wrong, and the fetch gives up rather than hang.
-static const uint32_t DRAW_WAIT_MS = 2000;
+// Rows rendered per pass. 24 rows x 240 px = 5,760 bytes, and 240 divides
+// evenly by 24 so no pass is short.
+static const int BAND_ROWS = 24;
 
 namespace {
-
-// The driver keeps its frame buffer, colour mode and writer protected. A
-// class derived from it may form pointers to those members and apply them to
-// any driver instance. Nothing is instantiated and no header is patched.
-struct Peek : public ili9xxx::ILI9XXXDisplay {
-  static uint8_t *buffer(ili9xxx::ILI9XXXDisplay *d) { return d->*(&Peek::buffer_); }
-  static ili9xxx::ILI9XXXColorMode mode(ili9xxx::ILI9XXXDisplay *d) { return d->*(&Peek::buffer_color_mode_); }
-  static display::display_writer_t &writer(ili9xxx::ILI9XXXDisplay *d) { return d->*(&Peek::writer_); }
-};
-
-// Counts a request as streaming for as long as it is in scope, whichever way
-// handleRequest() returns.
-struct FetchGuard {
-  explicit FetchGuard(std::atomic<int> &count) : count_(count) { count_.fetch_add(1); }
-  ~FetchGuard() { count_.fetch_sub(1); }
-  std::atomic<int> &count_;
-};
 
 // CRC-32 as used by PNG and zlib (reflected, polynomial 0xEDB88320). The
 // table is built at compile time and lives in flash.
@@ -102,40 +82,15 @@ bool send_chunk(httpd_req_t *req, const uint8_t *data, size_t len) {
 void ScreenMirror::setup() {
   // One PNG scanline: the filter byte (always 0, "None") followed by the row.
   this->row_.assign(static_cast<size_t>(this->display_->get_native_width()) + 1, 0);
-  // Take over the display's writer so redraws and fetches take turns (draw_()).
-  display::display_writer_t &writer = Peek::writer(this->display_);
-  this->writer_ = std::move(writer);
-  writer = display::display_writer_t([this](display::Display &it) { this->draw_(it); });
+  this->band_.assign(static_cast<size_t>(this->display_->get_native_width()) * BAND_ROWS, 0);
   this->base_->init();
   this->base_->add_handler(this);
 }
 
-// Runs on the main loop inside the display's update(). drawing_ is raised
-// before fetches_ is read, and handleRequest() raises fetches_ before reading
-// drawing_, so of a redraw and a fetch that start together at least one sees
-// the other and the buffer is never streamed mid-redraw.
-void ScreenMirror::draw_(display::Display &it) {
-  this->drawing_.store(true);
-  if (this->fetches_.load() > 0) {
-    this->drawing_.store(false);
-    this->redraw_pending_.store(true);
-    return;
-  }
-  this->writer_(it);
-  this->drawing_.store(false);
-}
-
-void ScreenMirror::loop() {
-  // Run a redraw skipped during a fetch as soon as nothing is streaming.
-  if (this->redraw_pending_.load() && this->fetches_.load() == 0) {
-    this->redraw_pending_.store(false);
-    this->display_->update();
-  }
-}
-
 void ScreenMirror::dump_config() {
-  ESP_LOGCONFIG(TAG, "Screen mirror:\n  Path: %s\n  Frame: %dx%d, 8-bit indexed PNG", this->path_.c_str(),
-                this->display_->get_native_width(), this->display_->get_native_height());
+  ESP_LOGCONFIG(TAG, "Screen mirror:\n  Path: %s\n  Frame: %dx%d, 8-bit indexed PNG\n  Band rows: %d",
+                this->path_.c_str(), this->display_->get_native_width(), this->display_->get_native_height(),
+                BAND_ROWS);
 }
 
 bool ScreenMirror::canHandle(AsyncWebServerRequest *request) const {
@@ -147,32 +102,6 @@ bool ScreenMirror::canHandle(AsyncWebServerRequest *request) const {
 
 void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
   httpd_req_t *req = *request;
-  uint8_t *buf = Peek::buffer(this->display_);
-  const bool usable = buf != nullptr && Peek::mode(this->display_) == ili9xxx::BITS_8 &&
-                      this->display_->get_rotation() == display::DISPLAY_ROTATION_0_DEGREES;
-  if (!usable) {
-    if (buf == nullptr) {
-      ESP_LOGD(TAG, "Frame buffer not allocated yet");
-    } else if (!this->warned_) {
-      ESP_LOGW(TAG, "Frame buffer not usable: needs color_palette 8BIT and rotation 0");
-      this->warned_ = true;
-    }
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen_mirror: needs an 8-bit, unrotated frame buffer");
-    return;
-  }
-
-  // Let a redraw in progress finish. From here until return, draw_() skips
-  // redraws and loop() runs them once the fetch is done.
-  FetchGuard guard(this->fetches_);
-  const uint32_t wait_start = millis();
-  while (this->drawing_.load()) {
-    if (millis() - wait_start > DRAW_WAIT_MS) {
-      ESP_LOGW(TAG, "Display still drawing after %" PRIu32 " ms; request dropped", DRAW_WAIT_MS);
-      httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen_mirror: display still drawing");
-      return;
-    }
-    vTaskDelay(pdMS_TO_TICKS(10));
-  }
 
   const uint32_t w = static_cast<uint32_t>(this->display_->get_native_width());
   const uint32_t h = static_cast<uint32_t>(this->display_->get_native_height());
@@ -211,10 +140,17 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
       !send_chunk(req, idat_head, sizeof(idat_head)))
     return;
 
+  // Re-render the UI into our own band buffer, a band at a time, from the
+  // state the panel captured on its last redraw.
+  BandDisplay band(static_cast<int>(w), static_cast<int>(h), this->band_.data(), BAND_ROWS);
+  const dryer_ui::UiState &state = dryer_ui::last_state();
+  const dryer_ui::UiAssets &assets = dryer_ui::last_assets();
+
   uint32_t crc = crc32_update(0xFFFFFFFFu, idat_head + 4, 4 + 2);  // "IDAT" + zlib header
   uint32_t adler_a = 1, adler_b = 0;
   uint32_t y = 0;
   uint8_t *row = this->row_.data();  // row[0] is the filter byte, always 0
+  int rendered_to = -1;              // last row already rendered into band_
   for (uint32_t blk = 0; blk < blocks; blk++) {
     const uint32_t rows = std::min(rows_per_block, h - y);
     const uint16_t len = static_cast<uint16_t>(rows * row_len);
@@ -226,7 +162,15 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
     if (!send_chunk(req, block_head, 5))
       return;
     for (uint32_t r = 0; r < rows; r++, y++) {
-      memcpy(row + 1, buf + static_cast<size_t>(y) * w, w);
+      if (static_cast<int>(y) > rendered_to) {
+        const int start = static_cast<int>(y) / BAND_ROWS * BAND_ROWS;
+        std::fill(this->band_.begin(), this->band_.end(), 0);
+        band.set_band_start(start);
+        dryer_ui::draw_ui(band, state, assets);
+        rendered_to = start + BAND_ROWS - 1;
+      }
+      const size_t off = static_cast<size_t>(static_cast<int>(y) % BAND_ROWS) * w;
+      memcpy(row + 1, this->band_.data() + off, w);
       crc = crc32_update(crc, row, row_len);
       for (uint32_t i = 0; i < row_len; i++) {
         adler_a += row[i];

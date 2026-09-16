@@ -1,36 +1,64 @@
 #pragma once
 
-#include <atomic>
 #include <string>
 #include <vector>
 
 #include "esphome/core/component.h"
+#include "esphome/core/color.h"
 #include "esphome/components/display/display.h"
-#include "esphome/components/ili9xxx/ili9xxx_display.h"
+#include "esphome/components/display/display_color_utils.h"
 #include "esphome/components/web_server_base/web_server_base.h"
 
 namespace esphome {
 namespace screen_mirror {
 
-// Answers GET <path> with the display's frame buffer as an 8-bit indexed PNG
-// (stored deflate blocks, so no compressor and no frame copy). Rows are
-// streamed with chunked sends; the only RAM is one scanline allocated at
-// setup, and the palette and CRC table live in flash.
+// An in-memory Display that holds only a horizontal band of the frame and
+// stores each pixel as an RGB332 index, which is the panel's own 8-bit
+// format. draw_ui() is called once per band; pixels outside the current
+// band are discarded. Same idea as packages/preview_capture.h on the host
+// build, but a band at a time so the RAM cost is a few kilobytes.
+class BandDisplay : public display::Display {
+ public:
+  BandDisplay(int w, int h, uint8_t *band, int band_rows) : w_(w), h_(h), band_rows_(band_rows), band_(band) {}
+
+  display::DisplayType get_display_type() override { return display::DISPLAY_TYPE_COLOR; }
+  void update() override {}
+
+  // Select the band starting at row `start`; the caller clears it first.
+  void set_band_start(int start) { this->start_ = start; }
+
+  void draw_pixel_at(int x, int y, Color color) override {
+    if (x < 0 || x >= this->w_ || y < this->start_ || y >= this->start_ + this->band_rows_)
+      return;
+    this->band_[static_cast<size_t>(y - this->start_) * this->w_ + x] = display::ColorUtil::color_to_332(color);
+  }
+
+ protected:
+  int get_width_internal() override { return this->w_; }
+  int get_height_internal() override { return this->h_; }
+
+  int w_, h_, band_rows_, start_{0};
+  uint8_t *band_;
+};
+
+// Answers GET <path> with the current screen as an 8-bit indexed PNG
+// (stored deflate blocks, so no compressor and no full frame in RAM).
 //
-// A redraw clears the buffer and repaints it over a few hundred milliseconds,
-// so a fetch that overlapped one would stream a half-drawn frame. setup()
-// wraps the display's writer so the two take turns: a fetch waits for a
-// redraw in progress to finish, and a redraw that falls due during a fetch
-// is skipped and run from loop() once no fetch is streaming.
+// The frame is re-rendered on demand into BandDisplay rather than read out
+// of the display driver: with a partial driver buffer there is no full
+// frame to read, and reaching into driver internals tied this component to
+// one driver's private members. draw_ui() is a pure function of
+// dryer_ui::last_state() and last_assets(), which the ui_draw script
+// refreshes on every panel redraw, so the served image is the state as of
+// the last redraw.
 class ScreenMirror : public Component, public AsyncWebHandler {
  public:
   explicit ScreenMirror(web_server_base::WebServerBase *base) : base_(base) {}
 
-  void set_display(ili9xxx::ILI9XXXDisplay *display) { this->display_ = display; }
+  void set_display(display::Display *display) { this->display_ = display; }
   void set_path(const std::string &path) { this->path_ = path; }
 
   void setup() override;
-  void loop() override;
   void dump_config() override;
   float get_setup_priority() const override { return setup_priority::LATE; }
 
@@ -38,17 +66,11 @@ class ScreenMirror : public Component, public AsyncWebHandler {
   void handleRequest(AsyncWebServerRequest *request) override;
 
  protected:
-  void draw_(display::Display &it);
-
   web_server_base::WebServerBase *base_;
-  ili9xxx::ILI9XXXDisplay *display_{nullptr};
+  display::Display *display_{nullptr};
   std::string path_;
-  std::vector<uint8_t> row_;
-  display::display_writer_t writer_{};       // the display's own writer, run by draw_()
-  std::atomic<bool> drawing_{false};         // draw_() is running the writer (main loop)
-  std::atomic<int> fetches_{0};              // requests streaming the buffer (web server task)
-  std::atomic<bool> redraw_pending_{false};  // a redraw was skipped during a fetch
-  bool warned_{false};
+  std::vector<uint8_t> row_;   // one PNG scanline: filter byte + pixels
+  std::vector<uint8_t> band_;  // BAND_ROWS scanlines of RGB332 indices
 };
 
 }  // namespace screen_mirror
