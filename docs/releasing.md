@@ -61,28 +61,31 @@ USB and later ones from ESPHome Device Builder over WiFi. Test builds
    it has no network and enter the WiFi there.
 2. Install the ESPHome Device Builder add-on in Home Assistant if it is not
    there. The dryer shows up as discovered; click **Adopt**. Device Builder
-   writes `desiccant-dryer.yaml` with a new API key. The released image has
-   no OTA server, so add one next to the generated `api:` block. On ESPHome
-   2026.9 or newer, let it reuse the API encryption key, which costs no
-   extra flash, RAM or secret:
+   writes a short `desiccant-dryer.yaml` with the WiFi secrets and nothing
+   else: no `api:` block (the key is provisioned by Home Assistant at
+   runtime through `api: encryption: {}` in `base.yaml`) and no `ota:`
+   block. The released image has no OTA server, so add one with its own
+   encryption key:
+
+   ```bash
+   openssl rand -base64 32
+   ```
 
    ```yaml
    ota:
      - platform: esphome
-       encryption: {}
+       encryption:
+         key: "<the generated key>"
    ```
 
-   On older ESPHome that option does not exist; use a password instead and
-   put the secret in Device Builder's secrets:
+   `encryption: {}` (inherit the API key) does **not** work here: ESPHome
+   rejects it because a runtime-provisioned API key does not exist at build
+   time. A `password:` instead of a key also works, but ESPHome then warns
+   that whoever provisions the API key can upload firmware without it, and
+   a password costs about 3.5 KB of flash; prefer the key.
 
-   ```yaml
-   ota:
-     - platform: esphome
-       password: !secret desiccant_dryer_ota_password
-   ```
-
-   ESPHome 2026.9 warns that OTA encryption does not cover the web_server
-   OTA platform. It does not apply here: `web_server: ota: false` compiles
+   ESPHome warns that OTA encryption does not cover the web_server OTA
+   platform. It does not apply here: `web_server: ota: false` compiles
    `/update` to refuse uploads unless the setup access point is active.
 3. Install the adopted YAML **over USB once** (Device Builder → Install →
    Plug into the computer running ESPHome Device Builder, or download the
@@ -118,6 +121,16 @@ the adopted YAML (1.0.x cannot install anything over WiFi).
 
 ## Notes
 
+- ESPHome 2026.9.0 or newer is required to build the production and adopt
+  selectors (`min_version` in `packages/production.yaml`); CI and the
+  release workflow pin that version. Homebrew may still ship an older
+  ESPHome, in which case build the production image with the Docker image
+  (`ghcr.io/esphome/esphome:2026.9.0`) or pipx. The bench builds (virtual,
+  host, hw-test, scenarios) carry no floor.
+- `provisioning:` (ESPHome 2026.9) closes the window in which the API key
+  may be set. It is not used here: adoption can happen days after the unit
+  is flashed, and closing the window would also shut down the setup access
+  point, which may be the unit's only way back onto a network.
 - Release binaries carry exactly the version in `version.yaml`. There is no
   `-dev` suffix. A test flash can relabel it, but with the adopt selector
   `ui_ref` and `display_assets` are derived from `version`, so pin them to

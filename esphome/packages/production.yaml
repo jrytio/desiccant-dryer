@@ -15,6 +15,14 @@
 #         would not resolve from a remote package either; the test builds
 #         keep screen-mirror.yaml.
 
+# The owner's adopted YAML needs 2026.9's `ota: encryption: key:` (an
+# explicit OTA key: the API key is provisioned at runtime and cannot be
+# inherited at build time), and the release images should match what an
+# owner's Device Builder compiles. Only the production and adopt selectors
+# carry this floor; the bench builds still run on an older CLI.
+esphome:
+  min_version: 2026.9.0
+
 packages:
   version: !include ../version.yaml
   base: !include base.yaml
