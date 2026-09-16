@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,16 @@ class BandDisplay : public display::Display {
 
   // Select the band starting at row `start`; the caller clears it first.
   void set_band_start(int start) { this->start_ = start; }
+
+  // Display::fill() is not overridden by default, so the base class would
+  // loop all get_width()xget_height() pixels through the virtual
+  // draw_pixel_at() -- for the full 240x240 panel that is ~57,600 calls to
+  // fill a 240x24 band, with ~87% of them clipped and discarded. Fill just
+  // the band directly instead.
+  void fill(Color color) override {
+    std::fill(this->band_, this->band_ + static_cast<size_t>(this->band_rows_) * this->w_,
+              display::ColorUtil::color_to_332(color));
+  }
 
   void draw_pixel_at(int x, int y, Color color) override {
     if (x < 0 || x >= this->w_ || y < this->start_ || y >= this->start_ + this->band_rows_)

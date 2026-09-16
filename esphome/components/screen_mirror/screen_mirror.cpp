@@ -134,6 +134,26 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
   idat_head[8] = 0x78;  // zlib: deflate, 32 KB window
   idat_head[9] = 0x01;  // no preset dictionary, fastest level
 
+  // Snapshot by value: ui_draw mutates the UiState singleton in place on the
+  // main loop while this handler (on the httpd task) walks it across ~10
+  // band renders. A by-reference binding would risk a use-after-free if any
+  // of its std::string members reallocate mid-render, and would also let a
+  // fetch straddle a state change and render a torn frame. Assets are left
+  // by reference: they hold only pointers, which are stable once set.
+  const dryer_ui::UiState state = dryer_ui::last_state();
+  const dryer_ui::UiAssets &assets = dryer_ui::last_assets();
+
+  // Guard against the boot window before the panel's first redraw: last_assets()
+  // is a static UiAssets{} until then, so every pointer -- bg included, and it's
+  // the first one draw_ui() dereferences -- is null. This must run before any
+  // response bytes (including the PNG signature/IHDR) go out, since
+  // httpd_resp_send_err() can't recall those once chunks have been sent.
+  if (assets.bg == nullptr) {
+    ESP_LOGD(TAG, "Refusing /%s: screen has not been drawn yet", this->path_.c_str());
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "screen has not been drawn yet");
+    return;
+  }
+
   httpd_resp_set_type(req, "image/png");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   if (!send_chunk(req, head, sizeof(head)) || !send_chunk(req, PLTE.bytes, PLTE_LEN) ||
@@ -143,8 +163,6 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
   // Re-render the UI into our own band buffer, a band at a time, from the
   // state the panel captured on its last redraw.
   BandDisplay band(static_cast<int>(w), static_cast<int>(h), this->band_.data(), BAND_ROWS);
-  const dryer_ui::UiState &state = dryer_ui::last_state();
-  const dryer_ui::UiAssets &assets = dryer_ui::last_assets();
 
   uint32_t crc = crc32_update(0xFFFFFFFFu, idat_head + 4, 4 + 2);  // "IDAT" + zlib header
   uint32_t adler_a = 1, adler_b = 0;
@@ -164,8 +182,13 @@ void ScreenMirror::handleRequest(AsyncWebServerRequest *request) {
     for (uint32_t r = 0; r < rows; r++, y++) {
       if (static_cast<int>(y) > rendered_to) {
         const int start = static_cast<int>(y) / BAND_ROWS * BAND_ROWS;
-        std::fill(this->band_.begin(), this->band_.end(), 0);
         band.set_band_start(start);
+        // No explicit clear here: draw_ui() always opens with it.fill(BLACK),
+        // which now goes through BandDisplay::fill() and clears exactly this
+        // band directly. A second clear here would just redo that work on
+        // every one of the ~10 bands per fetch -- the redundant memset this
+        // component's earlier revision relied on before BandDisplay had its
+        // own fill() override.
         dryer_ui::draw_ui(band, state, assets);
         rendered_to = start + BAND_ROWS - 1;
       }
