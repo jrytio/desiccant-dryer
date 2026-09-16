@@ -60,8 +60,19 @@ USB and later ones from ESPHome Device Builder over WiFi. Test builds
    it has no network and enter the WiFi there.
 2. Install the ESPHome Device Builder add-on in Home Assistant if it is not
    there. The dryer shows up as discovered; click **Adopt**. Device Builder
-   writes `desiccant-dryer.yaml` with a new API key. Add an OTA password to
-   it, next to the generated `api:` block:
+   writes `desiccant-dryer.yaml` with a new API key. The released image has
+   no OTA server, so add one next to the generated `api:` block. On ESPHome
+   2026.9 or newer, let it reuse the API encryption key, which costs no
+   extra flash, RAM or secret:
+
+   ```yaml
+   ota:
+     - platform: esphome
+       encryption: {}
+   ```
+
+   On older ESPHome that option does not exist; use a password instead and
+   put the secret in Device Builder's secrets:
 
    ```yaml
    ota:
@@ -69,7 +80,9 @@ USB and later ones from ESPHome Device Builder over WiFi. Test builds
        password: !secret desiccant_dryer_ota_password
    ```
 
-   and put that secret in Device Builder's secrets.
+   ESPHome 2026.9 warns that OTA encryption does not cover the web_server
+   OTA platform. It does not apply here: `web_server: ota: false` compiles
+   `/update` to refuse uploads unless the setup access point is active.
 3. Install the adopted YAML **over USB once** (Device Builder → Install →
    Plug into the computer running ESPHome Device Builder, or download the
    binary and flash it with web.esphome.io). The released image has no OTA
@@ -105,8 +118,15 @@ the adopted YAML (1.0.x cannot install anything over WiFi).
 ## Notes
 
 - Release binaries carry exactly the version in `version.yaml`. There is no
-  `-dev` suffix; a test flash can override it with
-  `esphome -s version <label> run ...`.
+  `-dev` suffix. A test flash can relabel it, but with the adopt selector
+  `ui_ref` and `display_assets` are derived from `version`, so pin them to
+  the real tag as well or the build looks for a tag that does not exist:
+
+  ```bash
+  esphome -s version 1.1.0-test -s ui_ref v1.1.0 \
+    -s display_assets https://raw.githubusercontent.com/jrytio/desiccant-dryer/v1.1.0/esphome/assets/display \
+    run --device <board> desiccant-dryer.yaml
+  ```
 - The first 1.x releases log at DEBUG (set in `packages/production.yaml`)
   so the unit can be brought up and tested remotely through `esphome logs`,
   the web server on port 80 and Home Assistant; a later release lowers it.
