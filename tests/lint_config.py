@@ -33,7 +33,13 @@ def dump(selector):
     )
     if out.returncode != 0:
         raise SystemExit(f"esphome config {selector} failed:\n{out.stdout}{out.stderr}")
-    return yaml.load(out.stdout, Loader=Loader)
+    # esphome logs to stderr, which capture_output keeps separate, so stdout is
+    # the dump alone. Strip the log prefixes anyway: scripts/normalize-config.py
+    # reads dumps captured with 2>&1 and has to, and matching it here means the
+    # two never disagree about what "the config dump" is.
+    text = "".join(l for l in out.stdout.splitlines(keepends=True)
+                   if not l.startswith(("INFO", "WARNING", "ERROR")))
+    return yaml.load(text, Loader=Loader)
 
 
 # ------------------------------------------------------------------ asserts

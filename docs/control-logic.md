@@ -142,8 +142,14 @@ press, replacing a blown fuse means opening the pack. 110 °C clears Th by
 over-temp cutout notes in [hardware.md](hardware.md).
 
 These entities are `restore_value: true`, so a unit that has already run
-keeps the value it stored. The new default only applies to a fresh install:
-on an existing dryer, set `Pack overtemp limit` by hand in Home Assistant.
+keeps the value it stored, and the new default only applies to a fresh
+install: on an existing dryer, set the tunables by hand in Home Assistant.
+`Pack overtemp limit` is the one exception. Its range now ends at the
+118 °C holding temperature, and a stored value above that — from a unit
+commissioned when the maximum was 125 °C — is re-clamped to 118 °C on boot
+with a logged warning (1.2.1). That is a ceiling, not the default: a dryer
+still running at, say, 115 °C keeps 115 °C, and getting back to the 110 °C
+default is still a manual change.
 
 ## Observability
 

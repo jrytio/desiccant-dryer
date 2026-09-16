@@ -318,7 +318,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | J-06 | Sensor id renamed in `hw-real.yaml` without base.yaml following; config fails, or falls back to a template with NaN | 🟡 P2 | CFG | inspect |  |
 | J-07 | Interval changed from 5 s; fault timing constants (300 s, 5 ticks) no longer mean what the docs say | 🟡 P2 | CFG | inspect |  |
 | J-08 | NVS full or erased on a flash update; all tunables back to defaults mid-run, no notification | 🔵 P3 | FW | bench |  |
-| J-09 | `number` entity min/max allow physically unsafe values (`overtemp` up to 125 °C — above the SF129E's 118 °C holding temperature — `regen_hold_min` down to 0); no firmware validation narrows these ranges below what the datasheet allows | 🟠 P1 | CFG | virtual | ✱ |
+| J-09 | `number` entity min/max allow physically unsafe values (`regen_hold_min` down to 0, `regen_temp` above `overtemp`); only `overtemp` has been bounded by its datasheet limit, and no firmware validation checks one tunable against another | 🟠 P1 | CFG | virtual | ✱ |
 | J-10 | Two controllers with the same hostname/API key on one network; HA writes tunables to the wrong unit | 🟡 P2 | OPS | bench |  |
 | J-11 | Persisted globals are restored by key with no schema version, so renumbering `standby_state` or changing a counter's units in a later firmware silently misreads stored state after an update | 🟡 P2 | CFG | inspect | ✱ |
 
