@@ -1392,6 +1392,27 @@ Read the current file first, then rewrite it around a single update route. It mu
 
 Delete every reference to Device Builder, adoption YAML, `dashboard_import`, `ui_ref` and the minted-key/`ota: encryption:` mechanism. Also delete the note that `scripts/release.sh` must run immediately after the version bump merges — that constraint is gone with the adopt selector.
 
+**The Recovery section must also carry two accepted security risks**, decided by
+the user during this work. Write them plainly; do not soften them:
+
+1. *Unauthenticated firmware upload over the fallback AP.* Production ships an
+   open AP (`"${friendly_name} Setup"`, no password) plus `captive_portal`.
+   ESPHome accepts `POST /update` whenever the captive portal is active, even
+   though `web_server: ota: false` is set — its own source says so
+   (`web_server/ota/ota_web_server.cpp:45`). So during any WiFi outage, anyone
+   in range can join the AP and flash arbitrary firmware onto a mains heater
+   controller. This is pre-existing, was raised, and the user chose to accept it
+   rather than password the AP or drop the captive portal. Say that it is a
+   deliberate trade for provisioning convenience, and that passwording the AP
+   or removing `captive_portal:` are the two ways to close it.
+2. *The update trust root is push access to the `gh-pages` branch.* The `update:`
+   entity fetches a manifest and the md5 it checks comes from that same
+   manifest, so md5 proves only that the download was not corrupted — it proves
+   nothing about who produced it. `ota: platform: http_request` supports no
+   signing. Anyone who can push to `gh-pages` can therefore run arbitrary
+   firmware on every deployed unit within 6 hours. State this explicitly so the
+   branch's protection is understood to be the security boundary.
+
 - [ ] **Step 4: Correct docs/screen-in-ha.md**
 
 Replace any description of the endpoint streaming the panel's frame buffer with the new behaviour: the endpoint re-renders the UI from the last captured state into its own buffer, so it no longer depends on `color_palette: 8BIT`, on rotation 0, or on a full driver frame buffer. Remove the warning that changing those settings makes the endpoint return 500. Keep everything about the Home Assistant `image.dryer_screen` template image and its 2 s refresh automation.
