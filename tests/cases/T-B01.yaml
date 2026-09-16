@@ -5,6 +5,7 @@ status: green          # fault 3 exists today: 5 min, less than +5 C rise
 setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5
+  Sim RH Rise Rate: 5       # 0.1 %/min (the default) would take 45 sim min to reach arm_rh
   Sim Heater Fault: on   # heater draws no power in the plant model
   Dryer Enabled: on
 steps:

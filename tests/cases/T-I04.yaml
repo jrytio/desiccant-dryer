@@ -5,6 +5,14 @@ status: red            # no-rise check fires only at the 5 min mark today
 setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5
+  Sim RH Rise Rate: 5       # 0.1 %/min (the default) would take 45 sim min to reach arm_rh
+  # Keep the pack below regen_temp (90) so it stays in HEATING for the whole
+  # test, and cool it slowly enough that the outcome is not a race: with the
+  # 5 min time constant the pack falls back within 5 C of its start
+  # temperature at around 12 sim min, so whether the check catches it would
+  # depend on scheduling jitter.
+  Sim Heater Max Temp: 80
+  Sim Thermal Time Constant: 10
   Dryer Enabled: on
 steps:
   - wait_until: {Standby State: heating}

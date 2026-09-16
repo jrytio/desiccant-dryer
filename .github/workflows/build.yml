@@ -48,6 +48,36 @@ jobs:
             --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
             -c 'python3 tests/lint_config.py'
 
+  host-cases:
+    name: host cases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Provide dummy secrets
+        run: cp esphome/secrets.ci.yaml esphome/secrets.yaml
+      # Read-only: the compile host job owns this key and saves it. A miss
+      # only costs a cold native compile, which is a fraction of an ESP one.
+      - name: Restore build directory
+        uses: actions/cache/restore@v6
+        with:
+          path: esphome/.esphome
+          key: build-${{ env.ESPHOME_VERSION }}-host-${{ hashFiles('esphome/**') }}
+          restore-keys: build-${{ env.ESPHOME_VERSION }}-host-
+      # Same SDL2 install as the host compile variant; the runner then keeps
+      # the display headless with SDL_VIDEODRIVER=dummy, so no display server
+      # is needed (tests/cases/*.yaml without `harness: ci-lint`).
+      - name: Run the host verification cases
+        run: |
+          docker run --rm -v "$PWD:/config" -w /config \
+            --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
+            -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends libsdl2-dev g++ > /dev/null && python3 tests/run_cases.py'
+      # The container compiles as root on a cache miss. Nothing is saved from
+      # here (the compile host job owns that key), but the next checkout would
+      # trip over a root-owned build tree.
+      - name: Hand the build directory back to the runner user
+        if: always()
+        run: '[ -d esphome/.esphome ] && sudo chown -R "$(id -u):$(id -g)" esphome/.esphome || true'
+
   compile:
     name: compile ${{ matrix.variant }}
     runs-on: ubuntu-latest

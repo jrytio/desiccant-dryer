@@ -31,13 +31,36 @@ the harness, so it also decides how automated the test can be.
 
 ## Harness
 
-**Host runner.** `tests/run_cases.py` (to be written, see below) starts the
-host build headless, connects over the ESPHome native API, and executes
-each case in `tests/cases/`: set knobs, advance simulated time via
-`Sim Speed`, assert entity states. Cases are data, not code, so a coding
-agent can add one without touching the runner. The runner exits non-zero
-if any `green` case fails or any `red` case unexpectedly passes (that
-means a gap closed and the case status must be updated to `green`).
+**Host runner.** `tests/run_cases.py` starts the host build headless,
+connects over the ESPHome native API, and executes each case in
+`tests/cases/` that is not `harness: ci-lint`: set knobs, advance simulated
+time via `Sim Speed`, assert entity states. Cases are data, not code, so a
+coding agent can add one without touching the runner. The runner exits
+non-zero if any `green` case fails or any `red` case unexpectedly passes
+(that means a gap closed and the case status must be updated to `green`).
+It runs in the `host-cases` job in `build.yml`, beside the compile jobs,
+inside the same ESPHome image.
+
+Locally (needs `brew install sdl2` and an `esphome/secrets.yaml`, as
+`docs/host-preview.md` describes):
+
+```bash
+tests/run_cases.py                  # every host case; compiles the host build first
+tests/run_cases.py T-B01 --no-build # one case, reusing the compiled binary
+```
+
+Each case gets its own process and its own prefs directory, so persisted
+globals and `Sim` knobs never leak from one case into the next; `restart`
+presses the Restart button and runs the binary again against the same
+prefs, which is what the board does on a reboot. `SDL_VIDEODRIVER=dummy`
+keeps the display compiled in but windowless, so no headless build variant
+is needed. The plant model's clock only runs while the process does, so a
+case's wall-clock cost is its simulated minutes divided by `Sim Speed`
+(maximum 60, i.e. one real second per simulated minute).
+
+A case that references a `Sim *` knob the plant model does not have yet is
+skipped with that knob named, not failed. The knobs under "New Sim knobs"
+below are all still missing, so the cases needing them are skipped.
 
 **Config lint.** `tests/lint_config.py` runs `esphome config` for each
 case's `selectors` and evaluates its `assert` lines against the dump. It
@@ -73,9 +96,8 @@ resolved against the `id:` in the config dump:
 names another key of the same entity compares the two (`initial_value <=
 max_value`).
 
-**Needed before the host runner can run in CI**: a headless variant of the
-host build (the current one opens an SDL window), and the plant-model
-knobs listed under "New Sim knobs" below. Both are their own issues.
+**Still needed**: the plant-model knobs listed under "New Sim knobs"
+below. Until they exist the cases using them are skipped, not run.
 
 ## Case format
 
