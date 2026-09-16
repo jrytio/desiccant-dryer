@@ -1,0 +1,13 @@
+# Runtime-provisioned API encryption, for the image an owner flashes.
+#
+# The empty encryption block matters: with it and no key, the device accepts
+# a key from Home Assistant when adopted and persists it.
+#
+# Deliberately NOT included by desiccant-dryer-adopt.yaml. ESPHome Device
+# Builder only mints an API key into the adopted YAML when the resolved
+# package does not already enable encryption, and a bare `encryption:`
+# counts as package-provided. Leaving it out lets adoption generate a static
+# key, which packages/ota-adopted.yaml then inherits so OTA encryption is
+# *required* rather than merely offered. See docs/releasing.md.
+api:
+  encryption: {}

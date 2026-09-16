@@ -31,11 +31,25 @@ USB and later ones from ESPHome Device Builder over WiFi. Test builds
 - **Updates come from Device Builder, not from the device.** The production
   firmware carries `dashboard_import` pointing at
   `github://jrytio/desiccant-dryer/esphome/desiccant-dryer-adopt.yaml@main`.
-  Adopting writes a short YAML on the owner's Home Assistant that pulls that
-  file as a package and adds the owner's own API key and WiFi; the owner
-  adds an OTA block (see below). Device Builder compiles it and pushes it
-  with ESPHome's native OTA, authenticated by the API encryption key or a
-  password, with no TLS on the device.
+  Adopting writes a short YAML on the owner's Home Assistant holding only
+  the WiFi secrets, the package reference and a freshly minted API
+  encryption key. Device Builder compiles it and pushes it with ESPHome's
+  native OTA, authenticated by that key, with no TLS on the device.
+- **The owner edits no YAML.** Device Builder mints an API key only when the
+  resolved package does not already enable encryption, so
+  `packages/api-provisioned.yaml` (the bare `api: encryption: {}`, key from
+  Home Assistant at runtime) is included by `desiccant-dryer.yaml` — the
+  image an owner flashes — and *not* by the adopt selector. The adopt
+  selector instead takes `packages/ota-adopted.yaml`, whose keyless
+  `encryption:` inherits the minted key; its presence is what compiles OTA
+  encryption as **required** rather than merely offered.
+- **The adopt selector deliberately fails to validate on its own**, with
+  "'ota' encryption has no key and there is no 'api' encryption key to
+  inherit". Device Builder matches that exact wording as "only the api key
+  is missing": it keeps the imported file, mints the key and revalidates.
+  Do not add a key to the package to silence it — a key in a public
+  repository protects nothing, and Device Builder refuses to mint when the
+  package supplies its own OTA key.
 - Why not the on-device updater (1.0.x had `update: platform: http_request`):
   the S2 has no PSRAM and a 58 KB display buffer, and never had the ~17 KB
   contiguous block that mbedTLS needs to receive a firmware download over
@@ -60,39 +74,22 @@ USB and later ones from ESPHome Device Builder over WiFi. Test builds
    join the open `Desiccant Dryer Setup` access point the board raises when
    it has no network and enter the WiFi there.
 2. Install the ESPHome Device Builder add-on in Home Assistant if it is not
-   there. The dryer shows up as discovered; click **Adopt**. Device Builder
-   writes a short `desiccant-dryer.yaml` with the WiFi secrets and nothing
-   else: no `api:` block (the key is provisioned by Home Assistant at
-   runtime through `api: encryption: {}` in `base.yaml`) and no `ota:`
-   block. The released image has no OTA server, so add one with its own
-   encryption key:
+   there. The dryer shows up as discovered; click **Adopt**. That is the
+   whole configuration step: Device Builder writes the YAML, mints the API
+   encryption key, and the unit's OTA server inherits it. Adopt may report
+   "the remote package didn't validate: 'ota' encryption has no key…" —
+   expected, and resolved by the key it mints immediately afterwards.
 
-   ```bash
-   openssl rand -base64 32
-   ```
-
-   ```yaml
-   ota:
-     - platform: esphome
-       encryption:
-         key: "<the generated key>"
-   ```
-
-   `encryption: {}` (inherit the API key) does **not** work here: ESPHome
-   rejects it because a runtime-provisioned API key does not exist at build
-   time. A `password:` instead of a key also works, but ESPHome then warns
-   that whoever provisions the API key can upload firmware without it, and
-   a password costs about 3.5 KB of flash; prefer the key.
-
-   ESPHome warns that OTA encryption does not cover the web_server OTA
+   ESPHome also warns that OTA encryption does not cover the web_server OTA
    platform. It does not apply here: `web_server: ota: false` compiles
    `/update` to refuse uploads unless the setup access point is active.
 3. Install the adopted YAML **over USB once** (Device Builder → Install →
    Plug into the computer running ESPHome Device Builder, or download the
    binary and flash it with web.esphome.io). The released image has no OTA
-   server, so this first adopted install cannot go over WiFi.
-4. Accept the device in Home Assistant under Settings → Devices → ESPHome
-   with the key from the adopted YAML.
+   server, so this first adopted install cannot go over WiFi. Every later
+   release installs wirelessly.
+4. Accept the device in Home Assistant under Settings → Devices → ESPHome,
+   with the key Device Builder minted (it offers to copy it).
 5. From then on, install new releases from Device Builder → **Install** →
    Wirelessly. Home Assistant does not announce them; watch the GitHub
    releases.
