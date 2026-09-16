@@ -514,57 +514,58 @@
 <text x="640" y="623.55" font-size="9.5" fill="#2C2C2A">the inlet, ahead of the PSU and heaters.</text>
 <circle cx="633" cy="581.58" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="639.38" font-size="9.5" fill="#2C2C2A">Each heater’s switched L lead carries a one-shot thermal fuse (TCO) at the pack,</text>
-<text x="640" y="652.2" font-size="9.5" fill="#2C2C2A">between “L sw” and the heater: Tf ≈ 140 °C (above the 120 °C firmware limit, holding</text>
-<text x="640" y="665.03" font-size="9.5" fill="#2C2C2A">temperature ≥ 120 °C), ≥ 2 A / 250 VAC, crimped leads. It is the only protection</text>
-<text x="640" y="677.85" font-size="9.5" fill="#2C2C2A">against a welded contact.</text>
+<text x="640" y="639.38" font-size="9.5" fill="#2C2C2A">Each heater’s switched L lead carries a one-shot thermal fuse (TCO) between “L sw” and</text>
+<text x="640" y="652.2" font-size="9.5" fill="#2C2C2A">the heater — the only protection against a welded contact. The fuses on hand trip at</text>
+<text x="640" y="665.03" font-size="9.5" fill="#2C2C2A">212 °C, far above the 120 °C firmware limit, so they are a fire limit and not pack</text>
+<text x="640" y="677.85" font-size="9.5" fill="#2C2C2A">protection: mount them against the heater sheath and verify a stuck-on heater actually</text>
+<text x="640" y="690.68" font-size="9.5" fill="#2C2C2A">reaches 212 °C there. ≥ 2 A / 250 VAC, crimped leads.</text>
 <circle cx="633" cy="635.88" r="1.8" fill="#2C2C2A"/>
 <text x="630" y="0" font-size="1" fill="none"></text>
-<text x="640" y="693.68" font-size="9.5" fill="#2C2C2A">Before wiring real heaters: make the four heater/valve switches internal: true</text>
-<text x="640" y="706.5" font-size="9.5" fill="#2C2C2A">(CLAUDE.md open item).</text>
-<circle cx="633" cy="690.18" r="1.8" fill="#2C2C2A"/>
-<text x="630" y="734.3250000000006" font-size="12" font-weight="bold" fill="#2C2C2A">Legend</text>
-<rect x="630" y="740.3250000000006" width="14" height="9" fill="#2A5D8F"/>
-<text x="650" y="748.3250000000006" font-size="9.5" fill="#2C2C2A">24 V screw terminals</text>
-<rect x="845" y="740.3250000000006" width="14" height="9" fill="#7A2626"/>
-<text x="865" y="748.3250000000006" font-size="9.5" fill="#2C2C2A">120 VAC screw terminals (mains-rated)</text>
-<rect x="630" y="755.3250000000006" width="14" height="9" fill="#2D6A4F"/>
-<text x="650" y="763.3250000000006" font-size="9.5" fill="#2C2C2A">sensor screw terminals</text>
-<rect x="845" y="755.3250000000006" width="14" height="9" fill="#222"/>
-<text x="865" y="763.3250000000006" font-size="9.5" fill="#2C2C2A">headers / sockets / JST-XH</text>
-<circle cx="637" cy="774.8250000000006" r="4" fill="#C8923E" stroke="#6B4A1A"/>
-<text x="650" y="778.3250000000006" font-size="9.5" fill="#2C2C2A">copper pad (solder point)</text>
-<rect x="845" y="771.3250000000006" width="14" height="7" rx="2" fill="#D8C9A0" stroke="#8A7A4A"/>
-<text x="865" y="778.3250000000006" font-size="9.5" fill="#2C2C2A">resistor</text>
-<rect x="630" y="786.3250000000006" width="14" height="7" fill="#222"/><rect x="640" y="786.3250000000006" width="2.5" height="7" fill="#DDD"/>
-<text x="650" y="793.3250000000006" font-size="9.5" fill="#2C2C2A">1N4007 / Schottky, band = cathode</text>
-<circle cx="852" cy="789.8250000000006" r="5.5" fill="#2B2B40" fill-opacity="0.55" stroke="#000"/><rect x="854.5" y="786.3250000000006" width="2" height="7" fill="#BBB"/>
-<text x="865" y="793.3250000000006" font-size="9.5" fill="#2C2C2A">100 µF 16 V, stripe = −, + marked</text>
-<line x1="630" y1="804.8250000000006" x2="646" y2="804.8250000000006" stroke="#333333" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="650" y="808.3250000000006" font-size="9.5" fill="#2C2C2A">GND bus — bare wire on a hole row</text>
-<line x1="845" y1="804.8250000000006" x2="861" y2="804.8250000000006" stroke="#E08A2E" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="865" y="808.3250000000006" font-size="9.5" fill="#2C2C2A">3V3 bus — bare wire</text>
-<line x1="630" y1="819.8250000000006" x2="646" y2="819.8250000000006" stroke="#2A5D8F" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="650" y="823.3250000000006" font-size="9.5" fill="#2C2C2A">24V+ bus — bare wire</text>
-<line x1="845" y1="819.8250000000006" x2="861" y2="819.8250000000006" stroke="#D64545" stroke-width="3.6" stroke-dasharray="7.8 3"/>
-<text x="865" y="823.3250000000006" font-size="9.5" fill="#2C2C2A">5 V bus — bare wire (relay board)</text>
-<line x1="630" y1="834.8250000000006" x2="646" y2="834.8250000000006" stroke="#B8860B" stroke-width="1.9"/>
-<text x="650" y="838.3250000000006" font-size="9.5" fill="#2C2C2A">signal — insulated hookup wire</text>
-<line x1="845" y1="834.8250000000006" x2="861" y2="834.8250000000006" stroke="#D64545" stroke-width="1.9"/>
-<text x="865" y="838.3250000000006" font-size="9.5" fill="#2C2C2A">5 V / VBUS — insulated</text>
-<line x1="630" y1="849.8250000000006" x2="646" y2="849.8250000000006" stroke="#333333" stroke-width="1.9"/>
-<text x="650" y="853.3250000000006" font-size="9.5" fill="#2C2C2A">GND — insulated</text>
-<line x1="845" y1="849.8250000000006" x2="861" y2="849.8250000000006" stroke="#2A5D8F" stroke-width="1.9"/>
-<text x="865" y="853.3250000000006" font-size="9.5" fill="#2C2C2A">24 V — insulated</text>
-<line x1="630" y1="864.8250000000006" x2="646" y2="864.8250000000006" stroke="#E08A2E" stroke-width="1.9"/>
-<text x="650" y="868.3250000000006" font-size="9.5" fill="#2C2C2A">3V3 — insulated</text>
-<line x1="845" y1="864.8250000000006" x2="861" y2="864.8250000000006" stroke="#8B1A1A" stroke-width="1.9"/>
-<text x="865" y="868.3250000000006" font-size="9.5" fill="#2C2C2A">120 VAC — insulated, mains-rated</text>
-<line x1="630" y1="879.8250000000006" x2="646" y2="879.8250000000006" stroke="#B03A3A" stroke-width="1.8" stroke-dasharray="12 3.6 2.4 3.6"/>
-<text x="650" y="883.3250000000006" font-size="9.5" fill="#2C2C2A">mains boundary (not a wire)</text>
-<rect x="845" y="875.3250000000006" width="14" height="9" fill="url(#hatchpx)" stroke="#7A2626"/>
-<text x="865" y="883.3250000000006" font-size="9.5" fill="#2C2C2A">ESP antenna / keep-out</text>
-<text x="630" y="902.3250000000006" font-size="9.5" fill="#2C2C2A">grid dots = 2.54 mm hole centres at 3.47 + k·2.54 mm from the board edge</text>
+<text x="640" y="706.5" font-size="9.5" fill="#2C2C2A">Before wiring real heaters: make the four heater/valve switches internal: true</text>
+<text x="640" y="719.33" font-size="9.5" fill="#2C2C2A">(CLAUDE.md open item).</text>
+<circle cx="633" cy="703" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="747.1500000000007" font-size="12" font-weight="bold" fill="#2C2C2A">Legend</text>
+<rect x="630" y="753.1500000000007" width="14" height="9" fill="#2A5D8F"/>
+<text x="650" y="761.1500000000007" font-size="9.5" fill="#2C2C2A">24 V screw terminals</text>
+<rect x="845" y="753.1500000000007" width="14" height="9" fill="#7A2626"/>
+<text x="865" y="761.1500000000007" font-size="9.5" fill="#2C2C2A">120 VAC screw terminals (mains-rated)</text>
+<rect x="630" y="768.1500000000007" width="14" height="9" fill="#2D6A4F"/>
+<text x="650" y="776.1500000000007" font-size="9.5" fill="#2C2C2A">sensor screw terminals</text>
+<rect x="845" y="768.1500000000007" width="14" height="9" fill="#222"/>
+<text x="865" y="776.1500000000007" font-size="9.5" fill="#2C2C2A">headers / sockets / JST-XH</text>
+<circle cx="637" cy="787.6500000000007" r="4" fill="#C8923E" stroke="#6B4A1A"/>
+<text x="650" y="791.1500000000007" font-size="9.5" fill="#2C2C2A">copper pad (solder point)</text>
+<rect x="845" y="784.1500000000007" width="14" height="7" rx="2" fill="#D8C9A0" stroke="#8A7A4A"/>
+<text x="865" y="791.1500000000007" font-size="9.5" fill="#2C2C2A">resistor</text>
+<rect x="630" y="799.1500000000007" width="14" height="7" fill="#222"/><rect x="640" y="799.1500000000007" width="2.5" height="7" fill="#DDD"/>
+<text x="650" y="806.1500000000007" font-size="9.5" fill="#2C2C2A">1N4007 / Schottky, band = cathode</text>
+<circle cx="852" cy="802.6500000000007" r="5.5" fill="#2B2B40" fill-opacity="0.55" stroke="#000"/><rect x="854.5" y="799.1500000000007" width="2" height="7" fill="#BBB"/>
+<text x="865" y="806.1500000000007" font-size="9.5" fill="#2C2C2A">100 µF 16 V, stripe = −, + marked</text>
+<line x1="630" y1="817.6500000000007" x2="646" y2="817.6500000000007" stroke="#333333" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="650" y="821.1500000000007" font-size="9.5" fill="#2C2C2A">GND bus — bare wire on a hole row</text>
+<line x1="845" y1="817.6500000000007" x2="861" y2="817.6500000000007" stroke="#E08A2E" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="865" y="821.1500000000007" font-size="9.5" fill="#2C2C2A">3V3 bus — bare wire</text>
+<line x1="630" y1="832.6500000000007" x2="646" y2="832.6500000000007" stroke="#2A5D8F" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="650" y="836.1500000000007" font-size="9.5" fill="#2C2C2A">24V+ bus — bare wire</text>
+<line x1="845" y1="832.6500000000007" x2="861" y2="832.6500000000007" stroke="#D64545" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="865" y="836.1500000000007" font-size="9.5" fill="#2C2C2A">5 V bus — bare wire (relay board)</text>
+<line x1="630" y1="847.6500000000007" x2="646" y2="847.6500000000007" stroke="#B8860B" stroke-width="1.9"/>
+<text x="650" y="851.1500000000007" font-size="9.5" fill="#2C2C2A">signal — insulated hookup wire</text>
+<line x1="845" y1="847.6500000000007" x2="861" y2="847.6500000000007" stroke="#D64545" stroke-width="1.9"/>
+<text x="865" y="851.1500000000007" font-size="9.5" fill="#2C2C2A">5 V / VBUS — insulated</text>
+<line x1="630" y1="862.6500000000007" x2="646" y2="862.6500000000007" stroke="#333333" stroke-width="1.9"/>
+<text x="650" y="866.1500000000007" font-size="9.5" fill="#2C2C2A">GND — insulated</text>
+<line x1="845" y1="862.6500000000007" x2="861" y2="862.6500000000007" stroke="#2A5D8F" stroke-width="1.9"/>
+<text x="865" y="866.1500000000007" font-size="9.5" fill="#2C2C2A">24 V — insulated</text>
+<line x1="630" y1="877.6500000000007" x2="646" y2="877.6500000000007" stroke="#E08A2E" stroke-width="1.9"/>
+<text x="650" y="881.1500000000007" font-size="9.5" fill="#2C2C2A">3V3 — insulated</text>
+<line x1="845" y1="877.6500000000007" x2="861" y2="877.6500000000007" stroke="#8B1A1A" stroke-width="1.9"/>
+<text x="865" y="881.1500000000007" font-size="9.5" fill="#2C2C2A">120 VAC — insulated, mains-rated</text>
+<line x1="630" y1="892.6500000000007" x2="646" y2="892.6500000000007" stroke="#B03A3A" stroke-width="1.8" stroke-dasharray="12 3.6 2.4 3.6"/>
+<text x="650" y="896.1500000000007" font-size="9.5" fill="#2C2C2A">mains boundary (not a wire)</text>
+<rect x="845" y="888.1500000000007" width="14" height="9" fill="url(#hatchpx)" stroke="#7A2626"/>
+<text x="865" y="896.1500000000007" font-size="9.5" fill="#2C2C2A">ESP antenna / keep-out</text>
+<text x="630" y="915.1500000000007" font-size="9.5" fill="#2C2C2A">grid dots = 2.54 mm hole centres at 3.47 + k·2.54 mm from the board edge</text>
 <text x="30" y="610" font-size="12" font-weight="bold" fill="#2C2C2A">Build order (logic board)</text>
 <text x="30" y="0" font-size="1" fill="none"></text>
 <text x="40" y="627" font-size="10.5" fill="#2C2C2A">Before fitting J-USB or the ESP: power the 24 V input, set the MP1584 module’s trimmer to 5.00–5.10 V</text>

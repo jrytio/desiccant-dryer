@@ -18,7 +18,7 @@
 | Buck | MP1584 "mini" 24 V → 5 V module (22 × 17 mm, trimmer), or a fixed-5 V module | Feeds board USB pin (through the Schottky) and relay coils; set to 5.00–5.10 V |
 | USB-pin Schottky | SS34 (SMD) or 1N5819 (axial) | Buck 5 V → J-USB → board USB pin |
 | Heaters | 2× 120 VAC, 123 Ω (~117 W) | Existing packs; switched by relay contacts |
-| Heater over-temp cutouts | 2× one-shot thermal fuse (TCO), Tf ≈ 140 °C (standard 141 °C part), ≥ 2 A / 250 VAC | In series with each heater's switched L lead, clamped to the pack; sizing in [Mains and earthing](#mains-and-earthing) |
+| Heater over-temp cutouts | 2× one-shot thermal fuse (TCO), Tf 212 °C (the parts on hand), ≥ 2 A / 250 VAC | In series with each heater's switched L lead, against the heater sheath. A 212 °C part is a fire limit, not pack protection — see [Mains and earthing](#mains-and-earthing) |
 
 Protoboard build (see [Protoboard layout](#protoboard-layout-proposal)), in
 addition to the parts above:
@@ -180,8 +180,8 @@ Geometry sources, all in [datasheets/](datasheets/README.md):
    (those pins are 1.0–1.1 mm flat blades; the coil pins are 0.6 mm round).
 4. Before wiring real heaters: make the four heater/valve switches
    `internal: true` with read-only mirrors (the open item in CLAUDE.md), and
-   fit a thermal fuse in each heater's switched L lead at the pack (sizing
-   under [Mains and earthing](#mains-and-earthing)).
+   fit a thermal fuse in each heater's switched L lead, against the heater
+   sheath (see [Mains and earthing](#mains-and-earthing)).
 
 ### J-USB and the Schottky
 
@@ -283,29 +283,41 @@ not in this layout.
 - Fuse T 3.15 A in L at the inlet, ahead of the PSU and heaters.
 - Each relay switches L only; N passes straight through.
 - Each heater carries its own one-shot thermal fuse (TCO) in series, in the
-  switched L lead between the relay board's "L sw" terminal and the heater,
-  clamped to the pack body like the DS18B20 so it senses the pack and not
-  the air. This is the only protection against a welded relay contact: the
-  firmware cannot clear that failure, and the standby pack's heater would
-  otherwise stay energised.
-- Sizing, from the numbers the firmware already uses: a pack runs up to
-  `regen_temp` (default 90 °C) and the firmware latches a fault above
-  `overtemp` (default 120 °C — see [control-logic.md](control-logic.md)).
-  The fuse therefore has to hold at 120 °C without drifting and open not far
-  above it, so Tf ≈ 140 °C (the standard 141 °C part) with the datasheet's
-  maximum continuous holding temperature at or above 120 °C; on most TCOs
-  that holding figure is Tf minus 15–25 °C, so check the part in hand rather
-  than assuming. Each heater draws 117 W / 120 VAC ≈ 1 A, so a 2 A (or the
-  common 10 A) 250 VAC rating is ample.
+  switched L lead between the relay board's "L sw" terminal and the heater.
+  This is the only protection against a welded relay contact: the firmware
+  cannot clear that failure, and the standby pack's heater would otherwise
+  stay energised indefinitely.
+- The fuses on hand trip at **212 °C**. That is far above anything the
+  control loop uses — `regen_temp` defaults to 90 °C and the firmware
+  latches above `overtemp`, 120 °C (see
+  [control-logic.md](control-logic.md)) — so it will never nuisance-trip:
+  a TCO's maximum continuous holding temperature is typically Tf minus
+  15–25 °C, around 190 °C here, nowhere near normal operation. What a
+  212 °C fuse buys is a **fire limit, not pack protection**. The desiccant,
+  the DS18B20 probe leads (rated under 100 °C) and the SMC valve (50 °C)
+  are all destroyed long before 212 °C is reached.
+- Mount it against the heater sheath, not the pack body. The sheath is the
+  hottest surface and the only place likely to reach 212 °C in a stuck-on
+  failure; a fuse clamped to the pack body may never get there at all.
+- Two measurements decide whether these fuses are protection or decoration,
+  and both are still to be made:
+  1. with a heater stuck on and no swap, does the fuse's mounting point
+     actually pass 212 °C? Run that supervised, with a probe on the sheath
+     and a hard power cut-off in reach.
+  2. during normal regen, does that same point stay below the fuse's
+     holding temperature?
+
+  If (1) fails, fit a lower-Tf part instead — a 140 °C class fuse is the
+  value matched to the 120 °C firmware limit — or a resettable bimetal
+  thermostat on the pack body, which also survives a trip without opening
+  the pack.
+- Current and voltage: each heater draws 117 W / 120 VAC ≈ 1 A, so confirm
+  the fuse is rated at least 2 A at 250 VAC (many are 10 A).
 - Crimp or clamp the fuse leads; soldering near the body can trip it.
   Sleeve the leads in high-temperature insulation. A tripped TCO is not
-  resettable and means opening the pack, so a resettable bimetal thermostat
-  of the same temperature class is the alternative if nuisance trips matter
-  more than the one-shot guarantee.
-- Unverified: the maximum temperature the pack, its desiccant and the probe
-  and valve leads can take. Tf has to sit below that as well as above the
-  firmware limit. Record the fuses actually fitted, with their Tf, holding
-  temperature and current rating, here.
+  resettable and means opening the pack to replace it.
+- Record the fuses actually fitted — part number, Tf, holding temperature,
+  current rating — here once they go in.
 - COM is mains and sits at the coil end of the relay: 6.3 mm centre to
   centre from each coil pin, which leaves about 4 mm pad edge to pad edge.
   The drawing's mains boundary goes around COM, and the PN2222A/1N4007 stage
@@ -321,10 +333,12 @@ not in this layout.
   slot along the boundary, or contacts off the protoboard, is needed.
 - The 24 V input has no reverse-polarity protection, fuse or bulk input
   capacitor.
-- The thermal fuses above are specified but not yet fitted or verified:
-  confirm the pack's safe maximum temperature (Tf must sit below it), the
-  fuse's holding temperature at the 120 °C firmware limit, and what the
-  original Azco board/packs provided.
+- The 212 °C thermal fuses are specified but not fitted or verified. Measure
+  whether a stuck-on heater actually drives the fuse's mounting point past
+  212 °C, and whether normal regen stays below its holding temperature. If
+  the first fails, the fuse protects nothing and a lower-Tf part or a
+  pack-body thermostat is needed. The pack's own safe maximum temperature,
+  and what the original Azco board/packs provided, are still unknown.
 - Stock DS18B20 probe leads are rated under 100 °C and the SMC VDW22 valve
   is rated 50 °C, both on a 90 °C pack; verify or change parts.
 - The buck module footprint is unverified; measure the module before
