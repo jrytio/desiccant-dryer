@@ -32,9 +32,10 @@ USB and later ones from ESPHome Device Builder over WiFi. Test builds
   firmware carries `dashboard_import` pointing at
   `github://jrytio/desiccant-dryer/esphome/desiccant-dryer-adopt.yaml@main`.
   Adopting writes a short YAML on the owner's Home Assistant that pulls that
-  file as a package and adds the owner's own API key, OTA password and
-  WiFi. Device Builder compiles it and pushes it with ESPHome's native OTA
-  (password-authenticated TCP, no TLS on the device).
+  file as a package and adds the owner's own API key and WiFi; the owner
+  adds an OTA block (see below). Device Builder compiles it and pushes it
+  with ESPHome's native OTA, authenticated by the API encryption key or a
+  password, with no TLS on the device.
 - Why not the on-device updater (1.0.x had `update: platform: http_request`):
   the S2 has no PSRAM and a 58 KB display buffer, and never had the ~17 KB
   contiguous block that mbedTLS needs to receive a firmware download over
