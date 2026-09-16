@@ -15,9 +15,17 @@
 # the test builds keep 100% because they never self-update. Override both
 # substitutions from the selector.
 #
-# 5s, not the 2s ili9xxx used: a redraw now blocks the loop for longer (the
-# writer runs once per band), and the screen shows slow thermal state that
-# does not need a 2s refresh. Task 3 measured the cost; see docs/releasing.md.
+# Measured on an ESP32-S2 at 240x240, 8-bit, 40MHz SPI (no panel attached):
+#   buffer_size 100%  writer runs once   ~377 ms redraw   frees no heap
+#   buffer_size  50%  writer runs twice   ~699 ms redraw  frees ~29 KB
+# Production takes the 50% cost because the freed contiguous block is what
+# lets mbedTLS hold a TLS record, and without that the unit cannot install
+# its own firmware at all. The ~500 ms goal is therefore knowingly missed:
+# 699 ms IS the price of self-updating firmware, not a failure to optimise.
+# Draw is 92% of it (321 ms/band x2); SPI write is only 28 ms/band. The loop
+# blocks for ~700 ms on every production redraw, once per
+# ${display_update_interval} (production overrides this to 10s below; the
+# hw-test and virtual builds, which never halve the buffer, keep 5s).
 
 substitutions:
   display_buffer_size: "100%"
