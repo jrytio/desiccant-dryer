@@ -2,7 +2,7 @@
 
 Bring-up of a board wired into real hardware. Bench state for the first run
 (2026-09-15): three DS18B20s, both valves, the fan and the display
-connected; 2N2222 heater driver stages wired but no relays; no SHT45.
+connected; PN2222A heater driver stages wired but no relays; no SHT45.
 Everything here is safe with mains disconnected, and nothing switches mains
 until the relays exist.
 
@@ -22,9 +22,10 @@ as its own step (section 7).
 
 ## 1. Flash the test build (USB, once)
 
-1. First pull the wire from the board's USB pin to the breadboard 5 V rail.
-   That pin is the same net as the USB-C connector's VBUS, with no diode, so
-   leaving it in ties the buck to the computer's USB port. Then plug the
+1. First pull JP-USB (protoboard) or the wire from the board's USB pin to
+   the breadboard 5 V rail (breadboard). That pin is the same net as the
+   USB-C connector's VBUS, with no diode, so leaving it in ties the buck to
+   the computer's USB port. Then plug the
    board in. macOS lists one CP2102N twice (`cu.SLAB_USBtoUART` and
    `cu.usbserial-NNN`); either works:
 
@@ -116,7 +117,7 @@ the override slider from HA. For the bench:
 
 - `Regen temp` cannot go below 40 °C, which fingers do not reach. Set it to
   40 °C and use a heat gun on low (or hot water) on the standby probe; aim
-  for 45 to 60 °C, far below the 120 °C overtemp latch.
+  for 45 to 60 °C, far below the 110 °C overtemp latch.
 - `Regen hold time` 1 min, `Cooldown temp` about 33 °C so COOLING has a
   threshold to fall through once the heat is removed.
 - Start heating within 5 min of the heater switch turning on, or the "not

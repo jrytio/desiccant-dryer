@@ -233,7 +233,13 @@ number:
     min_value: 60
     max_value: 125
     step: 1
-    initial_value: 120
+    # 110 °C, not 125: the heater thermal fuse (SEFUSE SF129E) is clamped to
+    # the pack body, and its datasheet holding temperature — the most it may
+    # sit at continuously — is 118 °C, with a functioning temperature of
+    # 133 °C. The firmware must fault below that so it always trips before
+    # the one-shot fuse; clearing a fault is a button press, replacing a
+    # blown fuse means opening the pack.
+    initial_value: 110
     restore_value: true
     optimistic: true
     entity_category: config

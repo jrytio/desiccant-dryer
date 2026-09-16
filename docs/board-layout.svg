@@ -1,125 +1,682 @@
-<svg width="1100" height="780" viewBox="0 0 1100 780" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
-<title>Desiccant dryer controller — protoboard layout (logic 70×90 mm, relay 50×70 mm)</title>
+<svg width="206.67mm" height="252.33mm" viewBox="0 0 1240 1514" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<title>Desiccant dryer controller — protoboard layout (logic 90×70 mm, relay 90×70 mm)</title>
 <defs>
-  <pattern id="holes" x="0" y="0" width="2.54" height="2.54" patternUnits="userSpaceOnUse"><circle cx="1.27" cy="1.27" r="0.45" fill="#C9C3B2"/></pattern>
-  <g id="tb2"><rect x="-2.55" y="-3.5" width="10.2" height="8" rx="0.4" fill="#2A5D8F" stroke="#183A5A"/><circle cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
-  <g id="tbm"><rect x="-2.55" y="-3.5" width="10.2" height="8" rx="0.4" fill="#7A2626" stroke="#4A1414"/><circle cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
-  <g id="res"><rect x="-1" y="-2.75" width="2" height="5.5" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A"/></g>
-  <g id="dio"><rect x="-2.6" y="-0.9" width="5.2" height="1.8" rx="0.3" fill="#222" stroke="#000"/><rect x="1.5" y="-0.9" width="0.7" height="1.8" fill="#DDD"/></g>
-  <g id="fet">
-    <use href="#res" x="0" y="0"/><use href="#res" x="2.54" y="0"/>
-    <text x="0" y="-3.6" font-size="1.15" text-anchor="middle" fill="#2C2C2A">100Ω</text><text x="2.54" y="-3.6" font-size="1.15" text-anchor="middle" fill="#2C2C2A">10k</text>
-    <rect x="-2.55" y="6" width="10.2" height="4.5" fill="#444" stroke="#111"/><rect x="-2.55" y="6" width="10.2" height="1.4" fill="#999" stroke="#111"/>
-    <text x="2.54" y="9.4" font-size="1.4" text-anchor="middle" fill="#FFF">IRLZ44N</text>
-    <text x="0" y="12.4" font-size="1.1" text-anchor="middle" fill="#2C2C2A">G</text><text x="2.54" y="12.4" font-size="1.1" text-anchor="middle" fill="#2C2C2A">D</text><text x="5.08" y="12.4" font-size="1.1" text-anchor="middle" fill="#2C2C2A">S</text>
-    <use href="#dio" x="2.54" y="15.2"/><text x="2.54" y="18.3" font-size="1.1" text-anchor="middle" fill="#2C2C2A">1N4007 → 24V+</text>
-  </g>
-  <g id="npn">
-    <use href="#res" x="0" y="0"/><use href="#res" x="2.54" y="0"/>
-    <text x="0" y="-3.6" font-size="1.1" text-anchor="middle" fill="#2C2C2A">1k</text><text x="2.54" y="-3.6" font-size="1.1" text-anchor="middle" fill="#2C2C2A">10k</text>
-    <path d="M5.6,1.2 a2.4,2.4 0 1,1 4.8,0 z" fill="#333" stroke="#000"/>
-    <text x="11.4" y="0.2" font-size="1.1" fill="#2C2C2A">2N2222</text><text x="11.4" y="1.9" font-size="1" fill="#555">E B C</text>
-  </g>
-  <g id="relay">
-    <rect x="0" y="0" width="19" height="15.5" rx="0.6" fill="#2E5CB8" stroke="#1B3A78"/>
-    <text x="9.5" y="6.2" font-size="1.7" font-weight="bold" text-anchor="middle" fill="#FFF">SONGLE</text>
-    <text x="9.5" y="8.5" font-size="1.4" text-anchor="middle" fill="#DCE6F8">SRD-05VDC-SL-C</text>
-    <text x="4" y="2.6" font-size="1.1" fill="#DCE6F8">coil</text><text x="15" y="2.6" font-size="1.1" fill="#DCE6F8" text-anchor="end">coil</text>
-    <text x="9.5" y="14.2" font-size="1.05" fill="#F8DCDC" text-anchor="middle">contacts NC · COM · NO (per datasheet)</text>
-  </g>
+  <pattern id="holes" x="0" y="0" width="2.54" height="2.54" patternUnits="userSpaceOnUse"><circle cx="0.93" cy="0.93" r="0.42" fill="#C9C3B2"/></pattern>
+  <pattern id="hatch" width="1.2" height="1.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1.2" height="1.2" fill="#F4D9D9"/><line x1="0" y1="0" x2="0" y2="1.2" stroke="#B03A3A" stroke-width="0.35"/></pattern>
+  <pattern id="hatchpx" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#F4D9D9"/><line x1="0" y1="0" x2="0" y2="5" stroke="#B03A3A" stroke-width="1.5"/></pattern>
+  <g id="tb2"><rect x="-2.55" y="-3.5" width="10.16" height="8" rx="0.4" fill="#2A5D8F" stroke="#183A5A" stroke-width="0.15"/><circle class="pad" cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle class="pad" cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
+  <g id="tbm"><rect x="-2.55" y="-3.5" width="10.16" height="8" rx="0.4" fill="#7A2626" stroke="#4A1414" stroke-width="0.15"/><circle class="pad" cx="0" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/><circle class="pad" cx="5.08" cy="0" r="1.1" fill="#DDD" stroke="#222" stroke-width="0.1"/></g>
 </defs>
-<rect width="1100" height="780" fill="#FFFFFF"/>
-<text x="20" y="26" font-size="14" font-weight="bold" fill="#2C2C2A">Desiccant dryer controller — protoboard layout (proposal, scale 6 px/mm, all pins on the 2.54 mm hole grid)</text>
-<text x="20" y="44" font-size="11" fill="#555">Left: logic + 24 V board, 70×90 mm.  Right: mains relay board, 50×70 mm.  Only a 4-wire logic-level harness links them.</text>
-
-<g transform="translate(30,80) scale(6)" stroke-width="0.15">
-<rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/><rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
-<g fill="#FFF" stroke="#8A8677" stroke-width="0.2"><circle cx="2.5" cy="2.5" r="1.3"/><circle cx="87.5" cy="2.5" r="1.3"/><circle cx="2.5" cy="67.5" r="1.3"/><circle cx="87.5" cy="67.5" r="1.3"/></g>
-<rect x="3.55" y="7.280000000000001" width="58.4" height="22.9" rx="1" fill="#B03A3A" stroke="#7A2626"/>
-<rect x="1.8" y="15.5" width="3.8" height="6" rx="0.6" fill="#666" stroke="#333"/><text x="1.2" y="14.8" font-size="1.5" fill="#2C2C2A" transform="rotate(-90 1.2 14.8)">USB-C</text>
-<rect x="57.949999999999996" y="15" width="3.5" height="7" rx="0.5" fill="#222" stroke="#000"/><text x="56.05" y="24.6" font-size="1.4" fill="#F2D6D6" text-anchor="middle">Qwiic</text>
-<text x="32.55" y="16.5" text-anchor="middle" font-size="2.6" font-weight="bold" fill="#FFF">ESP32-S2 Thing Plus</text><text x="32.55" y="19.8" text-anchor="middle" font-size="1.7" fill="#F2D6D6">58.4 × 22.9 mm, on 16 + 12 pin female headers</text>
-<rect x="7.280000000000001" y="7.3500000000000005" width="40.64" height="2.4" fill="#222" stroke="#000"/>
-<g font-size="1.15" fill="#FFF" text-anchor="middle"><text x="8.55" y="11.850000000000001">EN</text><text x="11.09" y="11.850000000000001">3V3</text><text x="13.63" y="11.850000000000001">NC</text><text x="16.17" y="11.850000000000001">GND</text><text x="18.71" y="11.850000000000001">17</text><text x="21.25" y="11.850000000000001">18</text><text x="23.79" y="11.850000000000001">14</text><text x="26.33" y="11.850000000000001">9</text><text x="28.87" y="11.850000000000001">7</text><text x="31.41" y="11.850000000000001">5</text><text x="33.95" y="11.850000000000001">36</text><text x="36.49" y="11.850000000000001">35</text><text x="39.03" y="11.850000000000001">37</text><text x="41.57" y="11.850000000000001">33</text><text x="44.11" y="11.850000000000001">34</text><text x="46.65" y="11.850000000000001">3</text></g>
-<rect x="17.44" y="27.67" width="30.48" height="2.4" fill="#222" stroke="#000"/>
-<g font-size="1.15" fill="#FFF" text-anchor="middle"><text x="18.71" y="26.67">BAT</text><text x="21.25" y="26.67">EN</text><text x="23.79" y="26.67">USB</text><text x="26.33" y="26.67">13</text><text x="28.87" y="26.67">12</text><text x="31.41" y="26.67">11</text><text x="33.95" y="26.67">10</text><text x="36.49" y="26.67">8</text><text x="39.03" y="26.67">6</text><text x="41.57" y="26.67">4</text><text x="44.11" y="26.67">SCL</text><text x="46.65" y="26.67">SDA</text></g>
-<text x="63.05" y="19" font-size="1.4" fill="#2C2C2A">→ SHT45</text>
-<rect x="63.160000000000004" y="2.22" width="20.32" height="2.5" fill="#222" stroke="#000"/>
-<g font-size="1.05" fill="#2C2C2A" text-anchor="middle"><text x="64.43" y="6.87">GND</text><text x="66.97" y="6.87">3V3</text><text x="69.51" y="6.87">SCL</text><text x="72.05" y="6.87">SDA</text><text x="74.59" y="6.87">RES</text><text x="77.13" y="6.87">DC</text><text x="79.67" y="6.87">CS</text><text x="82.21" y="6.87">BLK</text></g>
-<text x="73.32" y="9.77" font-size="1.5" text-anchor="middle" fill="#2C2C2A">DISPLAY (8-pin, cable to ST7789 on panel)</text><text x="73.32" y="11.97" font-size="1.3" text-anchor="middle" fill="#555">GND, 3V3, 36, 35, 14, 9, 5, 17</text>
-<rect x="81.5" y="16.11" width="7.5" height="45.84" rx="0.4" fill="#2D6A4F" stroke="#1B4332"/>
-<g fill="#DDD" stroke="#222" stroke-width="0.1"><circle cx="85.2" cy="18.71" r="1.1"/><circle cx="85.2" cy="23.79" r="1.1"/><circle cx="85.2" cy="28.87" r="1.1"/><circle cx="85.2" cy="33.95" r="1.1"/><circle cx="85.2" cy="39.03" r="1.1"/><circle cx="85.2" cy="44.11" r="1.1"/><circle cx="85.2" cy="49.19" r="1.1"/><circle cx="85.2" cy="54.27" r="1.1"/><circle cx="85.2" cy="59.35" r="1.1"/></g>
-<g font-size="1.3" fill="#2C2C2A" text-anchor="end"><text x="80.5" y="19.21">3V3</text><text x="80.5" y="24.29">DQ</text><text x="80.5" y="29.37">GND</text><text x="80.5" y="34.45">3V3</text><text x="80.5" y="39.53">DQ</text><text x="80.5" y="44.61">GND</text><text x="80.5" y="49.69">3V3</text><text x="80.5" y="54.77">DQ</text><text x="80.5" y="59.85">GND</text></g>
-<g font-size="1.4" fill="#1B4332" font-weight="bold" text-anchor="end"><text x="80.5" y="21.89">PACK A</text><text x="80.5" y="37.13">PACK B</text><text x="80.5" y="52.370000000000005">CASE</text></g>
-<text x="88" y="15.110000000000001" font-size="1.4" text-anchor="end" fill="#2C2C2A">DS18B20 ×3, 9-pos 5.08 mm</text>
-<use href="#res" x="69.51" y="23.79" transform="rotate(90 69.51 23.79)"/><text x="69.51" y="27.59" font-size="1.3" text-anchor="middle" fill="#2C2C2A">4.7 kΩ DQ→3V3</text><text x="69.51" y="29.59" font-size="1.2" text-anchor="middle" fill="#555">all DQ → GPIO37</text>
-<rect x="2" y="33" width="22" height="17" rx="0.8" fill="#1E5A8A" stroke="#123A5A"/><text x="13" y="39.5" text-anchor="middle" font-size="2" font-weight="bold" fill="#FFF">BUCK 24→5 V</text><text x="13" y="42.5" text-anchor="middle" font-size="1.5" fill="#CFE3F5">MP1584 mini, 22×17 (unverified)</text>
-<text x="3" y="48.8" font-size="1.3" fill="#CFE3F5">IN</text><text x="23" y="46.6" font-size="1.3" fill="#CFE3F5" text-anchor="end">OUT</text><text x="3" y="35.5" font-size="1.2" fill="#CFE3F5">24 V from block below</text>
-<circle cx="28.87" cy="36.49" r="2.2" fill="#333" stroke="#000"/><text x="28.87" y="40.79" text-anchor="middle" font-size="1.3" fill="#2C2C2A">100 µF on 5 V</text>
-<rect x="25.029999999999998" y="42.86" width="5.2" height="2.5" fill="#222" stroke="#000"/><rect x="25.43" y="43.26" width="4.4" height="1.7" fill="#D64545"/>
-<text x="27.6" y="47.71" text-anchor="middle" font-size="1.4" font-weight="bold" fill="#B03A3A">J-USB</text><text x="27.6" y="49.41" text-anchor="middle" font-size="0.95" fill="#B03A3A">pull before USB-C</text>
-<rect x="17.44" y="53.02" width="10.16" height="2.5" fill="#222" stroke="#000"/>
-<g font-size="1.2" fill="#2C2C2A" text-anchor="middle"><text x="18.71" y="52.07">5V</text><text x="21.25" y="52.07">GND</text><text x="23.79" y="52.07">13</text><text x="26.33" y="52.07">12</text></g>
-<text x="22.52" y="49.870000000000005" text-anchor="middle" font-size="1.3" font-weight="bold" fill="#2C2C2A">TO RELAY BOARD</text>
-<use href="#tb2" x="8.55" y="64.5"/><text x="8.55" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">0V</text><text x="13.63" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="11.09" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">24 V IN</text>
-<use href="#fet" x="33.95" y="36.5"/>
-<text x="36.49" y="31.6" font-size="1.6" font-weight="bold" text-anchor="middle" fill="#2C2C2A">VALVE A ← 11</text>
-<use href="#tb2" x="33.95" y="64.5"/><text x="33.95" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="39.03" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">SW</text>
-<text x="36.49" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">VALVE A</text>
-<use href="#fet" x="49.19" y="36.5"/>
-<text x="51.73" y="31.6" font-size="1.6" font-weight="bold" text-anchor="middle" fill="#2C2C2A">VALVE B ← 10</text>
-<use href="#tb2" x="49.19" y="64.5"/><text x="49.19" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="54.269999999999996" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">SW</text>
-<text x="51.73" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">VALVE B</text>
-<use href="#fet" x="64.43" y="36.5"/>
-<text x="66.97000000000001" y="31.6" font-size="1.6" font-weight="bold" text-anchor="middle" fill="#2C2C2A">FAN ← 6</text>
-<use href="#tb2" x="64.43" y="64.5"/><text x="64.43" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">24+</text><text x="69.51" y="67.9" font-size="1.3" fill="#FFF" text-anchor="middle">SW</text>
-<text x="66.97000000000001" y="59.8" font-size="1.5" font-weight="bold" fill="#183A5A" text-anchor="middle">FAN</text>
-<line x1="13.63" y1="57.2" x2="64.43" y2="57.2" stroke="#2A5D8F" stroke-width="0.5" stroke-dasharray="1 0.6"/><text x="65.43" y="57.7" font-size="1.2" fill="#2A5D8F">24V+ bus</text>
+<rect width="1240" height="1514" fill="#FFFFFF"/>
+<text x="20" y="26" font-size="15" font-weight="bold" fill="#2C2C2A">Desiccant dryer controller — protoboard layout (proposal)</text>
+<text x="20" y="45" font-size="11" fill="#444">Top view, component side; wiring on the underside. Left: logic + 24 V board, 90 × 70 mm. Right: mains relay board, also 90 × 70 mm. Only a 4-wire logic-level harness links them.</text>
+<text x="20" y="62" font-size="11" fill="#444">Prints 1:1 at 100 % (the SVG is sized in mm; 6 px/mm on screen): check the 10 mm bar measures 10 mm before using it as a drilling guide.</text>
+<g transform="translate(900,82)"><line x1="0" y1="0" x2="60" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-5" x2="0" y2="5" stroke="#000" stroke-width="1.5"/><line x1="60" y1="-5" x2="60" y2="5" stroke="#000" stroke-width="1.5"/><text x="70" y="4" font-size="11" fill="#000">10 mm</text></g>
+<text x="30" y="94" font-size="12" font-weight="bold" fill="#2C2C2A">LOGIC + 24 V BOARD (7 × 9 cm)</text>
+<text x="630" y="94" font-size="12" font-weight="bold" fill="#2C2C2A">RELAY BOARD (7 × 9 cm)</text>
+<g class="board logic" transform="translate(30,100) scale(6)" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
+<rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
+<circle cx="2.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="87.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="2.5" cy="67.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="87.5" cy="67.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<rect x="4.74" y="0.93" width="22.86" height="64.77" rx="2.54" fill="#B03A3A" fill-opacity="0.28" stroke="#7A2626" stroke-width="0.25"/>
+<rect x="4.74" y="0.93" width="22.86" height="6.3" fill="url(#hatch)" stroke="#7A2626" stroke-width="0.15"/>
+<rect x="0.6" y="0.6" width="31.2" height="9.2" fill="none" stroke="#7A2626" stroke-width="0.25" stroke-dasharray="0.8 0.5"/>
+<rect x="4.74" y="12.36" width="2.54" height="30.48" rx="0" fill="#222" stroke="#000" fill-opacity="0.75" stroke-width="0.1"/>
+<rect x="25.06" y="12.36" width="2.54" height="40.64" rx="0" fill="#222" stroke="#000" fill-opacity="0.75" stroke-width="0.1"/>
+<rect x="5.24" y="53.3" width="5" height="6" rx="0.3" fill="#111" stroke="#000" stroke-width="0.1"/>
+<rect x="11.67" y="59.6" width="9" height="7.2" rx="0.8" fill="#888" stroke="#333" stroke-width="0.15"/>
+<circle cx="7.28" cy="63.16" r="1.65" fill="#FFF" stroke="#7A2626" stroke-width="0.15"/>
+<circle cx="25.06" cy="63.16" r="1.65" fill="#FFF" stroke="#7A2626" stroke-width="0.15"/>
+<rect x="35.22" y="9.82" width="2.54" height="20.32" rx="0" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="34.04" y="3.11" width="12.4" height="5.75" rx="0.3" fill="#F2EEE0" stroke="#555" stroke-width="0.15"/>
+<rect x="34.04" y="3.11" width="12.4" height="0.8" rx="0" fill="#999" stroke="none" />
+<line x1="41.57" y1="8.55" x2="41.57" y2="16.17" stroke="#888" stroke-width="0.25"/>
+<rect x="40.62" y="9.76" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="44.11" y1="8.55" x2="44.11" y2="16.17" stroke="#888" stroke-width="0.25"/>
+<rect x="43.16" y="9.76" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<rect x="51.13" y="2.5" width="22" height="17" rx="0.6" fill="#1E5A8A" stroke="#123A5A" fill-opacity="0.45" stroke-width="0.2"/>
+<circle cx="60.62" cy="23.79" r="3.15" fill="#2B2B40" fill-opacity="0.55" stroke="#000" stroke-width="0.15"/>
+<rect x="62.37" y="21.59" width="0.9" height="4.4" rx="0" fill="#BBB" stroke="none" fill-opacity="0.8"/>
+<line x1="54.27" y1="23.79" x2="46.65" y2="23.79" stroke="#888" stroke-width="0.25"/>
+<rect x="47.95" y="22.89" width="5.2" height="1.8" rx="0.3" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="47.95" y="22.89" width="0.8" height="1.8" rx="0" fill="#DDD" stroke="none" />
+<rect x="40.3" y="22.52" width="5.08" height="2.54" rx="0" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="40.67" y="22.89" width="4.34" height="1.8" rx="0" fill="#D64545" stroke="none" fill-opacity="0.8"/>
+<rect x="81.15" y="17.75" width="7" height="47.64" rx="0.4" fill="#2D6A4F" stroke="#1B4332" fill-opacity="0.9" stroke-width="0.15"/>
+<line x1="77.13" y1="13.63" x2="77.13" y2="21.25" stroke="#888" stroke-width="0.25"/>
+<rect x="76.18" y="14.84" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="39.03" y1="36.49" x2="39.03" y2="44.11" stroke="#888" stroke-width="0.25"/>
+<rect x="38.08" y="37.7" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="36.49" y1="46.65" x2="36.49" y2="54.27" stroke="#888" stroke-width="0.25"/>
+<rect x="35.54" y="47.86" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<rect x="36.59" y="45.0" width="10" height="0.6" fill="#AAA" stroke="#555" stroke-width="0.08"/>
+<rect x="36.59" y="45.6" width="10" height="3.4" rx="0" fill="#444" stroke="#111" fill-opacity="0.85" stroke-width="0.1"/>
+<line x1="46.65" y1="46.65" x2="46.65" y2="59.35" stroke="#888" stroke-width="0.25"/>
+<rect x="45.75" y="47.95" width="1.8" height="5.2" rx="0.3" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="45.75" y="52.35" width="1.8" height="0.8" rx="0" fill="#DDD" stroke="none" />
+<use href="#tb2" x="36.49" y="64.43"/>
+<line x1="51.73" y1="36.49" x2="51.73" y2="44.11" stroke="#888" stroke-width="0.25"/>
+<rect x="50.78" y="37.7" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="49.19" y1="46.65" x2="49.19" y2="54.27" stroke="#888" stroke-width="0.25"/>
+<rect x="48.24" y="47.86" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<rect x="49.29" y="45.0" width="10" height="0.6" fill="#AAA" stroke="#555" stroke-width="0.08"/>
+<rect x="49.29" y="45.6" width="10" height="3.4" rx="0" fill="#444" stroke="#111" fill-opacity="0.85" stroke-width="0.1"/>
+<line x1="59.35" y1="46.65" x2="59.35" y2="59.35" stroke="#888" stroke-width="0.25"/>
+<rect x="58.45" y="47.95" width="1.8" height="5.2" rx="0.3" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="58.45" y="52.35" width="1.8" height="0.8" rx="0" fill="#DDD" stroke="none" />
+<use href="#tb2" x="49.19" y="64.43"/>
+<line x1="64.43" y1="36.49" x2="64.43" y2="44.11" stroke="#888" stroke-width="0.25"/>
+<rect x="63.48" y="37.7" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="61.89" y1="46.65" x2="61.89" y2="54.27" stroke="#888" stroke-width="0.25"/>
+<rect x="60.94" y="47.86" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<rect x="61.99" y="45.0" width="10" height="0.6" fill="#AAA" stroke="#555" stroke-width="0.08"/>
+<rect x="61.99" y="45.6" width="10" height="3.4" rx="0" fill="#444" stroke="#111" fill-opacity="0.85" stroke-width="0.1"/>
+<line x1="72.05" y1="46.65" x2="72.05" y2="59.35" stroke="#888" stroke-width="0.25"/>
+<rect x="71.15" y="47.95" width="1.8" height="5.2" rx="0.3" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="71.15" y="52.35" width="1.8" height="0.8" rx="0" fill="#DDD" stroke="none" />
+<use href="#tb2" x="61.89" y="64.43"/>
+<use href="#tb2" x="72.05" y="64.43"/>
+<circle class="pad" cx="6.01" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="18.71" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="21.25" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="26.33" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="28.87" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="31.41" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="33.95" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="36.49" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="39.03" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="6.01" cy="41.57" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="18.71" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="21.25" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="26.33" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="28.87" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="31.41" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="33.95" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="36.49" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="39.03" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="41.57" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="44.11" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="49.19" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="26.33" cy="51.73" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="11.09" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="18.71" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="21.25" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="26.33" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="28.87" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="39.03" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="41.57" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="44.11" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="41.57" cy="8.55" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="41.57" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="44.11" cy="8.55" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="44.11" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="72.05" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="72.05" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="59.35" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="61.89" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="54.27" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="46.65" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="41.57" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="44.11" cy="23.79" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="21.25" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="26.33" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="31.41" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="36.49" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="41.57" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="46.65" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="51.73" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="56.81" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="84.75" cy="61.89" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="77.13" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="77.13" cy="21.25" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="39.03" cy="36.49" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="39.03" cy="44.11" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="54.27" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="39.03" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="41.57" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="44.11" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="46.65" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="46.65" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="36.49" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="44.11" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="49.19" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="49.19" cy="54.27" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="54.27" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="56.81" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="59.35" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="59.35" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="64.43" cy="36.49" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="64.43" cy="44.11" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="61.89" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="61.89" cy="54.27" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="64.43" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="66.97" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="69.51" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="72.05" cy="46.65" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="72.05" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<polyline points="41.57,6.01 41.57,8.55" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="44.11,6.01 44.11,8.55" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="39.03,44.11 39.03,46.65" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,46.65 39.03,46.65" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="44.11,46.65 44.11,54.27" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="41.57,46.65 41.57,47.92 46.65,47.92 46.65,46.65" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="41.57,47.92 41.57,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,59.35 36.49,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="51.73,44.11 51.73,46.65" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="49.19,46.65 51.73,46.65" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="56.81,46.65 56.81,54.27" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="54.27,46.65 54.27,47.92 59.35,47.92 59.35,46.65" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="54.27,47.92 54.27,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="49.19,59.35 49.19,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="64.43,44.11 64.43,46.65" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="61.89,46.65 64.43,46.65" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="69.51,46.65 69.51,54.27" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="66.97,46.65 66.97,47.92 72.05,47.92 72.05,46.65" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="66.97,47.92 66.97,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="61.89,59.35 61.89,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="33.95,54.27 74.59,54.27" fill="none" stroke="#333333" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="36.49,59.35 72.05,59.35 72.05,64.43" fill="none" stroke="#2A5D8F" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="26.33,49.19 28.87,49.19 28.87,13.63 36.49,13.63" fill="none" stroke="#E08A2E" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="28.87,31.41 72.05,31.41 72.05,33.95 79.67,33.95" fill="none" stroke="#E08A2E" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="72.05,64.43 73.32,64.43 73.32,7.28 72.05,7.28 72.05,6.01" fill="none" stroke="#2A5D8F" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="77.13,64.43 77.13,61.89" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="51.73,16.17 72.05,16.17 74.59,16.17 74.59,61.89" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="61.89,23.79 63.16,23.79 63.16,16.17" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="39.03,6.01 39.03,2.2 49.9,2.2 49.9,16.17 51.73,16.17" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,11.09 37.76,11.09 37.76,7.28 39.03,7.28 39.03,6.01" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,44.11 33.95,44.11 33.95,54.27" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,6.01 36.49,4.74 51.73,4.74 51.73,6.01" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="51.73,6.01 53,6.01 53,20.95 54.27,20.95 54.27,23.79" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="53,20.95 59.35,20.95 59.35,23.79" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="46.65,23.79 44.11,23.79" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="41.57,23.79 40.3,23.79 40.3,35.22 7.28,35.22 7.28,36.49 6.01,36.49" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="6.01,28.87 7.28,28.87 7.28,30.14 39.03,30.14 39.03,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="6.01,26.33 8.55,26.33 8.55,27.6 51.73,27.6 51.73,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="6.01,21.25 9.82,21.25 9.82,32.68 64.43,32.68 64.43,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="6.01,33.95 11.09,33.95 11.09,17.44 41.57,17.44 41.57,16.17" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="6.01,31.41 12.36,31.41 12.36,19.98 44.11,19.98 44.11,16.17" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,23.79 29.85,23.79 29.85,18.71 36.49,18.71" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,26.33 30.75,26.33 30.75,16.17 36.49,16.17" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,28.87 31.65,28.87 31.65,26.33 36.49,26.33" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,33.95 32.55,33.95 32.55,23.79 36.49,23.79" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,36.49 33.45,36.49 33.45,21.25 36.49,21.25" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,41.57 34.35,41.57 34.35,28.87 36.49,28.87" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="26.33,21.25 23.8,21.25 23.8,55.54 77.13,55.54" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="77.13,21.25 77.13,56.81" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="77.13,13.63 79.67,13.63 79.67,51.73" fill="none" stroke="#E08A2E" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,21.25 79.67,21.25" fill="none" stroke="#E08A2E" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,26.33 77.13,26.33" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,31.41 74.59,31.41" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,36.49 79.67,36.49" fill="none" stroke="#E08A2E" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,41.57 77.13,41.57" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,46.65 74.59,46.65" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,51.73 79.67,51.73" fill="none" stroke="#E08A2E" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,56.81 77.13,56.81" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="84.75,61.89 74.59,61.89" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<text x="16.17" y="4.6" font-size="1.05" fill="#7A2626" text-anchor="middle" font-weight="bold">ANTENNA — keep copper, parts, wires out</text>
+<text x="16.17" y="9.2" font-size="0.95" fill="#7A2626" text-anchor="middle">keep-out (board edge above)</text>
+<text x="8.1" y="14.03" font-size="1.05" fill="#5A1515" text-anchor="start">SDA</text>
+<text x="8.1" y="16.57" font-size="1.05" fill="#5A1515" text-anchor="start">SCL</text>
+<text x="8.1" y="19.11" font-size="1.05" fill="#5A1515" text-anchor="start">4</text>
+<text x="8.1" y="21.65" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">6</text>
+<text x="8.1" y="24.19" font-size="1.05" fill="#5A1515" text-anchor="start">8</text>
+<text x="8.1" y="26.73" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">10</text>
+<text x="8.1" y="29.27" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">11</text>
+<text x="8.1" y="31.81" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">12</text>
+<text x="8.1" y="34.35" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">13</text>
+<text x="8.1" y="36.89" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">USB</text>
+<text x="8.1" y="39.43" font-size="1.05" fill="#5A1515" text-anchor="start">EN</text>
+<text x="8.1" y="41.97" font-size="1.05" fill="#5A1515" text-anchor="start">BAT</text>
+<text x="24.3" y="14.03" font-size="1.05" fill="#5A1515" text-anchor="end">3</text>
+<text x="24.3" y="16.57" font-size="1.05" fill="#5A1515" text-anchor="end">34</text>
+<text x="24.3" y="19.11" font-size="1.05" fill="#5A1515" text-anchor="end">33</text>
+<text x="24.3" y="21.65" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">37</text>
+<text x="24.3" y="24.19" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">35</text>
+<text x="24.3" y="26.73" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">36</text>
+<text x="24.3" y="29.27" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">5</text>
+<text x="24.3" y="31.81" font-size="1.05" fill="#5A1515" text-anchor="end">7</text>
+<text x="24.3" y="34.35" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">9</text>
+<text x="24.3" y="36.89" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">14</text>
+<text x="24.3" y="39.43" font-size="1.05" fill="#5A1515" text-anchor="end">18</text>
+<text x="24.3" y="41.97" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">17</text>
+<text x="24.3" y="44.51" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">GND</text>
+<text x="24.3" y="47.05" font-size="1.05" fill="#5A1515" text-anchor="end">NC</text>
+<text x="24.3" y="49.59" font-size="1.05" fill="#5A1515" text-anchor="end" font-weight="bold">3V3</text>
+<text x="24.3" y="52.13" font-size="1.05" fill="#5A1515" text-anchor="end">EN</text>
+<text x="16.17" y="22" font-size="1.9" fill="#5A1515" text-anchor="middle" font-weight="bold">ESP32-S2</text>
+<text x="16.17" y="24.3" font-size="1.9" fill="#5A1515" text-anchor="middle" font-weight="bold">Thing Plus</text>
+<text x="16.17" y="27" font-size="1.2" fill="#5A1515" text-anchor="middle">64.77 × 22.86 mm</text>
+<text x="16.17" y="28.8" font-size="1.1" fill="#5A1515" text-anchor="middle">component side up</text>
+<text x="8.3" y="45.5" font-size="1" fill="#5A1515" text-anchor="start">12-pin</text>
+<text x="24.1" y="55.2" font-size="1" fill="#5A1515" text-anchor="end">16-pin</text>
+<text x="10.8" y="56.7" font-size="1.05" fill="#5A1515" text-anchor="start">Qwiic</text>
+<text x="4.4" y="56.3" font-size="1" fill="#2C2C2A" text-anchor="end">← SHT45</text>
+<text x="16.17" y="64.2" font-size="1.2" fill="#FFF" text-anchor="middle" font-weight="bold">USB-C</text>
+<text x="16.17" y="69.1" font-size="0.95" fill="#2C2C2A" text-anchor="middle">plug enters below the board</text>
+<text x="38.09" y="11.49" font-size="0.95" fill="#2C2C2A" text-anchor="start">GND</text>
+<text x="38.09" y="14.03" font-size="0.95" fill="#2C2C2A" text-anchor="start">3V3</text>
+<text x="38.09" y="16.57" font-size="0.95" fill="#2C2C2A" text-anchor="start">SCL</text>
+<text x="38.09" y="19.11" font-size="0.95" fill="#2C2C2A" text-anchor="start">SDA</text>
+<text x="38.09" y="21.65" font-size="0.95" fill="#2C2C2A" text-anchor="start">RES</text>
+<text x="38.09" y="24.19" font-size="0.95" fill="#2C2C2A" text-anchor="start">DC</text>
+<text x="38.09" y="26.73" font-size="0.95" fill="#2C2C2A" text-anchor="start">CS</text>
+<text x="38.09" y="29.27" font-size="0.95" fill="#2C2C2A" text-anchor="start">BLK</text>
+<text x="35" y="11.5" font-size="1" fill="#2C2C2A" text-anchor="end" font-weight="bold">DISPLAY</text>
+<text x="36.49" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">5V</text>
+<text x="39.03" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">GND</text>
+<text x="41.57" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">A</text>
+<text x="44.11" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">B</text>
+<text x="34.09" y="1.3" font-size="0.95" fill="#2C2C2A" text-anchor="start" font-weight="bold">TO RELAY BOARD · JST-XH 4-way</text>
+<text x="41.37" y="18.07" font-size="1" fill="#2C2C2A" text-anchor="end">1k</text>
+<text x="44.31" y="18.07" font-size="1" fill="#2C2C2A" text-anchor="start">1k</text>
+<text x="52.83" y="6.41" font-size="1" fill="#0E2A45" text-anchor="start" font-weight="bold">OUT+</text>
+<text x="52.83" y="16.57" font-size="1" fill="#0E2A45" text-anchor="start" font-weight="bold">OUT−</text>
+<text x="70.95" y="6.41" font-size="1" fill="#0E2A45" text-anchor="end" font-weight="bold">IN+</text>
+<text x="70.95" y="16.57" font-size="1" fill="#0E2A45" text-anchor="end" font-weight="bold">IN−</text>
+<text x="62.13" y="9.6" font-size="1.6" fill="#0E2A45" text-anchor="middle" font-weight="bold">BUCK 24 → 5 V</text>
+<text x="62.13" y="11.7" font-size="1.05" fill="#0E2A45" text-anchor="middle">MP1584 mini, 22 × 17</text>
+<text x="62.13" y="13.1" font-size="1" fill="#0E2A45" text-anchor="middle">pads UNVERIFIED · IN− = OUT−</text>
+<text x="62.13" y="14.5" font-size="1" fill="#0E2A45" text-anchor="middle" font-weight="bold">set 5.00–5.10 V first</text>
+<text x="57.45" y="22.59" font-size="1.8" fill="#FFF" text-anchor="middle" font-weight="bold">+</text>
+<text x="60.62" y="28.09" font-size="1" fill="#2C2C2A" text-anchor="middle">100 µF 16 V</text>
+<text x="50.46" y="26.09" font-size="0.9" fill="#2C2C2A" text-anchor="middle">SS34 / 1N5819</text>
+<text x="50.46" y="22.39" font-size="0.9" fill="#2C2C2A" text-anchor="middle">band →</text>
+<text x="42.84" y="26.09" font-size="1.1" fill="#B03A3A" text-anchor="middle" font-weight="bold">JP-USB</text>
+<text x="86.15" y="21.65" font-size="0.95" fill="#FFF" text-anchor="start">3V3</text>
+<text x="86.15" y="26.73" font-size="0.95" fill="#FFF" text-anchor="start">DQ</text>
+<text x="86.15" y="31.81" font-size="0.95" fill="#FFF" text-anchor="start">GND</text>
+<text x="86.15" y="36.89" font-size="0.95" fill="#FFF" text-anchor="start">3V3</text>
+<text x="86.15" y="41.97" font-size="0.95" fill="#FFF" text-anchor="start">DQ</text>
+<text x="86.15" y="47.05" font-size="0.95" fill="#FFF" text-anchor="start">GND</text>
+<text x="86.15" y="52.13" font-size="0.95" fill="#FFF" text-anchor="start">3V3</text>
+<text x="86.15" y="57.21" font-size="0.95" fill="#FFF" text-anchor="start">DQ</text>
+<text x="86.15" y="62.29" font-size="0.95" fill="#FFF" text-anchor="start">GND</text>
+<text x="84.75" y="17.05" font-size="1.05" fill="#2C2C2A" text-anchor="middle" font-weight="bold">DS18B20 ×3</text>
+<text x="75.93" y="17.69" font-size="1" fill="#2C2C2A" text-anchor="end">4.7k</text>
+<text x="40.23" y="39.79" font-size="1" fill="#2C2C2A" text-anchor="start">100Ω</text>
+<text x="37.59" y="53.25" font-size="1" fill="#2C2C2A" text-anchor="start">10k</text>
+<text x="41.59" y="46.5" font-size="0.8" fill="#FFF" text-anchor="middle">IRLZ44N</text>
+<text x="39.03" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">G</text>
+<text x="41.57" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">D</text>
+<text x="44.11" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">S</text>
+<text x="36.49" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">24+</text>
+<text x="41.57" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">SW</text>
+<text x="40.69" y="37.55" font-size="1.05" fill="#2C2C2A" text-anchor="start" font-weight="bold">VALVE A ← 11</text>
+<text x="52.93" y="39.79" font-size="1" fill="#2C2C2A" text-anchor="start">100Ω</text>
+<text x="50.29" y="53.25" font-size="1" fill="#2C2C2A" text-anchor="start">10k</text>
+<text x="54.29" y="46.5" font-size="0.8" fill="#FFF" text-anchor="middle">IRLZ44N</text>
+<text x="51.73" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">G</text>
+<text x="54.27" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">D</text>
+<text x="56.81" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">S</text>
+<text x="49.19" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">24+</text>
+<text x="54.27" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">SW</text>
+<text x="53.39" y="37.55" font-size="1.05" fill="#2C2C2A" text-anchor="start" font-weight="bold">VALVE B ← 10</text>
+<text x="65.63" y="39.79" font-size="1" fill="#2C2C2A" text-anchor="start">100Ω</text>
+<text x="62.99" y="53.25" font-size="1" fill="#2C2C2A" text-anchor="start">10k</text>
+<text x="66.99" y="46.5" font-size="0.8" fill="#FFF" text-anchor="middle">IRLZ44N</text>
+<text x="64.43" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">G</text>
+<text x="66.97" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">D</text>
+<text x="69.51" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">S</text>
+<text x="61.89" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">24+</text>
+<text x="66.97" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">SW</text>
+<text x="66.09" y="37.55" font-size="1.05" fill="#2C2C2A" text-anchor="start" font-weight="bold">FAN ← 6</text>
+<text x="72.05" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">24+</text>
+<text x="77.13" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">0V</text>
+<text x="91.4" y="26.33" font-size="1.3" fill="#1B4332" text-anchor="middle" font-weight="bold" transform="rotate(-90 91.4 26.33)">PACK A</text>
+<text x="91.4" y="41.57" font-size="1.3" fill="#1B4332" text-anchor="middle" font-weight="bold" transform="rotate(-90 91.4 41.57)">PACK B</text>
+<text x="91.4" y="56.81" font-size="1.3" fill="#1B4332" text-anchor="middle" font-weight="bold" transform="rotate(-90 91.4 56.81)">CASE</text>
 </g>
-<g transform="translate(620,80) scale(6)" stroke-width="0.15">
-<rect x="0" y="0" width="70" height="50" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/><rect x="2.2" y="2.2" width="65.6" height="45.6" fill="url(#holes)"/>
-<g fill="#FFF" stroke="#8A8677" stroke-width="0.2"><circle cx="2.5" cy="2.5" r="1.3"/><circle cx="67.5" cy="2.5" r="1.3"/><circle cx="2.5" cy="47.5" r="1.3"/><circle cx="67.5" cy="47.5" r="1.3"/></g>
-<rect x="7.280000000000001" y="2.22" width="10.16" height="2.5" fill="#222" stroke="#000"/>
-<g font-size="1.2" fill="#2C2C2A" text-anchor="middle"><text x="8.55" y="6.77">5V</text><text x="11.09" y="6.77">GND</text><text x="13.63" y="6.77">13</text><text x="16.17" y="6.77">12</text></g>
-<text x="19.71" y="3.97" font-size="1.3" fill="#2C2C2A">FROM LOGIC BOARD (4-pin)</text>
-<circle cx="64.43" cy="23.79" r="2.2" fill="#333" stroke="#000"/><text x="64.43" y="28.09" text-anchor="middle" font-size="1.2" fill="#2C2C2A">100 µF on 5 V</text>
-<text x="15.5" y="9.6" font-size="1.5" font-weight="bold" fill="#2C2C2A" text-anchor="middle">HEATER A ← 13</text>
-<use href="#npn" x="11.09" y="15"/>
-<use href="#dio" x="15.5" y="19.8"/><text x="19.0" y="20.3" font-size="1.1" fill="#2C2C2A">1N4007 → 5 V</text>
-<use href="#relay" x="6" y="22"/>
-<text x="51.0" y="9.6" font-size="1.5" font-weight="bold" fill="#2C2C2A" text-anchor="middle">HEATER B ← 12</text>
-<use href="#npn" x="46.65" y="15"/>
-<use href="#dio" x="51.0" y="19.8"/><text x="54.5" y="20.3" font-size="1.1" fill="#2C2C2A">1N4007 → 5 V</text>
-<use href="#relay" x="41.5" y="22"/>
-<line x1="1.5" y1="31.2" x2="68.5" y2="31.2" stroke="#B03A3A" stroke-width="0.35" stroke-dasharray="1.2 0.8"/>
-<text x="35" y="39.3" font-size="1.1" text-anchor="middle" fill="#B03A3A">mains only below the dashed line · ≥ 2 empty hole rows (≥ 6 mm) between any mains pad and any low-voltage pad · drill out unused pads in the gap</text>
-<use href="#tbm" x="8.55" y="45"/><text x="8.55" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">L</text><text x="13.63" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">N</text><text x="11.09" y="40.9" font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">120 VAC IN</text>
-<use href="#tbm" x="23.79" y="45"/><text x="23.79" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">L sw</text><text x="28.869999999999997" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">N</text><text x="26.33" y="40.9" font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">HEATER A</text>
-<use href="#tbm" x="46.65" y="45"/><text x="46.65" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">L sw</text><text x="51.73" y="48.4" font-size="1.3" fill="#FFF" text-anchor="middle">N</text><text x="49.19" y="40.9" font-size="1.5" font-weight="bold" fill="#7A2626" text-anchor="middle">HEATER B</text>
-<text x="61.5" y="42.5" font-size="1.15" fill="#7A2626" text-anchor="middle">L → COM, NO → L sw</text><text x="61.5" y="44.4" font-size="1.15" fill="#7A2626" text-anchor="middle">fuse 3 A upstream</text><text x="61.5" y="46.3" font-size="1.15" fill="#7A2626" text-anchor="middle">PE passes straight</text><text x="61.5" y="48.2" font-size="1.15" fill="#7A2626" text-anchor="middle">to the heaters</text>
+<g class="board relay" transform="translate(630,100) scale(6)" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="90" height="70" rx="1.5" fill="#EDE9DD" stroke="#B8B4A8" stroke-width="0.3"/>
+<rect x="2.2" y="2.2" width="85.6" height="65.6" fill="url(#holes)"/>
+<circle cx="2.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="87.5" cy="2.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="2.5" cy="67.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<circle cx="87.5" cy="67.5" r="1.6" fill="#FFF" stroke="#8A8677" stroke-width="0.2"/>
+<rect x="28.96" y="3.11" width="12.4" height="5.75" rx="0.3" fill="#F2EEE0" stroke="#555" stroke-width="0.15"/>
+<rect x="28.96" y="3.11" width="12.4" height="0.8" rx="0" fill="#999" stroke="none" />
+<circle cx="37.76" cy="13.63" r="3.15" fill="#2B2B40" fill-opacity="0.55" stroke="#000" stroke-width="0.15"/>
+<rect x="39.51" y="11.43" width="0.9" height="4.4" rx="0" fill="#BBB" stroke="none" fill-opacity="0.8"/>
+<rect x="12.23" y="21.81" width="15.5" height="19.2" rx="0.6" fill="#2E5CB8" stroke="#1B3A78" fill-opacity="0.3" stroke-width="0.2"/>
+<path d="M15.07,14.83 L22.35,14.83 A3.9,3.9 0 0,0 15.07,14.83 z" fill="#333" fill-opacity="0.55" stroke="#000" stroke-width="0.12"/>
+<line x1="18.71" y1="3.47" x2="18.71" y2="11.09" stroke="#888" stroke-width="0.25"/>
+<rect x="17.76" y="4.68" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="23.79" y1="6.01" x2="23.79" y2="16.17" stroke="#888" stroke-width="0.25"/>
+<rect x="22.89" y="7.31" width="1.8" height="5.2" rx="0.3" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="22.89" y="11.71" width="1.8" height="0.8" rx="0" fill="#DDD" stroke="none" />
+<rect x="42.71" y="21.81" width="15.5" height="19.2" rx="0.6" fill="#2E5CB8" stroke="#1B3A78" fill-opacity="0.3" stroke-width="0.2"/>
+<path d="M48.09,14.83 L55.37,14.83 A3.9,3.9 0 0,0 48.09,14.83 z" fill="#333" fill-opacity="0.55" stroke="#000" stroke-width="0.12"/>
+<line x1="51.73" y1="3.47" x2="51.73" y2="11.09" stroke="#888" stroke-width="0.25"/>
+<rect x="50.78" y="4.68" width="1.9" height="5.2" rx="0.4" fill="#D8C9A0" stroke="#8A7A4A" stroke-width="0.12"/>
+<line x1="46.65" y1="6.01" x2="46.65" y2="16.17" stroke="#888" stroke-width="0.25"/>
+<rect x="45.75" y="7.31" width="1.8" height="5.2" rx="0.3" fill="#222" stroke="#000" stroke-width="0.1"/>
+<rect x="45.75" y="11.71" width="1.8" height="0.8" rx="0" fill="#DDD" stroke="none" />
+<use href="#tbm" x="8.55" y="44.11"/>
+<use href="#tbm" x="31.41" y="44.11"/>
+<use href="#tbm" x="56.81" y="44.11"/>
+<rect x="27.81" y="53.75" width="30.06" height="11.2" rx="0.6" fill="#7A2626" stroke="#4A1414" fill-opacity="0.15" stroke-width="0.2"/>
+<rect x="29.81" y="56.15" width="3.2" height="6.4" rx="0.3" fill="#BBBBBB" stroke="#555" stroke-width="0.15"/>
+<rect x="52.67" y="56.15" width="3.2" height="6.4" rx="0.3" fill="#BBBBBB" stroke="#555" stroke-width="0.15"/>
+<rect x="32.84" y="56.85" width="20" height="5" rx="1.5" fill="#E2E2DA" stroke="#888" fill-opacity="0.8" stroke-width="0.15"/>
+<use href="#tbm" x="72.05" y="44.11"/>
+<circle class="pad" cx="31.41" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="33.95" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="39.03" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="36.49" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="39.03" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="19.98" cy="24.31" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="13.98" cy="26.31" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="25.98" cy="26.31" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="13.98" cy="38.51" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="25.98" cy="38.51" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="16.17" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="18.71" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="21.25" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="18.71" cy="3.47" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="18.71" cy="11.09" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="23.79" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="23.79" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="50.46" cy="24.31" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="56.46" cy="26.31" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="44.46" cy="26.31" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="56.46" cy="38.51" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="44.46" cy="38.51" r="1" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12" data-offgrid="relay"/>
+<circle class="pad" cx="54.27" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="49.19" cy="13.63" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="3.47" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="51.73" cy="11.09" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="46.65" cy="6.01" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="46.65" cy="16.17" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="31.41" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<circle class="pad" cx="54.27" cy="59.35" r="0.8" fill="#C8923E" stroke="#6B4A1A" stroke-width="0.12"/>
+<polyline points="13.63,3.47 56.81,3.47" fill="none" stroke="#333333" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="13.63,16.17 56.81,16.17" fill="none" stroke="#D64545" stroke-width="0.6" stroke-dasharray="1.3 0.5" stroke-linejoin="round"/>
+<polyline points="33.95,6.01 33.95,3.47" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="31.41,6.01 31.41,16.17" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,13.63 36.49,16.17" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="39.03,13.63 41.57,13.63 41.57,3.47" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="18.71,11.09 18.71,13.63" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="16.17,13.63 16.17,3.47" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="21.25,13.63 22.52,13.63 22.52,6.01 23.79,6.01" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="22.52,13.63 22.52,14.9 25.98,14.9 25.98,26.31" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="13.98,26.31 13.98,20 13.63,20 13.63,16.17" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,6.01 36.49,4.74 19.98,4.74 19.98,11.09 18.71,11.09" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="51.73,11.09 51.73,13.63" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="54.27,13.63 54.27,3.47" fill="none" stroke="#333333" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="49.19,13.63 47.92,13.63 47.92,6.01 46.65,6.01" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="47.92,13.63 47.92,14.9 44.46,14.9 44.46,26.31" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="56.46,26.31 56.46,20 56.81,20 56.81,16.17" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="39.03,6.01 39.03,4.74 50.46,4.74 50.46,11.09 51.73,11.09" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="1.2,29.2 16.83,29.2 16.83,21.16 23.13,21.16 23.13,29.2 47.31,29.2 47.31,21.16 53.61,21.16 53.61,29.2 88.8,29.2" fill="none" stroke="#B03A3A" stroke-width="0.3" stroke-dasharray="2 0.6 0.4 0.6"/>
+<polyline points="31.41,44.11 31.41,59.35" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="54.27,59.35 66.97,59.35 66.97,31.75 50.46,31.75 50.46,24.31" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="50.46,31.75 19.98,31.75 19.98,24.31" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="66.97,44.11 72.05,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="13.98,38.51 13.98,42.84 13.63,42.84 13.63,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="56.46,38.51 56.46,42.84 56.81,42.84 56.81,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,44.11 36.49,41.57 8.55,41.57 8.55,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="36.49,41.57 61.89,41.57 61.89,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="61.89,41.57 77.13,41.57 77.13,44.11" fill="none" stroke="#8B1A1A" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<text x="31.41" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">5V</text>
+<text x="33.95" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">GND</text>
+<text x="36.49" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">A</text>
+<text x="39.03" y="8.31" font-size="0.85" fill="#2C2C2A" text-anchor="middle">B</text>
+<text x="29.01" y="1.3" font-size="0.95" fill="#2C2C2A" text-anchor="start" font-weight="bold">FROM LOGIC BOARD · JST-XH 4-way</text>
+<text x="34.59" y="12.43" font-size="1.8" fill="#FFF" text-anchor="middle" font-weight="bold">+</text>
+<text x="41.9" y="15.1" font-size="1" fill="#2C2C2A" text-anchor="start">100 µF 16 V</text>
+<text x="19.98" y="33.51" font-size="1" fill="#1B3A78" text-anchor="middle" font-weight="bold">SRD-05VDC-SL-C</text>
+<text x="19.98" y="34.91" font-size="0.9" fill="#1B3A78" text-anchor="middle">19.2 × 15.5 mm</text>
+<text x="19.98" y="23.01" font-size="0.95" fill="#8B1A1A" text-anchor="middle" font-weight="bold">COM</text>
+<text x="13.98" y="28.51" font-size="0.95" fill="#1B3A78" text-anchor="middle" font-weight="bold">coil</text>
+<text x="25.98" y="28.51" font-size="0.95" fill="#1B3A78" text-anchor="middle" font-weight="bold">coil</text>
+<text x="13.98" y="37.21" font-size="0.95" fill="#8B1A1A" text-anchor="middle" font-weight="bold">NO</text>
+<text x="25.98" y="37.21" font-size="0.95" fill="#8B1A1A" text-anchor="middle" font-weight="bold">NC</text>
+<text x="25.98" y="40.81" font-size="0.85" fill="#8B1A1A" text-anchor="middle">leave open</text>
+<text x="16.17" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">E</text>
+<text x="18.71" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">B</text>
+<text x="21.25" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">C</text>
+<text x="14.31" y="14.03" font-size="0.95" fill="#2C2C2A" text-anchor="end" font-weight="bold">PN2222A *</text>
+<text x="18.71" y="7.28" font-size="1" fill="#2C2C2A" text-anchor="start"></text>
+<text x="15.81" y="7.58" font-size="0.9" fill="#2C2C2A" text-anchor="end">10k</text>
+<text x="19.98" y="19.3" font-size="1.2" fill="#2C2C2A" text-anchor="middle" font-weight="bold">HEATER A ← 13</text>
+<text x="50.46" y="33.51" font-size="1" fill="#1B3A78" text-anchor="middle" font-weight="bold">SRD-05VDC-SL-C</text>
+<text x="50.46" y="34.91" font-size="0.9" fill="#1B3A78" text-anchor="middle">19.2 × 15.5 mm</text>
+<text x="50.46" y="23.01" font-size="0.95" fill="#8B1A1A" text-anchor="middle" font-weight="bold">COM</text>
+<text x="56.46" y="28.51" font-size="0.95" fill="#1B3A78" text-anchor="middle" font-weight="bold">coil</text>
+<text x="44.46" y="28.51" font-size="0.95" fill="#1B3A78" text-anchor="middle" font-weight="bold">coil</text>
+<text x="56.46" y="37.21" font-size="0.95" fill="#8B1A1A" text-anchor="middle" font-weight="bold">NO</text>
+<text x="44.46" y="37.21" font-size="0.95" fill="#8B1A1A" text-anchor="middle" font-weight="bold">NC</text>
+<text x="44.46" y="40.81" font-size="0.85" fill="#8B1A1A" text-anchor="middle">leave open</text>
+<text x="54.27" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">E</text>
+<text x="51.73" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">B</text>
+<text x="49.19" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">C</text>
+<text x="56.13" y="14.03" font-size="0.95" fill="#2C2C2A" text-anchor="start" font-weight="bold">PN2222A *</text>
+<text x="51.73" y="7.28" font-size="1" fill="#2C2C2A" text-anchor="start"></text>
+<text x="54.63" y="7.58" font-size="0.9" fill="#2C2C2A" text-anchor="start">10k</text>
+<text x="50.46" y="19.3" font-size="1.2" fill="#2C2C2A" text-anchor="middle" font-weight="bold">HEATER B ← 12</text>
+<text x="35" y="28.5" font-size="0.95" fill="#B03A3A" text-anchor="middle" font-weight="bold">LOW VOLTAGE above</text>
+<text x="35" y="34.6" font-size="0.95" fill="#B03A3A" text-anchor="middle" font-weight="bold">120 VAC below (and COM)</text>
+<text x="8.55" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
+<text x="13.63" y="47.11" font-size="0.95" fill="#FFF" text-anchor="middle">L sw</text>
+<text x="31.41" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">L</text>
+<text x="36.49" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
+<text x="56.81" y="47.11" font-size="0.95" fill="#FFF" text-anchor="middle">L sw</text>
+<text x="61.89" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
+<text x="42.84" y="59.85" font-size="1.3" fill="#4A1414" text-anchor="middle" font-weight="bold">F1   T 3.15 A</text>
+<text x="42.84" y="66.75" font-size="0.9" fill="#8B1A1A" text-anchor="middle">5 × 20 clips on 22.86 mm centres (9 × 2.54) — check your holder</text>
+<text x="72.05" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">L</text>
+<text x="77.13" y="47.11" font-size="1.1" fill="#FFF" text-anchor="middle">N</text>
+<text x="74.59" y="38.71" font-size="1.3" fill="#8B1A1A" text-anchor="middle" font-weight="bold">24 V PSU</text>
+<text x="74.59" y="40.41" font-size="1" fill="#8B1A1A" text-anchor="middle">(fused side)</text>
 </g>
-<g transform="translate(30,540)" font-size="11" fill="#2C2C2A">
-  <text y="0" font-size="12" font-weight="bold">Inter-board harness (4 wires)</text>
-  <text y="18">5 V and GND from the buck; GPIO13 → heater A, GPIO12 → heater B. About 3 mA per signal.</text>
-  <text y="34">Everything mains-rated stays on the relay board; the relay board carries no 24 V.</text>
-  <text y="60" font-size="12" font-weight="bold">Off-board</text>
-  <text y="78">SHT45 on the ESP's Qwiic connector. Display on the enclosure front via the 8-pin cable (keep it under 15 cm).</text>
-  <text y="94">24 V PSU → 24 V IN. Valves and fan → their own blocks; the negative lead is the switched one.</text>
-  <text y="110">Three DS18B20 cables → the green 9-pos block; each probe gets its own 3V3 / DQ / GND triple.</text>
-  <text y="136" font-size="12" font-weight="bold">Caveats</text>
-  <text y="154">Songle SRD pins sit on a 6 mm / 12 mm pattern, not 2.54 mm; expect to splay pins or ream holes, and mark COM/NO from the datasheet before wiring L.</text>
-  <text y="170">Buck footprint is drawn as an MP1584 mini and is unverified. Don't cut metal from this drawing.</text>
-  <text y="186">ESP PCB sits 3.5 mm in from the left edge; the USB-C shell protrudes past it. J-USB feeds buck 5 V to the USB pin: pull it before plugging in (USB pin and VBUS are one net).</text>
-  <text y="202">Alternative to J-USB: a Schottky from buck 5 V to the USB pin makes USB-C safe at any time, if the module's 3.3 V LDO tolerates the extra drop (unverified).</text>
-</g>
-<g transform="translate(700,540)" font-size="11" fill="#2C2C2A">
-  <text y="0" font-size="12" font-weight="bold">Legend</text>
-  <rect x="0" y="8" width="12" height="10" fill="#2A5D8F"/><text x="18" y="17">24 V terminals</text>
-  <rect x="0" y="26" width="12" height="10" fill="#7A2626"/><text x="18" y="35">120 VAC terminals</text>
-  <rect x="0" y="44" width="12" height="10" fill="#2D6A4F"/><text x="18" y="53">sensor terminals</text>
-  <rect x="0" y="62" width="12" height="10" fill="#222"/><text x="18" y="71">pin headers</text>
-  <rect x="0" y="80" width="12" height="10" fill="#D8C9A0" stroke="#8A7A4A"/><text x="18" y="89">resistors</text>
-  <rect x="0" y="98" width="12" height="10" fill="#222"/><rect x="9" y="98" width="2" height="10" fill="#DDD"/><text x="18" y="107">1N4007, band marked</text>
-  <text x="0" y="125">grid dots = 2.54 mm holes</text>
-</g>
+<text x="264.18" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">VALVE A ← GPIO11</text>
+<text x="264.18" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · SW</text>
+<text x="264.18" y="549" font-size="7.5" text-anchor="middle" fill="#2C2C2A">(drain, load −)</text>
+<text x="340.38" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">VALVE B ← GPIO10</text>
+<text x="340.38" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · SW</text>
+<text x="340.38" y="549" font-size="7.5" text-anchor="middle" fill="#2C2C2A">(drain, load −)</text>
+<text x="416.58" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">FAN ← GPIO6</text>
+<text x="416.58" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · SW</text>
+<text x="416.58" y="549" font-size="7.5" text-anchor="middle" fill="#2C2C2A">(drain, load −)</text>
+<text x="477.54" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">24 V IN</text>
+<text x="477.54" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · 0V</text>
+<text x="230" y="570" font-size="8" fill="#2C2C2A">Each MOSFET channel: 100 Ω gate, 10 kΩ gate → GND, IRLZ44N (marking face toward viewer,</text>
+<text x="230" y="580.8" font-size="8" fill="#2C2C2A">legs down: G D S; tab = drain), 1N4007, band (cathode) → 24V+, anode → drain. Valve/fan</text>
+<text x="230" y="591.6" font-size="8" fill="#2C2C2A">+ → 24+, − → SW.</text>
+<text x="30" y="570" font-size="8" fill="#2C2C2A">ESP placement: vertical along the left edge,</text>
+<text x="30" y="580.8" font-size="8" fill="#2C2C2A">antenna end at the top edge, USB-C at the</text>
+<text x="30" y="591.6" font-size="8" fill="#2C2C2A">bottom edge, Qwiic cable exits left.</text>
+<rect x="630" y="532" width="520" height="113" rx="4" fill="#FDF3E3" stroke="#B03A3A" stroke-width="1.5"/>
+<text x="642" y="554" font-size="12" font-weight="bold" fill="#B03A3A">* PN2222A or P2N2222A? CHECK THE MARKING BEFORE FITTING</text>
+<text x="642" y="568" font-size="10" fill="#2C2C2A">Flat face toward the bottom of this drawing (toward the mains terminals): PN2222A is E B C,</text>
+<text x="642" y="581.5" font-size="10" fill="#2C2C2A">P2N2222A is C B E. They are mirror images and both are sold as a TO-92 “2N2222”, so the marking on</text>
+<text x="642" y="595" font-size="10" fill="#2C2C2A">the part is the only way to tell. The wrong way round swaps collector and emitter: the stage never</text>
+<text x="642" y="608.5" font-size="10" fill="#2C2C2A">switches and the base–emitter junction breaks down near 6 V. Read every part before it goes in and</text>
+<text x="642" y="622" font-size="10" fill="#2C2C2A">rotate a P2N2222A 180°. Bulk TO-92 leads are 1.27 mm pitch; this footprint is 2.54 mm (the formed-</text>
+<text x="642" y="635.5" font-size="10" fill="#2C2C2A">lead PN2222ATA/ATF and P2N2222ARL1G).</text>
+<text x="630" y="663.0" font-size="12" font-weight="bold" fill="#2C2C2A">Mains side (relay board)</text>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="680" font-size="9.5" fill="#2C2C2A">L → COM; the contact wired to “L sw” is NO. Identify NC first: with the coil unpowered, NC has continuity</text>
+<text x="640" y="692.83" font-size="9.5" fill="#2C2C2A">to COM. NC is live whenever the heater is off; leave it unconnected. The relay switches L only; N passes</text>
+<text x="640" y="705.65" font-size="9.5" fill="#2C2C2A">through.</text>
+<circle cx="633" cy="676.5" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="721.48" font-size="9.5" fill="#2C2C2A">COM is at the coil end: 6.3 mm centre to centre from each coil pad, ≈4 mm pad edge to pad edge. The PN2222A</text>
+<text x="640" y="734.3" font-size="9.5" fill="#2C2C2A">/ 1N4007 stage sits ≥ 3 hole rows (7.62 mm) from COM, NO and NC.</text>
+<circle cx="633" cy="717.98" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="750.13" font-size="9.5" fill="#2C2C2A">Relay pads are off the grid (datasheet, mm: COM (0, 0), coil (2.0, ±6.0), NO/NC (14.2, ±6.0), 1.3 mm</text>
+<text x="640" y="762.95" font-size="9.5" fill="#2C2C2A">holes). Nearest grid fit: rows ±6.35, columns 12.7 apart, COM 2.54 outboard (≈0.35–0.5 mm splay per pin).</text>
+<text x="640" y="775.78" font-size="9.5" fill="#2C2C2A">Drawn at the real positions: coil and NO/NC pins sit 0.35 mm inside hole columns 12.7 mm apart, and COM</text>
+<text x="640" y="788.6" font-size="9.5" fill="#2C2C2A">falls on the centreline between two columns, so drill its hole there. COM/NO/NC are 1.0–1.1 mm flat blades:</text>
+<text x="640" y="801.43" font-size="9.5" fill="#2C2C2A">ream those three holes to ≥ 1.2 mm.</text>
+<circle cx="633" cy="746.63" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="817.25" font-size="9.5" fill="#2C2C2A">Earthing: PSU FG → PE. Chassis, enclosure and heater sheaths bond to PE at a star point that is NOT on this</text>
+<text x="640" y="830.08" font-size="9.5" fill="#2C2C2A">board. 0 V bonds to PE at one point at the PSU, because the relay’s 1500 VAC coil–contact rating is basic</text>
+<text x="640" y="842.9" font-size="9.5" fill="#2C2C2A">insulation only. F1, T 3.15 A time-delay, is on this board in L: inlet “L” terminal → F1 → both COM pins,</text>
+<text x="640" y="855.73" font-size="9.5" fill="#2C2C2A">with the 24 V PSU’s live spurred off the fused side of F1 at the “24 V PSU” block. One fuse therefore</text>
+<text x="640" y="868.55" font-size="9.5" fill="#2C2C2A">covers the heaters and the supply. Feed the PSU from that block, never straight from the inlet, or its</text>
+<text x="640" y="881.38" font-size="9.5" fill="#2C2C2A">branch runs unfused. Time-delay rides out the LRS-35’s 45 A cold-start inrush.</text>
+<circle cx="633" cy="813.75" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="897.2" font-size="9.5" fill="#2C2C2A">Mains wire: 18 AWG stranded, 300 V insulation, 105 °C, into the screw blocks only — 18 AWG solid will not</text>
+<text x="640" y="910.03" font-size="9.5" fill="#2C2C2A">pass a 1 mm board hole, and no mains conductor belongs in one. Bus wire elsewhere is 22 AWG solid tinned.</text>
+<circle cx="633" cy="893.7" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="925.85" font-size="9.5" fill="#2C2C2A">Each heater’s switched L lead carries a one-shot thermal fuse (TCO) between “L sw” and the heater — the</text>
+<text x="640" y="938.68" font-size="9.5" fill="#2C2C2A">only protection against a welded contact. The parts are SEFUSE SF129E, Tf 133 °C, 10 A / 250 VAC: clamp</text>
+<text x="640" y="951.5" font-size="9.5" fill="#2C2C2A">them to the pack body next to the DS18B20, NOT to the heater sheath, which runs far hotter and would open</text>
+<text x="640" y="964.33" font-size="9.5" fill="#2C2C2A">one on the first cycle. It holds continuously to Th 118 °C and opens at Tf 133 °C, so the firmware limit</text>
+<text x="640" y="977.15" font-size="9.5" fill="#2C2C2A">sits below Th at 110 °C (v1.2.0). Crimped leads.</text>
+<circle cx="633" cy="922.35" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="0" font-size="1" fill="none"></text>
+<text x="640" y="992.98" font-size="9.5" fill="#2C2C2A">Before wiring real heaters: make the four heater/valve switches internal: true (CLAUDE.md open item).</text>
+<circle cx="633" cy="989.48" r="1.8" fill="#2C2C2A"/>
+<text x="630" y="1020.8000000000011" font-size="12" font-weight="bold" fill="#2C2C2A">Legend</text>
+<rect x="630" y="1026.800000000001" width="14" height="9" fill="#2A5D8F"/>
+<text x="650" y="1034.800000000001" font-size="9.5" fill="#2C2C2A">24 V screw terminals</text>
+<rect x="895" y="1026.800000000001" width="14" height="9" fill="#7A2626"/>
+<text x="915" y="1034.800000000001" font-size="9.5" fill="#2C2C2A">120 VAC screw terminals (mains-rated)</text>
+<rect x="630" y="1041.800000000001" width="14" height="9" fill="#2D6A4F"/>
+<text x="650" y="1049.800000000001" font-size="9.5" fill="#2C2C2A">sensor screw terminals</text>
+<rect x="895" y="1041.800000000001" width="14" height="9" fill="#222"/>
+<text x="915" y="1049.800000000001" font-size="9.5" fill="#2C2C2A">headers / sockets / JST-XH</text>
+<rect x="630" y="1056.800000000001" width="14" height="9" fill="#D64545"/>
+<text x="650" y="1064.800000000001" font-size="9.5" fill="#2C2C2A">JP-USB = jumper shunt, not a USB socket</text>
+<circle cx="902" cy="1061.300000000001" r="4" fill="#C8923E" stroke="#6B4A1A"/>
+<text x="915" y="1064.800000000001" font-size="9.5" fill="#2C2C2A">copper pad (solder point)</text>
+<rect x="630" y="1072.800000000001" width="14" height="7" rx="2" fill="#D8C9A0" stroke="#8A7A4A"/>
+<text x="650" y="1079.800000000001" font-size="9.5" fill="#2C2C2A">resistor</text>
+<rect x="895" y="1072.800000000001" width="14" height="7" fill="#222"/><rect x="905" y="1072.800000000001" width="2.5" height="7" fill="#DDD"/>
+<text x="915" y="1079.800000000001" font-size="9.5" fill="#2C2C2A">1N4007 / Schottky, band = cathode</text>
+<circle cx="637" cy="1091.300000000001" r="5.5" fill="#2B2B40" fill-opacity="0.55" stroke="#000"/><rect x="639.5" y="1087.800000000001" width="2" height="7" fill="#BBB"/>
+<text x="650" y="1094.800000000001" font-size="9.5" fill="#2C2C2A">100 µF 16 V, stripe = −, + marked</text>
+<line x1="895" y1="1091.300000000001" x2="911" y2="1091.300000000001" stroke="#333333" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="915" y="1094.800000000001" font-size="9.5" fill="#2C2C2A">GND bus — bare wire on a hole row</text>
+<line x1="630" y1="1106.300000000001" x2="646" y2="1106.300000000001" stroke="#E08A2E" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="650" y="1109.800000000001" font-size="9.5" fill="#2C2C2A">3V3 bus — bare wire</text>
+<line x1="895" y1="1106.300000000001" x2="911" y2="1106.300000000001" stroke="#2A5D8F" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="915" y="1109.800000000001" font-size="9.5" fill="#2C2C2A">24V+ bus — bare wire</text>
+<line x1="630" y1="1121.300000000001" x2="646" y2="1121.300000000001" stroke="#D64545" stroke-width="3.6" stroke-dasharray="7.8 3"/>
+<text x="650" y="1124.800000000001" font-size="9.5" fill="#2C2C2A">5 V bus — bare wire (relay board)</text>
+<line x1="895" y1="1121.300000000001" x2="911" y2="1121.300000000001" stroke="#B8860B" stroke-width="1.9"/>
+<text x="915" y="1124.800000000001" font-size="9.5" fill="#2C2C2A">signal — insulated hookup wire</text>
+<line x1="630" y1="1136.300000000001" x2="646" y2="1136.300000000001" stroke="#D64545" stroke-width="1.9"/>
+<text x="650" y="1139.800000000001" font-size="9.5" fill="#2C2C2A">5 V / VBUS — insulated</text>
+<line x1="895" y1="1136.300000000001" x2="911" y2="1136.300000000001" stroke="#333333" stroke-width="1.9"/>
+<text x="915" y="1139.800000000001" font-size="9.5" fill="#2C2C2A">GND — insulated</text>
+<line x1="630" y1="1151.300000000001" x2="646" y2="1151.300000000001" stroke="#2A5D8F" stroke-width="1.9"/>
+<text x="650" y="1154.800000000001" font-size="9.5" fill="#2C2C2A">24 V — insulated</text>
+<line x1="895" y1="1151.300000000001" x2="911" y2="1151.300000000001" stroke="#E08A2E" stroke-width="1.9"/>
+<text x="915" y="1154.800000000001" font-size="9.5" fill="#2C2C2A">3V3 — insulated</text>
+<line x1="630" y1="1166.300000000001" x2="646" y2="1166.300000000001" stroke="#8B1A1A" stroke-width="1.9"/>
+<text x="650" y="1169.800000000001" font-size="9.5" fill="#2C2C2A">120 VAC — insulated, mains-rated</text>
+<line x1="895" y1="1166.300000000001" x2="911" y2="1166.300000000001" stroke="#B03A3A" stroke-width="1.8" stroke-dasharray="12 3.6 2.4 3.6"/>
+<text x="915" y="1169.800000000001" font-size="9.5" fill="#2C2C2A">mains boundary (not a wire)</text>
+<rect x="630" y="1176.800000000001" width="14" height="9" fill="url(#hatchpx)" stroke="#7A2626"/>
+<text x="650" y="1184.800000000001" font-size="9.5" fill="#2C2C2A">ESP antenna / keep-out</text>
+<text x="630" y="1188.800000000001" font-size="9.5" fill="#2C2C2A">grid dots = 2.54 mm hole centres at 3.47 + k·2.54 mm from the board edge</text>
+<text x="30" y="610" font-size="12" font-weight="bold" fill="#2C2C2A">Build order (logic board)</text>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="627" font-size="10.5" fill="#2C2C2A">Before fitting JP-USB or the ESP: power the 24 V input, set the MP1584 module’s trimmer to 5.00–5.10 V</text>
+<text x="40" y="641.17" font-size="10.5" fill="#2C2C2A">measured at the buck OUT+ pad (the Schottky and JP-USB are downstream of it), lock the pot, power down. A</text>
+<text x="40" y="655.35" font-size="10.5" fill="#2C2C2A">fixed-5 V module avoids the trimmer.</text>
+<circle cx="33" cy="623.5" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="674.52" font-size="10.5" fill="#2C2C2A">Fit parts; check every net against the net list in docs/hardware.md with a meter before the ESP goes in.</text>
+<text x="40" y="688.7" font-size="10.5" fill="#2C2C2A">Keep every copper feature out of the antenna keep-out.</text>
+<circle cx="33" cy="671.02" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="715.8749999999998" font-size="12" font-weight="bold" fill="#2C2C2A">JP-USB and USB-C</text>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="732.87" font-size="10.5" fill="#2C2C2A">The ESP’s USB pin is the USB-C VBUS net, with no diode or fuse, feeding D2 (BAT20J) → AP2112 3.3 V LDO</text>
+<text x="40" y="747.05" font-size="10.5" fill="#2C2C2A">(600 mA, 6.5 V abs. max) and the MCP73831 charger (7 V abs. max). The MP1584 is non-synchronous and cannot</text>
+<text x="40" y="761.22" font-size="10.5" fill="#2C2C2A">sink current, so a higher host VBUS simply stops it switching. The hazard with JP-USB fitted and a USB</text>
+<text x="40" y="775.4" font-size="10.5" fill="#2C2C2A">cable plugged in is the buck, if above the host’s VBUS, sourcing current into the computer’s port, up to</text>
+<text x="40" y="789.57" font-size="10.5" fill="#2C2C2A">the MP1584’s 4–4.7 A current limit.</text>
+<circle cx="33" cy="729.37" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="808.75" font-size="10.5" fill="#2C2C2A">The series Schottky (SS34 or 1N5819) from buck 5 V to JP-USB does NOT block that: buck → USB pin is its</text>
+<text x="40" y="822.92" font-size="10.5" fill="#2C2C2A">forward direction, which is how the board is powered. It blocks a host from back-feeding the buck output,</text>
+<text x="40" y="837.1" font-size="10.5" fill="#2C2C2A">the 5 V bus and the relay coils, for 0.3–0.4 V; with the buck at 5.0 V the LDO still keeps ≥ 0.39 V</text>
+<text x="40" y="851.27" font-size="10.5" fill="#2C2C2A">dropout margin at the 430 mA peak (BAT20J and AP2112 worst-case drops).</text>
+<circle cx="33" cy="805.25" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="870.45" font-size="10.5" fill="#2C2C2A">So JP-USB, not the diode, keeps the buck off a computer’s port: pull it before plugging in a USB-C cable,</text>
+<text x="40" y="884.62" font-size="10.5" fill="#2C2C2A">every time. Keep the buck ≤ 5.1 V; a USB-C host may also refuse to attach while VBUS is pre-biased. Being</text>
+<text x="40" y="898.8" font-size="10.5" fill="#2C2C2A">safe with JP-USB fitted would need a real power path (ideal-diode / load-switch ORing), not a series</text>
+<text x="40" y="912.97" font-size="10.5" fill="#2C2C2A">diode; that is not in this layout.</text>
+<circle cx="33" cy="866.95" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="940.1499999999992" font-size="12" font-weight="bold" fill="#2C2C2A">Harness and off-board</text>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="957.15" font-size="10.5" fill="#2C2C2A">Harness: JST-XH 4-way, B4B-XH-A on each board, XHP-4 housings, 1:1 cable: 1 = 5 V, 2 = GND, 3 = GPIO13</text>
+<text x="40" y="971.32" font-size="10.5" fill="#2C2C2A">through 1 kΩ (heater A), 4 = GPIO12 through 1 kΩ (heater B). The 1 kΩ base resistors sit at the logic-</text>
+<text x="40" y="985.5" font-size="10.5" fill="#2C2C2A">board end; the 10 kΩ pull-downs stay on the relay board. The relay board carries no 24 V. XH pitch is 2.50</text>
+<text x="40" y="999.67" font-size="10.5" fill="#2C2C2A">mm (0.12 mm short of 0.1" over four pins).</text>
+<circle cx="33" cy="953.65" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1018.85" font-size="10.5" fill="#2C2C2A">Display on the enclosure front via the 8-pin 1:1 cable; keep the cable under 15 cm (ESPHome ili9xxx runs</text>
+<text x="40" y="1033.02" font-size="10.5" fill="#2C2C2A">40 MHz SPI by default; set data_rate: 20MHz in display-st7789.yaml if the image tears). Header order</text>
+<text x="40" y="1047.2" font-size="10.5" fill="#2C2C2A">follows LCDWIKI/QDtech MSP1541-style modules; Waveshare’s 1.54" module is VCC GND DIN CLK CS DC RST BL.</text>
+<text x="40" y="1061.37" font-size="10.5" fill="#2C2C2A">BLK must drive an on-module transistor (check BLK → VCC ≈ 10 kΩ unpowered); a bare LED anode would</text>
+<text x="40" y="1075.55" font-size="10.5" fill="#2C2C2A">overload GPIO17.</text>
+<circle cx="33" cy="1015.35" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1094.72" font-size="10.5" fill="#2C2C2A">SHT45 on the ESP’s Qwiic connector. 24 V PSU → 24 V IN. Three DS18B20 cables → the green block, each probe</text>
+<text x="40" y="1108.9" font-size="10.5" fill="#2C2C2A">on its own 3V3 / DQ / GND triple.</text>
+<circle cx="33" cy="1091.22" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="1206.800000000001" font-size="12" font-weight="bold" fill="#2C2C2A">Caveats (numbers from docs/datasheets/, see its README)</text>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1223.8" font-size="10" fill="#2C2C2A">ESP geometry is verified from SparkFun’s Eagle files (mcu/sparkfun-esp32-s2-thing-plus.brd/.sch and the dimension drawing): PCB 64.77 × 22.86 mm, rows 20.32 mm apart and ending 12.70 mm before the antenna</text>
+<text x="40" y="1237.3" font-size="10" fill="#2C2C2A">end, 16-pin pin 1 (EN) 13.97 mm and 12-pin pin 1 (BAT) 24.13 mm from the USB end, Qwiic at the USB end on the 12-pin edge, mounting holes only at the USB end. Component side up with USB-C at the left, the</text>
+<text x="40" y="1250.8" font-size="10" fill="#2C2C2A">12-pin row is on top. The USB-C shell’s width is drawn approximately; only its centring and 1.1 mm overhang are from the files. The antenna (last 6.3 mm) is at the board’s top edge; USB-C face 3.2 mm inside</text>
+<text x="40" y="1264.3" font-size="10" fill="#2C2C2A">the bottom edge.</text>
+<circle cx="33" cy="1220.3" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1282.8" font-size="10" fill="#2C2C2A">The buck module footprint (22 × 17 mm, pad positions) is UNVERIFIED: “MP1584 mini” boards vary by vendor. Measure the one you have before drilling. Don’t cut metal from this drawing.</text>
+<circle cx="33" cy="1279.3" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1301.3" font-size="10" fill="#2C2C2A">PN2222A, flat face toward viewer: E B C (P2N2222A is C B E — check the datasheet of the part you have). Drawn at 2.54 mm pitch; bulk TO-92 parts are 1.27 mm (the formed-lead PN2222ATA/ATF and P2N2222ARL1G</text>
+<text x="40" y="1314.8" font-size="10" fill="#2C2C2A">are 2.54 mm). Here the flat face points toward the mains terminals.</text>
+<circle cx="33" cy="1297.8" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1333.3" font-size="10" fill="#2C2C2A">Relay pads are the only intentional exceptions to the grid. Alternative, not chosen: take the contacts off the protoboard, with screw-terminal relay sockets or an off-the-shelf 2-channel 5 V relay module</text>
+<text x="40" y="1346.8" font-size="10" fill="#2C2C2A">fed from 3V3 with its JD-VCC jumper removed.</text>
+<circle cx="33" cy="1329.8" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1365.3" font-size="10" fill="#2C2C2A">Bare bus wire runs along hole rows and never crosses another bare bus; insulated hookup wire may cross anything. Mains wiring on the relay board is insulated wire rated for 120 VAC.</text>
+<circle cx="33" cy="1361.8" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="1391.800000000001" font-size="12" font-weight="bold" fill="#2C2C2A">Open items (questions for review)</text>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1408.8" font-size="10" fill="#2C2C2A">Creepage: two empty rows are 5.6 mm pad edge to pad edge, and undrilled plated pads between mains and logic reduce it further; a cleared band or slot along the boundary, or contacts off the protoboard, is</text>
+<text x="40" y="1422.3" font-size="10" fill="#2C2C2A">needed.</text>
+<circle cx="33" cy="1405.3" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1440.8" font-size="10" fill="#2C2C2A">The 24 V input has no reverse-polarity protection, fuse or bulk input capacitor.</text>
+<circle cx="33" cy="1437.3" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1459.3" font-size="10" fill="#2C2C2A">No hardware over-temperature cutout backs up the firmware if a relay contact welds; check what the original Azco board/packs provided.</text>
+<circle cx="33" cy="1455.8" r="1.8" fill="#2C2C2A"/>
+<text x="30" y="0" font-size="1" fill="none"></text>
+<text x="40" y="1477.8" font-size="10" fill="#2C2C2A">Stock DS18B20 probe leads are rated under 100 °C and the SMC VDW22 valve is rated 50 °C, both on a 90 °C pack; verify or change parts.</text>
+<circle cx="33" cy="1474.3" r="1.8" fill="#2C2C2A"/>
 </svg>
