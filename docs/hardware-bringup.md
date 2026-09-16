@@ -117,7 +117,7 @@ the override slider from HA. For the bench:
 
 - `Regen temp` cannot go below 40 °C, which fingers do not reach. Set it to
   40 °C and use a heat gun on low (or hot water) on the standby probe; aim
-  for 45 to 60 °C, far below the 120 °C overtemp latch.
+  for 45 to 60 °C, far below the 110 °C overtemp latch.
 - `Regen hold time` 1 min, `Cooldown temp` about 33 °C so COOLING has a
   threshold to fall through once the heat is removed.
 - Start heating within 5 min of the heater switch turning on, or the "not

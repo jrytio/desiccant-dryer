@@ -72,7 +72,7 @@ path completes on its own.
 |---|---|---|
 | Sim Speed | 1x | Time multiplier for the plant and the control counters. 60x makes one control tick worth 5 sim-minutes |
 | Sim Ambient Temp | 25 °C | Where packs cool to; raise above 35 °C to see the fan |
-| Sim Heater Max Temp | 110 °C | Where a heated pack settles; set 130 °C to trigger overtemp |
+| Sim Heater Max Temp | 110 °C | Where a heated pack settles; set 130 °C to trigger overtemp. Note this equals the 110 °C `overtemp` default: at the default knobs the pack peaks about 109 °C, 1 °C under the limit (see below) |
 | Sim Thermal Time Constant | 5 min | Heating and cooling pace |
 | Sim Breakthrough Time | 60 min | Service minutes before outlet RH starts rising |
 | Sim RH Rise Rate | 0.1 %/min | Set about 1 to make RH outrun regen and see "(waiting)" |
@@ -92,6 +92,16 @@ constant at its 30 min maximum that requires `Sim Heater Max Temp` roughly 33 °
 60x because the controller then sees the pack up to one plant tick (one
 simulated minute) late. Extreme knob settings can therefore trip that
 fault legitimately.
+
+Since 1.2.0 the `overtemp` default is 110 °C, which is also the default
+`Sim Heater Max Temp`. The plant approaches that ceiling asymptotically, so
+at the stock knobs a heating pack peaks near 109 °C at the end of the 15 min
+hold — under the limit, but only just. Raise `Sim Thermal Time Constant` or
+`Regen hold time`, or drop `Regen temp`, and the sim will latch a real
+"Standby pack overtemp". That is the model behaving correctly, not a bug; if
+it becomes a nuisance on the bench, lower `Sim Heater Max Temp` to about
+100 °C, which leaves the scenarios below unchanged apart from a couple of
+minutes of extra heating time.
 
 ## Checklist
 
