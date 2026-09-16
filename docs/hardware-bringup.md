@@ -17,7 +17,8 @@ hardware plus the developer credentials from `secrets.yaml`, so it takes
 OTA updates as often as needed and USB is only used once. The released
 production image (`esphome/desiccant-dryer.yaml`) has no OTA server, no
 WiFi credentials (it has WiFi and a setup access point, and is provisioned
-through Improv or that access point) and no `/screen.png`; it goes on last,
+through Improv or that access point); it installs its own updates from the
+published manifest instead. It goes on last,
 as its own step (section 7).
 
 ## 1. Flash the test build (USB, once)
@@ -103,12 +104,19 @@ tick should open Valve A and leave everything else off.
 
 ## 4. Display
 
-Compare the panel with `http://<board>/screen.png` (the frame buffer the
-panel is drawn from) and with the reference states in `docs/display/`. With
+Compare the panel with the reference states in `docs/display/` (and with
+the live host preview, `docs/host-preview.md`). With
 no SHT45 the humidity reads `--% RH`. If the image is shifted or cropped,
 try `offset_height: 80` as the comment in `display-st7789.yaml` says; red
 and blue swapped means the colour order, a negative image means
-`invert_colors`. First unit: offset 0, colours and backlight correct.
+`invert_colors`. First unit, on 1.0.x with the old `ili9xxx` driver: offset
+0, colours and backlight correct.
+
+The panel now runs `mipi_spi` with `color_depth: 8bit` and a banded buffer
+(`packages/display-st7789.yaml`). **No panel has been attached to a board
+since that change**, so colour, banding, tearing and image offset are
+unverified on real glass; the 40 MHz SPI clock was restored to match the old
+driver, not re-validated. Treat this section as the check that proves it.
 
 ## 5. Cycle with the humidity override and real probes
 
@@ -137,16 +145,18 @@ display offset of each unit, in this file.
 ## 7. Production image
 
 Needs USB access to the board. Follow "Installing a release on a dryer" in
-docs/releasing.md: flash the release, give it WiFi, adopt it in ESPHome
-Device Builder, and install the adopted YAML over USB once. After that,
-Device Builder installs updates over WiFi. Expect `Firmware Version` to
-match the release. Remove the HW Test entry from HA first if it uses the
-same host.
+docs/releasing.md: flash the release over USB with web.esphome.io, give it
+WiFi (Improv, or the setup access point), and accept it in Home Assistant.
+Expect `Firmware Version` to match the release. Remove the HW Test entry
+from HA first if it uses the same host.
 
-The test board ran this path twice. On 2026-09-15 with an adopted-style
-YAML built from a branch, and on 2026-09-16 with the YAML ESPHome Device
-Builder itself wrote for the adopted unit (remote package at `@main`, plus
-an `ota:` block with an encryption key): USB install of 1.1.0, then a
-native OTA push over WiFi to a relabelled build (14 s upload, back in 6 s,
-reset reason "Reboot request from esphome.ota", controller running, no
-fault).
+From then on the unit updates itself: the `Firmware` update entity polls
+the published manifest every 6 h and installs over HTTPS. There is no
+inbound OTA server on the release image, so if that updater cannot reach a
+working manifest the only way back is another USB flash — see the Recovery
+section of docs/releasing.md, which also records the two accepted security
+trade-offs of this arrangement.
+
+Also note that the production image redraws the panel every 10 s (the test
+builds use 5 s), so a fault or overtemp indication can be up to 10 s stale
+on the screen.

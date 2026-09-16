@@ -2,8 +2,7 @@
 # the screen's drawing code and art from this checkout. CI compiles it and
 # the release workflow builds the published images from it.
 # Flash:  esphome run esphome/desiccant-dryer.yaml
-# Contents: packages/production.yaml (shared with desiccant-dryer-adopt.yaml,
-#           the Device Builder entry point). See docs/releasing.md.
+# Contents: packages/production.yaml. See docs/releasing.md.
 substitutions:
   name: desiccant-dryer
   friendly_name: Desiccant Dryer
@@ -11,6 +10,5 @@ substitutions:
 packages:
   production: !include packages/production.yaml
   ui: !include packages/ui-code-local.yaml
-  # The owner flashes this image, so Home Assistant provisions its API key.
-  # The adopt selector leaves this out; see the package's header.
+  # Home Assistant provisions the API key at adoption time.
   api: !include packages/api-provisioned.yaml

@@ -54,8 +54,8 @@ preview build, with the display visible in a window; see
    ```
 
    After the board moves to the other site it has a new address and Home
-   Assistant keeps trying the old one; see "Moving between sites" in
-   `docs/screen-in-ha.md`.
+   Assistant keeps trying the old one; reconfigure the ESPHome integration
+   entry with the new address.
 
 4. Log tail without reflashing:
 
@@ -144,5 +144,4 @@ scripts/scenario-shots.sh 6 6      # just one
 The script runs `esphome/desiccant-dryer-scenarios.yaml` with `SCENARIO=n`
 and `SHOT=<file>`; the program draws the frame through the panel's RGB
 3-3-2 palette into a buffer, writes it, and exits. Needs `brew install sdl2`.
-The live, controller-driven screen is `docs/host-preview.md`; the board's
-own screen is `docs/screen-in-ha.md`.
+The live, controller-driven screen is `docs/host-preview.md`.

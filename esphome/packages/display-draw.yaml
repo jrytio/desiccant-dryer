@@ -17,11 +17,9 @@
 
 substitutions:
   display_lambda: "id(ui_draw).execute();"
-  # Where the SVG art is read from at compile time. A local path for every
-  # checked-in build; esphome/desiccant-dryer-adopt.yaml points it at the
-  # release tag on GitHub, because Device Builder's remote package cannot
-  # resolve paths inside this repository. The drawing code comes in the
-  # same way through packages/ui-code-local.yaml or ui-code-remote.yaml.
+  # Where the SVG art is read from at compile time: a local path, used by
+  # every build. The drawing code comes in the same way, through
+  # packages/ui-code-local.yaml.
   display_assets: assets/display
 
 font:
@@ -112,6 +110,12 @@ image:
     transparency: chroma_key
     resize: 14x14
 
+# Runs once per writer pass, not once per frame: with buffer_size below 100%
+# mipi_spi re-runs the display lambda for each band, so this script re-gathers
+# the ids every band. On production (50%) the two halves of one frame can
+# therefore come from state captured a few hundred ms apart. Cosmetic only --
+# nothing here drives an output, and a stale half is corrected on the next
+# redraw.
 script:
   - id: ui_draw
     mode: single

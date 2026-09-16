@@ -3,16 +3,46 @@
 #
 # The release image carries no credentials (packages/dev-secrets.yaml is
 # only in the test builds). The owner sets WiFi through Improv on the USB
-# serial port (web.esphome.io does this) or the fallback access point, then
-# adopts the unit in ESPHome Device Builder. The adopted YAML holds the
-# owner's API key and OTA password, and Device Builder pushes updates with
-# ESPHome's native OTA.
+# serial port (web.esphome.io does this) or the fallback access point, and
+# Home Assistant sets the API encryption key when it adopts the device.
+# Later updates come from the update entity below; no add-on is needed.
 #
-# The released image itself has no OTA server: without a password it would
-# let any host on the LAN upload firmware to a mains controller. It also
-# has no on-device HTTP updater. 1.0.x tried one: the S2 (no PSRAM, 58 KB
-# display buffer) never had the ~17 KB contiguous block a TLS firmware
-# download needs, with dynamic or static mbedTLS buffers.
+# The released image has no ESPHome OTA *server*, and the normal LAN path
+# is strictly pull-based, through the update entity below.
+#
+# That is not the whole story, and the exception matters: `captive_portal:`
+# (packages/platform-esp32.yaml) AUTO_LOADs `ota.web_server`, whose
+# POST /update handler stays reachable whenever the captive portal is
+# active — `web_server: ota: false` does not close it (ESPHome's own
+# web_server/ota/ota_web_server.cpp says so explicitly).
+#
+# Stated plainly: while that portal is up, anyone within WiFi range can
+# join the open "${friendly_name} Setup" AP with no credential and flash
+# arbitrary firmware onto a unit switching two 120 VAC heaters.
+#
+# The portal is up on any unprovisioned unit, and whenever the configured
+# network is unreachable — which an attacker can force, so this is not
+# only a rare-outage window.
+#
+# This is an accepted trade for provisioning convenience, not an oversight.
+# It is closed by passwording the AP or by dropping `captive_portal:`;
+# this repo deliberately does neither. See docs/releasing.md.
+#
+# 1.0.x tried this and failed: with ili9xxx's mandatory full frame buffer
+# the S2 never had the ~16,749-byte contiguous block a TLS record needs.
+# Moving the panel to mipi_spi with a reduced buffer freed it. See
+# packages/display-st7789.yaml.
+
+# The device polls this esp-web-tools manifest on the repository's GitHub
+# Pages site and reports an update to Home Assistant when the manifest's
+# version differs from ${version}. Installing pulls the .ota.bin over HTTPS
+# (the relative path in the manifest resolves next to it) and checks its md5.
+#
+# Pages, not the GitHub Release download URL: that one redirects to an
+# RSA-certificate host with a ~900-byte signed URL, and the S2 has too
+# little free heap for the second handshake.
+substitutions:
+  update_manifest_url: https://jrytio.github.io/desiccant-dryer/firmware/manifest.json
 
 esphome:
   project:
@@ -27,11 +57,16 @@ api:
 
 improv_serial:
 
-# The web server's own firmware-upload page is the same unauthenticated
-# LAN reflash path; the status pages and controls stay.
+# The web server's own firmware-upload page is an unauthenticated LAN
+# reflash path, so it is off; the status pages and controls stay. Note this
+# does NOT disable the captive portal's own POST /update — see the header.
 web_server:
   ota: false
 
+# Safe mode still stops a boot loop from bricking the unit, but it is NOT a
+# recovery route on this image: there is no inbound OTA server, so nothing
+# can push a working firmware to a unit sitting in safe mode. Recovery is a
+# USB reflash either way (see docs/releasing.md).
 safe_mode:
 
 # Diagnostics for remote bring-up: what image is running, why it last
@@ -60,3 +95,38 @@ sensor:
       name: "Largest Free Block"
     loop_time:
       name: "Loop Time"
+
+http_request:
+  verify_ssl: true
+  timeout: 10s
+  # GitHub Pages answers directly with no redirect, so the request and
+  # response headers stay short. Kept a little above the 512-byte default
+  # for header headroom.
+  buffer_size_rx: 1024
+  # Pages answers directly. Enforce that rather than assume it: following a
+  # redirect is how 1.0.x ended up at a ~900-byte signed URL that neither the
+  # buffer above nor the S2's heap could take.
+  follow_redirects: false
+
+# The download backend for the update entity below. It is not an OTA
+# *server*: this block opens no listener, so the normal LAN path is strictly
+# pull-based. That is not the same as "nothing listens" — `captive_portal:`
+# pulls in its own POST /update handler; see the header of this file.
+ota:
+  - platform: http_request
+
+# The md5 checked below comes from this same manifest, so it proves the
+# download was not corrupted, not who produced it: platform: http_request
+# has no code signing. Anyone with push access to gh-pages can run
+# arbitrary firmware on every deployed unit within one 6h poll interval.
+# That push access is the security boundary for the whole fleet.
+#
+# Installing an update reboots the unit, which can land mid drying-cycle.
+# That fails safe: all outputs use restore_mode: ALWAYS_OFF and are forced
+# off in on_boot, so the reboot drops the heaters and valves rather than
+# leaving them energised.
+update:
+  - platform: http_request
+    name: "Firmware"
+    source: ${update_manifest_url}
+    update_interval: 6h

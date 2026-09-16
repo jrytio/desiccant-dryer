@@ -1,27 +1,42 @@
-# Everything in the production firmware except where the screen's drawing
-# code and art come from. Two selectors wrap it:
-#   esphome/desiccant-dryer.yaml        local sources (CI, release images)
-#   esphome/desiccant-dryer-adopt.yaml  GitHub sources at the release tag
-#                                       (ESPHome Device Builder adoption)
+# Everything in the production firmware. One selector wraps it:
+#   esphome/desiccant-dryer.yaml   CI, and the published release images
 # Logic:  base.yaml           (shared with the virtual and host builds)
 # Board:  platform-esp32.yaml (board, WiFi, web server)
 # Wiring: hw-real.yaml        (the only file the hardware side needs)
 # Release: ../version.yaml + release.yaml (version, provisioning,
-#         diagnostics). No secrets: the owner sets WiFi at flash time and
-#         adopts the device in Device Builder, which generates the owner's
-#         own API key and OTA password and pushes later updates over WiFi.
-#         See docs/releasing.md.
-# Screen: no /screen.png mirror in production. Its local external component
-#         would not resolve from a remote package either; the test builds
-#         keep screen-mirror.yaml.
+#         diagnostics). No secrets: the owner sets WiFi at flash time,
+#         Home Assistant sets the API key on adoption, and the unit
+#         installs later releases itself. See docs/releasing.md.
 
-# The owner's adopted YAML needs 2026.9's `ota: encryption: key:` (an
-# explicit OTA key: the API key is provisioned at runtime and cannot be
-# inherited at build time), and the release images should match what an
-# owner's Device Builder compiles. Only the production and adopt selectors
-# carry this floor; the bench builds still run on an older CLI.
+# 2026.9.0 is the version the release images are built and tested with, and
+# the version CI and the release workflow pin. The floor records that, not a
+# feature requirement: mipi_spi's buffer_size and color_depth both exist in
+# 2026.8.2, and packages/display-st7789.yaml (shared by every build) emits
+# them for the bench builds too. Only the production selector carries the
+# floor because only it is released; the bench builds are free to run on
+# whatever CLI is to hand.
 esphome:
   min_version: 2026.9.0
+
+# The production unit installs its own firmware over HTTPS, which needs a
+# ~16,749-byte contiguous block for a TLS record. Halving the frame buffer
+# frees roughly 29 KB. The cost is that the writer runs twice per redraw,
+# measured at ~699 ms total (bench, no panel attached; SPI clock restored to
+# 40MHz but not re-validated against real glass) against a ~500ms target
+# that was missed; see packages/display-st7789.yaml for the full numbers.
+# The interval below is doubled from the test builds' 5s to 10s to halve
+# how often the blocking redraw happens, rather than speculatively
+# optimising draw_ui(). That means a fault or overtemp indication can be up
+# to 10s stale on the panel of a mains appliance. Control ticks are not
+# affected: measured on the bench over 236 s (48 publishes) on a build with
+# this production config plus WiFi and no panel attached, the 5s tick
+# (base.yaml) held a median of 5.00s with a worst case of 5.36s and no
+# skipped ticks, while the ~700ms redraw ran once per 10s throughout. Those
+# are the only conditions the numbers cover; they have not been re-measured
+# with real glass on the SPI bus.
+substitutions:
+  display_buffer_size: "50%"
+  display_update_interval: 10s
 
 packages:
   version: !include ../version.yaml
@@ -31,12 +46,6 @@ packages:
   draw: !include display-draw.yaml
   display: !include display-st7789.yaml
   release: !include release.yaml
-
-# Lets Device Builder adopt a flashed unit: it writes a short YAML that pulls
-# the adopt selector as a package and adds the owner's credentials.
-dashboard_import:
-  package_import_url: github://jrytio/desiccant-dryer/esphome/desiccant-dryer-adopt.yaml@main
-  import_full_config: false
 
 # 1.x releases log at DEBUG so the unit can be brought up and tested
 # remotely through `esphome logs`, the web server and Home Assistant.

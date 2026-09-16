@@ -8,6 +8,10 @@
 substitutions:
   name: desiccant-dryer-hw-test
   friendly_name: Desiccant Dryer (HW Test)
+  # No on-device updater here, so the panel keeps a full frame buffer and
+  # the writer runs once per redraw.
+  display_buffer_size: "100%"
+  display_update_interval: 5s
 
 packages:
   base: !include packages/base.yaml
@@ -17,7 +21,6 @@ packages:
   draw: !include packages/display-draw.yaml
   ui: !include packages/ui-code-local.yaml
   display: !include packages/display-st7789.yaml
-  mirror: !include packages/screen-mirror.yaml
 
 logger:
   level: DEBUG

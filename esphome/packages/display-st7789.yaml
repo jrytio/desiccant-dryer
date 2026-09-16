@@ -1,8 +1,49 @@
-# ST7789 1.54" 240x240 display on SPI, shared by both device builds. On the
-# virtual build nothing is attached; the driver still runs so the frame
-# buffer allocation on the S2 gets exercised. The drawing itself is
-# ${display_lambda} from packages/display-draw.yaml.
+# ST7789 1.54" 240x240 display on SPI, shared by the production, virtual and
+# hw-test builds. On the virtual build nothing is attached; the driver still
+# runs so the frame buffer allocation on the S2 gets exercised. The drawing
+# itself is ${display_lambda} from packages/display-draw.yaml.
 #   GPIO36/35 SPI SCK/MOSI, GPIO5 CS, GPIO9 DC, GPIO14 RST, GPIO17 backlight
+#
+# mipi_spi, not ili9xxx, because ili9xxx cannot buffer less than a full frame
+# (get_buffer_length_() is width * height, so 57,600 B is its floor) and that
+# leaves the S2 without the ~16,749-byte contiguous block mbedTLS needs for a
+# TLS record. With no such block the on-device updater can never install.
+#
+# The cost is that MipiSpiBuffer::update() re-runs the whole writer lambda
+# once per band, so ${display_buffer_size} multiplies draw cost: 50% draws
+# twice, 25% draws four times. Production trades draw time for the heap;
+# the test builds keep 100% because they never self-update. Override both
+# substitutions from the selector.
+#
+# Measured on an ESP32-S2 at 240x240, 8-bit, 40MHz SPI (no panel attached):
+#   buffer_size 100%  writer runs once   ~377 ms redraw   frees no heap
+#   buffer_size  50%  writer runs twice   ~699 ms redraw  frees ~29 KB
+# Production takes the 50% cost because the freed contiguous block is what
+# lets mbedTLS hold a TLS record, and without that the unit cannot install
+# its own firmware at all. The ~500 ms goal is therefore knowingly missed:
+# 699 ms IS the price of self-updating firmware, not a failure to optimise.
+# Draw is 92% of it (321 ms/band x2); SPI write is only 28 ms/band. The loop
+# blocks for ~700 ms on every production redraw, once per
+# ${display_update_interval} (packages/production.yaml overrides it to 10s;
+# the hw-test and virtual builds, which never halve the buffer, keep the 5s
+# default set below).
+#
+# Both figures were captured on the hw-test build, which also runs the web
+# server, so treat the absolutes as indicative for production and the 322 ms
+# delta between them as the reliable number: it is one extra writer pass, and
+# matches the measured 321 ms/band directly.
+#
+# This file is shared by production, virtual and hw-test, so every key below
+# is emitted for all three. Nothing here requires a particular ESPHome
+# version: buffer_size and color_depth both exist in 2026.8.2. The
+# min_version: 2026.9.0 in packages/production.yaml is a release pin (the
+# version CI and the release workflow build with), not a dependency of this
+# driver, which is why the bench builds carry no floor while using the same
+# keys.
+
+substitutions:
+  display_buffer_size: "100%"
+  display_update_interval: 5s
 
 spi:
   clk_pin: GPIO36
@@ -22,7 +63,7 @@ light:
     default_transition_length: 0s
 
 display:
-  - platform: ili9xxx
+  - platform: mipi_spi
     id: panel
     model: ST7789V
     dimensions:
@@ -34,10 +75,14 @@ display:
     dc_pin: GPIO9
     reset_pin: GPIO14
     invert_colors: true    # most 1.54" IPS modules need this
-    # 8-bit palette halves the frame buffer to ~58 KB. The full 16-bit buffer
-    # (~115 KB) failed to allocate on the S2 with WiFi, API and web server up
-    # (seen on the first virtual-build flash: "Could not allocate buffer").
-    color_palette: 8BIT
-    update_interval: 2s
+    # ili9xxx defaulted to 40MHz; mipi_spi defaults to 10MHz and the ST7789V
+    # model sets no override, so the driver swap quartered the SPI clock.
+    data_rate: 40MHz
+    # RGB 3-3-2: the same grid the 1.0.x ili9xxx 8-bit palette used, and the
+    # grid every designed colour already sits on. Only valid on a single-wire
+    # SPI bus.
+    color_depth: 8bit
+    buffer_size: ${display_buffer_size}
+    update_interval: ${display_update_interval}
     auto_clear_enabled: false   # draw_ui() fills the frame itself
     lambda: ${display_lambda}
