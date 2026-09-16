@@ -24,8 +24,14 @@
 # 699 ms IS the price of self-updating firmware, not a failure to optimise.
 # Draw is 92% of it (321 ms/band x2); SPI write is only 28 ms/band. The loop
 # blocks for ~700 ms on every production redraw, once per
-# ${display_update_interval} (production overrides this to 10s below; the
-# hw-test and virtual builds, which never halve the buffer, keep 5s).
+# ${display_update_interval} (packages/production.yaml overrides it to 10s;
+# the hw-test and virtual builds, which never halve the buffer, keep the 5s
+# default set below).
+#
+# Both figures were captured on the hw-test build, which also runs the web
+# server and the screen mirror, so treat the absolutes as indicative for
+# production and the 322 ms delta between them as the reliable number: it is
+# one extra writer pass, and matches the measured 321 ms/band directly.
 
 substitutions:
   display_buffer_size: "100%"

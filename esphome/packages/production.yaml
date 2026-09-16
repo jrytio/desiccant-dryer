@@ -32,9 +32,11 @@ esphome:
 # The interval below is doubled from the test builds' 5s to 10s to halve
 # how often the blocking redraw happens, rather than speculatively
 # optimising draw_ui(). That means a fault or overtemp indication can be up
-# to 10s stale on the panel of a mains appliance — control ticks are
-# unaffected: they still run every 5s (base.yaml) and are delayed at most
-# ~0.7s by a redraw, never skipped.
+# to 10s stale on the panel of a mains appliance. Control ticks are expected
+# to be unaffected: they run every 5s (base.yaml) and ESPHome delays rather
+# than drops a due interval, so a redraw should postpone a tick by at most
+# ~0.7s and never skip it. That is reasoning from how the loop works, not a
+# measurement — tick timing under load has not been instrumented.
 substitutions:
   display_buffer_size: "50%"
   display_update_interval: 10s
