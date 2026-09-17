@@ -59,8 +59,9 @@ case's wall-clock cost is its simulated minutes divided by `Sim Speed`
 (maximum 60, i.e. one real second per simulated minute).
 
 A case that references a `Sim *` knob the plant model does not have yet is
-skipped with that knob named, not failed. The knobs under "New Sim knobs"
-below are all still missing, so the cases needing them are skipped.
+skipped with that knob named, not failed. Every knob the cases below name
+now exists in `packages/hw-virtual.yaml`, so nothing is skipped for that
+reason today; the mechanism stays for the next knob a new case needs.
 
 **Config lint.** `tests/lint_config.py` runs `esphome config` for each
 case's `selectors` and evaluates its `assert` lines against the dump. It
@@ -96,9 +97,6 @@ resolved against the `id:` in the config dump:
 names another key of the same entity compares the two (`initial_value <=
 max_value`).
 
-**Still needed**: the plant-model knobs listed under "New Sim knobs"
-below. Until they exist the cases using them are skipped, not run.
-
 ## Case format
 
 One YAML file per automated test, named after the test ID:
@@ -108,7 +106,7 @@ One YAML file per automated test, named after the test ID:
 id: T-B02
 covers: [B-02, A-01]
 type: infer
-status: red            # needs Sim Relay Stuck On A, and the firmware check
+status: red            # waiting on the firmware check, not on a knob
 setup:                 # entity name: value, applied before steps
   Sim Speed: 60        # 1 real second = 1 simulated minute
   Sim Breakthrough Time: 5
@@ -149,7 +147,7 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 
 | Test | Type | Covers | Harness | Inject | Expect | Status |
 |---|---|---|---|---|---|---|
-| T-B02 | infer | B-02, A-01 | host | `Sim Relay Stuck On A` on while standby A is HEATING; wait until `Standby State` leaves HEATING; then 10 sim min more | heater A commanded off and pack A still rising ⇒ `Fault Code` set, both heaters off within 2 ticks | red |
+| T-B02 | infer | B-02, A-01 | host | `Sim Relay Stuck On A` on while pack A is in service and its heater is commanded off; wait until `Standby State` leaves HEATING; then 10 sim min more | heater A commanded off and pack A still rising ⇒ `Fault Code` set, both heaters off within 2 ticks | red |
 | T-A02 | hil | A-02 | bench | On the bench rig (mains off), fault the PN2222A driver stage for heater A to hold collector-emitter shorted, command `Heater A` off | relay A stays engaged despite GPIO/coil off ⇒ confirms no software detects a shorted driver | later |
 | T-A03 | hil | A-03, H-02, H-19 | bench | Flash a build with a lambda that spins in the interval script past the watchdog period; power up normally | ESP-IDF task watchdog reboots the board and both heater relays de-energise within one watchdog period | later |
 | T-A04 | physical | A-04 | checklist | Stage 1 board assembly check: inspect both relay-driver transistor markings and pinout under magnification | both read `PN2222A` (E-B-C); a `P2N2222A` (C-B-E) is rejected before power-up | manual |
@@ -182,7 +180,7 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-I02 | infer | I-02, B-03 | host | `Sim Heater Max Temp` 150, `Sim Thermal Time Constant` 1 (near-instant rise) on standby A; watch pack A temp approach `overtemp` | a rate-of-rise or thermal-model check trips before pack temperature reaches `overtemp`: `Fault` on, both heaters off | red |
 | T-B04 | detect | B-04 | host | `Sim Manual Temps` on, `Sim Pack A Temp` 130 with pack A active, then `Sim Probe A Fault` on so `pack_a_temp` publishes NaN | active-pack probe NaN beyond the probe timeout while any heater is on: both heaters off and `Fault` on within 2 ticks | red |
 | T-B05 | hil | B-05 | bench | Bench rig, mains off: swap the two DS18B20 leads (or their `address:` mapping) between packs A and B, warm pack A with a heat gun | `pack_b_temp` moves instead of `pack_a_temp`, confirming the mis-mapping and that nothing in firmware catches it | later |
-| T-B06 | detect | B-06 | host | `Sim Probe 85C` on for pack A while pack A is standby HEATING | an exact 85.0 from a cold pack is rejected as the power-on sentinel: reading treated as unavailable, `Regen Hold Time` stays 0 | red |
+| T-B06 | detect | B-06 | host | `Sim Probe 85C` on for pack A, made the standby by `Force Swap`, with `Sim Heater Fault` keeping it cold and `Regen temp` below 85 | an exact 85.0 from a cold pack is rejected as the power-on sentinel: reading treated as unavailable, `Regen Hold Time` stays 0 | red |
 | T-B07 | detect | B-07 | host | `Sim Probe Garbage A` on for pack A (publishes -127C) while pack A is standby | -127 (or any value outside -20 to 150) is rejected: reading treated as unavailable, no COOLING to READY transition on it | red |
 | T-B08 | infer | B-08, I-25 | host | `Sim Manual Temps` on, `Sim Pack A Temp` pinned at 95C (above `regen_temp`) through a full HEATING and overtemp window | a reading unchanged to the bit for longer than the staleness window while a heater is on is treated as unavailable: heater off, `Fault` on | red |
 | T-B09 | logic | B-09, I-17 | host | `Sim Probe A Fault` toggled on for 3 ticks then off while standby A is HEATING near `regen_temp` | heater A stays commanded through the gap (`sb_nan_ticks` tolerance), regen continues uninterrupted once the probe returns | green |
@@ -338,18 +336,18 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-L11 | lint | L-11 | ci-lint | Script dumps `esphome config` for `packages/release.yaml` and checks the debug sensors (free heap, largest block, loop time) are present with an `update_interval` | all three debug sensors exist and update, so memory problems would not go unnoticed | green |
 | T-L12 | physical | L-12 | checklist | Stage 1 check (paired with A-28): confirm the commissioning note that the GPIO13 blue LED is not a general "status OK" indicator | checklist/documentation explicitly states the LED reflects heater A relay state only | manual |
 
-## New Sim knobs
+## Plant-model fault knobs
 
-| Knob | Used by tests | What it does in the plant model |
-|---|---|---|
-| `Sim Relay Stuck On A` | T-B02 | Heater A's plant effect (heat toward `Sim Heater Max Temp`) stays applied to pack A regardless of the `Heater A` switch command, simulating a welded relay contact |
-| `Sim Valve Stuck A` | T-D01, T-D02, T-F20 | Valve A's simulated real-world position latches to whatever it was when this switch turns on and ignores all further commands, modelling a mechanically stuck valve with no position feedback |
-| `Sim RH Fault` | T-C01, T-C14 (via Override) | Forces `air_rh` to publish NaN regardless of the plant model, simulating a dead or disconnected SHT45 |
-| `Sim RH Frozen` | T-C02 | `air_rh` stops updating and republishes its last value every tick regardless of the plant model, simulating a hung I2C bus |
-| `Sim Probe 85C` | T-B06 | Forces `pack_a_temp` to publish exactly 85.0C regardless of the plant model, simulating the DS18B20 power-on sentinel value |
-| `Sim Probe Garbage A` | T-B07 | Forces `pack_a_temp` to publish -127C regardless of the plant model, simulating an out-of-range DS18B20 fault code |
-| `Sim Case Probe Fault` | T-B16, T-B1011 | Forces `case_temp` to publish NaN regardless of the plant model, simulating a dead case DS18B20 |
-| `Sim Probes Swapped` | T-B26 | `pack_b_temp` republishes pack A's plant temperature instead of its own, simulating duplicated or crossed DS18B20 addresses |
-| `Sim Fan Stalled` | T-E11, T-I24 | The case thermal model stops responding to fan/thermostat state, so the enclosure keeps heating as if the fan were absent, simulating a stalled fan with no tachometer feedback |
+The `Sim *` switches the cases above inject with all live in
+`packages/hw-virtual.yaml`, acting on the plant model only; none exists in
+the real hardware package, which T-H17 and T-J02 assert on every PR.
+`docs/virtual-testing.md` lists them with their defaults and bench
+behaviour.
 
-Each knob is a `switch` in `packages/hw-virtual.yaml` acting on the plant model only; none exists in the real hardware package.
+`Sim Valve Stuck A` is the one that is more than a switch: valve A has a
+modelled position that normally follows the `Valve A` switch and latches
+while the knob is on, and outlet RH derives from which pack the air
+actually flows through rather than from the controller's `active_pack`. A
+valve latched open therefore keeps the wet pack on line through a swap and
+RH goes on climbing, which is what T-D01, T-F20 and the no-improvement
+check in T-I22 need to see.

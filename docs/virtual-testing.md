@@ -80,18 +80,31 @@ path completes on its own.
 | Sim Manual Temps | off | Pin both pack temps to Sim Pack A/B Temp. The heaters then have no effect, so raise the pinned value yourself or expect the "not heating" fault |
 | Sim Pack A Temp, Sim Pack B Temp | 25 °C | Used while Sim Manual Temps is on |
 | Sim Probe A Fault, Sim Probe B Fault | off | That pack's probe reads NaN while on; the plant keeps running underneath |
+| Sim Relay Stuck On A | off | Welded relay contact: heater A keeps heating pack A whatever Heater A is commanded to do |
+| Sim Valve Stuck A | off | Valve A's real position latches where it was and ignores further commands. Left open through a swap the wet pack stays on line, so outlet RH goes on climbing instead of resetting |
+| Sim Probe 85C | off | Pack A reads exactly 85.0 °C, the DS18B20 power-on sentinel |
+| Sim Probe Garbage A | off | Pack A reads -127 °C, the DS18B20 out-of-range fault code. Wins over Sim Probe 85C |
+| Sim Probes Swapped | off | Crossed addresses: Pack B Temperature republishes pack A's value |
+| Sim Case Probe Fault | off | Case Temperature reads NaN |
+| Sim RH Fault | off | Outlet Air Humidity reads NaN |
+| Sim RH Frozen | off | Hung I2C: Outlet Air Humidity republishes its last value. Sim RH Fault wins if both are on |
+| Sim Fan Stalled | off | The case stops responding to the fan and heats as if it were absent; there is no tachometer to notice |
 
 With the defaults: RH reaches 5 % at 100 min of service and 10 % at 150 min.
 Heating to 90 °C takes about 7 min, the hold 15 min, cooling to 40 °C about
 9 min, so standby is READY around 131 min and the swap fires at 150 min.
 At 60x that is 2.5 real minutes per half cycle.
 
-Two things to know about the model. Pack and case temperatures are published from the plant tick, so the controller's view of them is never more than one plant tick (1 s real) old at any speed; outlet RH reaches the controller through the `Control Humidity` template sensor, which polls every 5 s, so RH can be up to 5 s real (5 simulated minutes at 60x) behind the plant. And the controller's "not heating" check needs the
+Three things to know about the model. Pack and case temperatures are published from the plant tick, so the controller's view of them is never more than one plant tick (1 s real) old at any speed; outlet RH reaches the controller through the `Control Humidity` template sensor, which polls every 5 s, so RH can be up to 5 s real (5 simulated minutes at 60x) behind the plant. And the controller's "not heating" check needs the
 standby pack to rise 5 °C within 5 simulated minutes; with the thermal time
 constant at its 30 min maximum that requires `Sim Heater Max Temp` roughly 33 °C above `Sim Ambient Temp` at 1x, rising to about 40 °C at
 60x because the controller then sees the pack up to one plant tick (one
 simulated minute) late. Extreme knob settings can therefore trip that
-fault legitimately.
+fault legitimately. Finally, the case settles at ambient + 8 °C while a heater
+runs, or ambient + 2 °C while the fan runs as well; the fan never pulls the
+case below ambient, so with Sim Ambient Temp above the thermostat setpoint
+the fan stays on and the case stays hot, which is the model being right
+rather than a stalled fan.
 
 Since 1.2.0 the `overtemp` default is 110 °C, which is also the default
 `Sim Heater Max Temp`. The plant approaches that ceiling asymptotically, so
