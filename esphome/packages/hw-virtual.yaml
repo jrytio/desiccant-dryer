@@ -6,8 +6,14 @@
 #   pack temp  -> heater max while its heater switch is on, else -> ambient,
 #                 with one thermal time constant for both directions
 #   case temp  -> ambient + 8 C while any heater is on, 10 min time constant
-#   outlet RH  =  1 % until the active pack's service time passes the
-#                 breakthrough point, then rises linearly; resets on swap
+#   outlet RH  =  1 % until the service time of the pack air is actually
+#                 flowing through passes the breakthrough point, then rises
+#                 linearly; resets when a different pack comes on line
+#
+# Air path: valve A has a modelled position that normally follows the Valve A
+# switch and latches while Sim Valve Stuck A is on. Outlet RH derives from that
+# position, not from the controller's active_pack, so a valve that never moved
+# keeps the wet pack on line and RH goes on climbing through a swap.
 #
 # Everything here is a test-bench control and persists across reboots so the
 # reboot tests keep their settings. That is deliberately different from the
@@ -28,6 +34,24 @@ globals:
     initial_value: "25.0"
   - id: plant_last_ms
     type: uint32_t
+    initial_value: "0"
+  # Valve A's real-world position. Only A has a stuck knob, so valve B's
+  # position is read straight off its switch.
+  - id: plant_valve_a
+    type: bool
+    restore_value: true
+    initial_value: "false"
+  # Which pack air is actually flowing through: 0 none, 1 A, 2 B.
+  - id: plant_flow_pack
+    type: int
+    restore_value: true
+    initial_value: "0"
+  # Scaled seconds that pack has been on line since a different pack was. The
+  # controller's own service_elapsed_s is not used: it resets on a commanded
+  # swap whether or not the air path actually changed.
+  - id: plant_service_s
+    type: float
+    restore_value: true
     initial_value: "0"
 
 number:
@@ -234,6 +258,17 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
     icon: mdi:test-tube
+  # Valve A's modelled position latches where it was and ignores every
+  # further command (mechanically stuck, no position feedback). Left open
+  # through a swap it keeps the wet pack on line, so outlet RH goes on
+  # climbing instead of resetting.
+  - platform: template
+    name: "Sim Valve Stuck A"
+    id: sim_valve_stuck_a
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
 
 interval:
   - interval: 1s
@@ -284,7 +319,23 @@ interval:
           const float target_case = ambient + (any_heat ? (fan ? 2.0f : 8.0f) : 0.0f);
           id(plant_t_case) += (target_case - id(plant_t_case)) * (1.0f - expf(-dt / 600.0f));
 
-          const float service_min = id(active_pack) == 0 ? 0.0f : id(service_elapsed_s) / 60.0f;
+          // A stuck valve ignores further commands; everything else follows.
+          if (!id(sim_valve_stuck_a).state) id(plant_valve_a) = id(valve_a).state;
+          const bool a_open = id(plant_valve_a), b_open = id(valve_b).state;
+          // One valve open decides the path. Both closed is the 500 ms window
+          // inside a swap, or a reboot before the controller re-asserts, and
+          // both open is a stuck valve: in either case the pack already on line
+          // keeps the air, so the path holds rather than resetting.
+          int flow = (a_open == b_open) ? id(plant_flow_pack) : (a_open ? 1 : 2);
+          if (id(active_pack) == 0) flow = 0;   // stopped or not yet started
+          if (flow != id(plant_flow_pack)) {
+            id(plant_flow_pack) = flow;
+            id(plant_service_s) = 0;            // a different pack: fresh desiccant
+          } else if (flow != 0) {
+            id(plant_service_s) += dt;
+          }
+
+          const float service_min = id(plant_service_s) / 60.0f;
           float rh = 1.0f + fmaxf(0.0f, service_min - knob(id(sim_breakthrough_min).state, 60.0f))
                           * knob(id(sim_rh_rate).state, 0.1f);
           if (rh > 100.0f) rh = 100.0f;
