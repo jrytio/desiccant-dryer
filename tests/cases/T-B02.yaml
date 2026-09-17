@@ -6,6 +6,12 @@ setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5
   Sim RH Rise Rate: 5       # 0.1 %/min (the default) would take 45 sim min to reach arm_rh
+  # Pinned so the verdict never turns on how fast a pack heats. 105 C also
+  # keeps both packs clear of the 110 C overtemp default, which Sim Heater Max
+  # Temp otherwise equals: a pack asymptotic to the limit makes the fault this
+  # case is waiting for a coin flip.
+  Sim Heater Max Temp: 105
+  Sim Thermal Time Constant: 5
   Dryer Enabled: on
 steps:
   - wait_until: {Standby State: heating}

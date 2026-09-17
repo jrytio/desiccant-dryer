@@ -164,6 +164,76 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
     icon: mdi:test-tube
+  # A welded relay contact: heater A keeps heating pack A whatever the
+  # Heater A switch is commanded to do.
+  - platform: template
+    name: "Sim Relay Stuck On A"
+    id: sim_relay_stuck_on_a
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # pack_a_temp publishes exactly 85.0, the DS18B20 power-on sentinel a
+  # probe returns before its first conversion completes.
+  - platform: template
+    name: "Sim Probe 85C"
+    id: sim_probe_85c
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # pack_a_temp publishes -127, the DS18B20 out-of-range fault code.
+  # Takes precedence over Sim Probe 85C if both are on.
+  - platform: template
+    name: "Sim Probe Garbage A"
+    id: sim_probe_garbage_a
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # case_temp publishes NaN (dead case DS18B20).
+  - platform: template
+    name: "Sim Case Probe Fault"
+    id: sim_case_probe_fault
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # Crossed or duplicated addresses: pack_b_temp republishes pack A's
+  # plant temperature instead of its own.
+  - platform: template
+    name: "Sim Probes Swapped"
+    id: sim_probes_swapped
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # air_rh publishes NaN (dead or disconnected SHT45).
+  - platform: template
+    name: "Sim RH Fault"
+    id: sim_rh_fault
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # A hung I2C bus: air_rh republishes its last value every tick. Sim RH
+  # Fault wins if both are on, so the freeze can be followed by a loss.
+  - platform: template
+    name: "Sim RH Frozen"
+    id: sim_rh_frozen
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
+  # The case model stops responding to the fan, so the enclosure heats as
+  # if the fan were absent. There is no tachometer to notice this.
+  - platform: template
+    name: "Sim Fan Stalled"
+    id: sim_fan_stalled
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:test-tube
 
 interval:
   - interval: 1s
@@ -193,7 +263,10 @@ interval:
           const float tau        = knob(id(sim_tau_min).state, 5.0f) * 60.0f;
           const float k = 1.0f - expf(-dt / tau);          // exact first-order step
 
-          const bool heat_a = id(heater_a).state && !id(sim_heater_fault).state;
+          // A welded contact heats the pack whatever the switch says; a failed
+          // element produces no heat either way.
+          const bool coil_a = id(heater_a).state || id(sim_relay_stuck_on_a).state;
+          const bool heat_a = coil_a && !id(sim_heater_fault).state;
           const bool heat_b = id(heater_b).state && !id(sim_heater_fault).state;
           id(plant_t_a) += ((heat_a ? heater_max : ambient) - id(plant_t_a)) * k;
           id(plant_t_b) += ((heat_b ? heater_max : ambient) - id(plant_t_b)) * k;
@@ -204,8 +277,11 @@ interval:
 
           // A failed element still warms the case, so this is deliberately not
           // gated by Sim Heater Fault.
-          const bool any_heat = id(heater_a).state || id(heater_b).state;
-          const float target_case = ambient + (any_heat ? 8.0f : 0.0f);
+          const bool any_heat = coil_a || id(heater_b).state;
+          // The fan carries most of that heat out, but cannot pull the case
+          // below ambient. A stalled fan is one with no effect and no tacho.
+          const bool fan = id(case_fan).state && !id(sim_fan_stalled).state;
+          const float target_case = ambient + (any_heat ? (fan ? 2.0f : 8.0f) : 0.0f);
           id(plant_t_case) += (target_case - id(plant_t_case)) * (1.0f - expf(-dt / 600.0f));
 
           const float service_min = id(active_pack) == 0 ? 0.0f : id(service_elapsed_s) / 60.0f;
@@ -217,11 +293,28 @@ interval:
           // sees a value older than one plant tick regardless of Sim Speed.
           // Rounded to 0.1 so an unchanged reading at 1x is the same value
           // and HA records nothing; no filter sits between here and .state.
+          // The sensor-fault knobs act here and nowhere else, so the plant keeps
+          // integrating underneath one and the true value is back the moment it
+          // goes off. Nothing below may reach a persisted global.
           auto r1 = [](float v) { return roundf(v * 10.0f) / 10.0f; };
-          id(pack_a_temp).publish_state(id(sim_probe_a_fault).state ? NAN : r1(id(plant_t_a)));
-          id(pack_b_temp).publish_state(id(sim_probe_b_fault).state ? NAN : r1(id(plant_t_b)));
-          id(case_temp).publish_state(r1(id(plant_t_case)));
-          id(air_rh).publish_state(r1(rh));
+          float t_a = r1(id(plant_t_a));
+          if (id(sim_probe_85c).state)      t_a = 85.0f;
+          if (id(sim_probe_garbage_a).state) t_a = -127.0f;
+          if (id(sim_probe_a_fault).state)  t_a = NAN;
+          id(pack_a_temp).publish_state(t_a);
+
+          float t_b = r1(id(sim_probes_swapped).state ? id(plant_t_a) : id(plant_t_b));
+          if (id(sim_probe_b_fault).state) t_b = NAN;
+          id(pack_b_temp).publish_state(t_b);
+
+          id(case_temp).publish_state(id(sim_case_probe_fault).state ? NAN : r1(id(plant_t_case)));
+
+          // Frozen republishes the sensor's own last value; before the first
+          // publish there is none, so the plant's value stands in.
+          float rh_pub = r1(rh);
+          if (id(sim_rh_frozen).state && !isnan(id(air_rh).state)) rh_pub = id(air_rh).state;
+          if (id(sim_rh_fault).state) rh_pub = NAN;
+          id(air_rh).publish_state(rh_pub);
           id(air_temp).publish_state(r1(ambient + 2.0f));
 
 # Published by the plant tick above, already rounded; nothing here filters.

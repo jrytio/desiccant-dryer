@@ -2,16 +2,32 @@ id: T-B06
 covers: [B-06]
 type: detect
 status: red            # 85 C sentinel is accepted as a real reading today
+# Pack A is made the standby with Force Swap, because Sim Probe 85C acts on
+# pack_a_temp. The sentinel is on from the start rather than set mid-regen: at
+# 60x one control tick is 5 sim min, so the "not heating" check would fire on
+# the real cold pack before a mid-run knob could take effect.
+#
+# Sim Heater Fault keeps pack A genuinely cold, which is the whole point of
+# B-06 — an exact 85.0 from a pack that never warmed. Regen temp sits below 85
+# so accepting the sentinel visibly counts as regen hold; the verdict depends
+# on no heating rate at all, so Sim Heater Max Temp and the time constant do
+# not need pinning.
 setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5
   Sim RH Rise Rate: 5       # 0.1 %/min (the default) would take 45 sim min to reach arm_rh
+  Sim Heater Fault: on
+  Sim Probe 85C: on
+  Regen temp: 80            # below the sentinel, so a accepted 85 counts as hold
+  Regen hold time: 40       # longer than this case, so hold never completes into COOLING
   Dryer Enabled: on
 steps:
+  - press: Force Swap       # air to B, so pack A is the standby
   - wait_until: {Standby State: heating}
     timeout_sim_min: 30
-  - set: {Sim Probe 85C: on}    # standby probe reports exactly 85.0 from a cold pack
-  - wait_sim_min: 3
+  # Regen Hold Time publishes every 10 s real, so a 3 sim min wait could read a
+  # stale 0 at 60x and pass for the wrong reason.
+  - wait_sim_min: 20
   - expect:
-      Regen Hold Time: 0        # not counted as regen hold
+      Regen Hold Time: 0    # the sentinel must not be counted as regen hold
       Standby State: heating
