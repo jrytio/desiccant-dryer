@@ -95,16 +95,26 @@ Heating to 90 °C takes about 7 min, the hold 15 min, cooling to 40 °C about
 9 min, so standby is READY around 131 min and the swap fires at 150 min.
 At 60x that is 2.5 real minutes per half cycle.
 
-Three things to know about the model. Pack and case temperatures are published from the plant tick, so the controller's view of them is never more than one plant tick (1 s real) old at any speed; outlet RH reaches the controller through the `Control Humidity` template sensor, which polls every 5 s, so RH can be up to 5 s real (5 simulated minutes at 60x) behind the plant. And the controller's "not heating" check needs the
-standby pack to rise 5 °C within 5 simulated minutes; with the thermal time
-constant at its 30 min maximum that requires `Sim Heater Max Temp` roughly 33 °C above `Sim Ambient Temp` at 1x, rising to about 40 °C at
-60x because the controller then sees the pack up to one plant tick (one
-simulated minute) late. Extreme knob settings can therefore trip that
-fault legitimately. Finally, the case settles at ambient + 8 °C while a heater
-runs, or ambient + 2 °C while the fan runs as well; the fan never pulls the
-case below ambient, so with Sim Ambient Temp above the thermostat setpoint
-the fan stays on and the case stays hot, which is the model being right
-rather than a stalled fan.
+Some things to know about the model.
+
+**Freshness.** Pack and case temperatures are published from the plant tick,
+so the controller's view of them is never more than one plant tick (1 s real)
+old at any speed. Outlet RH instead reaches the controller through the
+`Control Humidity` template sensor, which polls every 5 s, so RH can be up to
+5 s real (5 simulated minutes at 60x) behind the plant.
+
+**The "not heating" check** needs the standby pack to rise 5 °C within 5
+simulated minutes. With the thermal time constant at its 30 min maximum that
+requires `Sim Heater Max Temp` roughly 33 °C above `Sim Ambient Temp` at 1x,
+rising to about 40 °C at 60x because the controller then sees the pack up to
+one plant tick (one simulated minute) late. Extreme knob settings can
+therefore trip that fault legitimately.
+
+**The case and the fan.** The case settles at ambient + 8 °C while a heater
+runs, or ambient + 2 °C while the fan runs as well. The fan never pulls the
+case below ambient, so with Sim Ambient Temp above the thermostat setpoint the
+fan stays on and the case stays hot — the model being right, not a stalled
+fan.
 
 Since 1.2.0 the `overtemp` default is 110 °C, which is also the default
 `Sim Heater Max Temp`. The plant approaches that ceiling asymptotically, so

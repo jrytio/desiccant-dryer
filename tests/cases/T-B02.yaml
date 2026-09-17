@@ -1,7 +1,7 @@
 id: T-B02
 covers: [B-02, A-01]
 type: infer
-status: red            # needs Sim Relay Stuck On A and a heater-off-still-heating check
+status: red            # waiting on the heater-off-still-heating check, not on a knob
 setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5

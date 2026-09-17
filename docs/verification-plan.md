@@ -180,7 +180,7 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-I02 | infer | I-02, B-03 | host | `Sim Heater Max Temp` 150, `Sim Thermal Time Constant` 1 (near-instant rise) on standby A; watch pack A temp approach `overtemp` | a rate-of-rise or thermal-model check trips before pack temperature reaches `overtemp`: `Fault` on, both heaters off | red |
 | T-B04 | detect | B-04 | host | `Sim Manual Temps` on, `Sim Pack A Temp` 130 with pack A active, then `Sim Probe A Fault` on so `pack_a_temp` publishes NaN | active-pack probe NaN beyond the probe timeout while any heater is on: both heaters off and `Fault` on within 2 ticks | red |
 | T-B05 | hil | B-05 | bench | Bench rig, mains off: swap the two DS18B20 leads (or their `address:` mapping) between packs A and B, warm pack A with a heat gun | `pack_b_temp` moves instead of `pack_a_temp`, confirming the mis-mapping and that nothing in firmware catches it | later |
-| T-B06 | detect | B-06 | host | `Sim Probe 85C` on for pack A, made the standby by `Force Swap`, with `Sim Heater Fault` keeping it cold and `Regen temp` below 85 | an exact 85.0 from a cold pack is rejected as the power-on sentinel: reading treated as unavailable, `Regen Hold Time` stays 0 | red |
+| T-B06 | detect | B-06 | host | `Sim Probe 85C` on for pack A once it is standby HEATING (`Force Swap` makes it the standby), with `Regen temp` below 85 and the thermal knobs pinned so the pack's true temperature stays under it | an exact 85.0 from a cold pack is rejected as the power-on sentinel: reading treated as unavailable, `Regen Hold Time` stays 0 | red |
 | T-B07 | detect | B-07 | host | `Sim Probe Garbage A` on for pack A (publishes -127C) while pack A is standby | -127 (or any value outside -20 to 150) is rejected: reading treated as unavailable, no COOLING to READY transition on it | red |
 | T-B08 | infer | B-08, I-25 | host | `Sim Manual Temps` on, `Sim Pack A Temp` pinned at 95C (above `regen_temp`) through a full HEATING and overtemp window | a reading unchanged to the bit for longer than the staleness window while a heater is on is treated as unavailable: heater off, `Fault` on | red |
 | T-B09 | logic | B-09, I-17 | host | `Sim Probe A Fault` toggled on for 3 ticks then off while standby A is HEATING near `regen_temp` | heater A stays commanded through the gap (`sb_nan_ticks` tolerance), regen continues uninterrupted once the probe returns | green |
@@ -338,9 +338,10 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 
 ## Plant-model fault knobs
 
-The `Sim *` switches the cases above inject with all live in
-`packages/hw-virtual.yaml`, acting on the plant model only; none exists in
-the real hardware package, which T-H17 and T-J02 assert on every PR.
+Every `Sim *` switch the cases above inject with lives in
+`packages/hw-virtual.yaml` and acts on the plant model only. None of them
+exists in the real hardware package, which T-H17 and T-J02 assert on every
+PR.
 `docs/virtual-testing.md` lists them with their defaults and bench
 behaviour.
 
