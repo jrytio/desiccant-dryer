@@ -3,9 +3,11 @@
 # case_temp) from the real GPIO output states, in time scaled by "Sim Speed".
 #
 # Model (first-order, integrated every second in scaled time):
-#   pack temp  -> heater max while its heater switch is on, else -> ambient,
-#                 with one thermal time constant for both directions
-#   case temp  -> ambient + 8 C while any heater is on, 10 min time constant
+#   pack temp  -> heater max while its heater coil is energised (the switch,
+#                 or Sim Relay Stuck On A), else -> ambient, with one thermal
+#                 time constant for both directions
+#   case temp  -> ambient + 8 C while any heater is on, or + 2 C with the fan
+#                 running as well; 10 min time constant, never below ambient
 #   outlet RH  =  1 % until the service time of the pack air is actually
 #                 flowing through passes the breakthrough point, then rises
 #                 linearly; resets when a different pack comes on line
