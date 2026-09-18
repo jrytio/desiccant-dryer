@@ -14,6 +14,6 @@ steps:
   - wait_sim_min: 6
   - expect:
       Fault Message: Standby heater not heating
-      Heater A: off
-      Heater B: off
+      Heater A Relay: off
+      Heater B Relay: off
       Standby State: wet

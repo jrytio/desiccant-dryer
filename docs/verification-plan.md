@@ -133,7 +133,9 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 
 - Test IDs are `T-` plus the primary catalogue ID without its dash. A test
   that covers several rows is named after the highest-priority one. IDs are
-  never reused or renumbered.
+  never reused or renumbered. A trailing letter (`T-K01L`) is a second test
+  of the same row under another harness — a `ci-lint` check beside a `host`
+  case — and is the only way one row appears in two tests' Covers.
 - Every catalogue row is in exactly one test's Covers. Adding a catalogue
   row means adding it to an existing test's Covers or adding a new test in
   the same change; `scripts/failure-modes-report.py` fails if a row is
@@ -312,8 +314,9 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-J08 | hil | J-08 | bench | Bench rig: fill or erase NVS during a flash update | all tunables revert to firmware defaults mid-run with no notification to the operator | later |
 | T-J10 | hil | J-10 | bench | Bench rig: flash two boards with the same hostname and API encryption key on one network | Home Assistant writes a tunable change to the wrong unit | later |
 | T-J11 | lint | J-11 | ci-lint | Script inspects the `globals:` block for any schema-version marker alongside `standby_state` or the elapsed counters | a persisted schema-version global exists and a mismatch at boot resets the persisted state to defaults with one log line | red |
-| T-K01 | logic | K-01, K-02 | host | `Dryer Enabled` off; then `switch.turn_on` on `Heater A` and `Valve A` via the API; wait 3 ticks (15s) | a heater or valve switched on while disabled is turned back off within 1 tick; the active pack's heater switched on while enabled is off within 1 tick | red |
-| T-K03 | logic | K-03 | host | Script toggles `Valve A` on/off via the API 10 times within one 5s tick interval | each optimistic switch state change is applied immediately with no debounce, confirming automation-driven chatter is possible | green |
+| T-K01 | logic | K-01, K-02 | host | `Dryer Enabled` off, then press `Sim Stray Heater A` and `Sim Stray Valve B` (hw-virtual fault injectors: the switches themselves are `internal` in this build, so nothing outside the controller can command them); repeat on the active pack's heater with the dryer enabled | a relay energised from outside the state machine is off again within 3 ticks while disabled and within 2 ticks while enabled, and the active valve stays open | green |
+| T-K01L | lint | K-01 | ci-lint | Script dumps `esphome config` for `desiccant-dryer.yaml` and checks the four output switches | `heater_a`, `heater_b`, `valve_a` and `valve_b` are all `internal: true`, so the released image exposes no commandable relay entity to Home Assistant or the web server | green |
+| T-K03 | logic | K-03 | host | Script toggles `Valve A` on/off via the API 10 times within one 5s tick interval, on a bench build that still exposes the switches (`outputs_internal: "false"`) | each optimistic switch state change is applied immediately with no debounce, confirming automation-driven chatter is possible on a build that exposes the outputs; the production build exposes none (T-K01L) | green |
 | T-K04 | lint | K-04 | ci-lint | Script dumps `esphome config`'s `web_server:` block | no `auth:` is configured; port 80 is reachable by anyone on the LAN, as documented | green |
 | T-K05 | lint | K-05 | ci-lint | Script dumps `esphome config` for `packages/release.yaml` and checks Improv/captive-portal settings | Improv serial and captive portal are present as documented provisioning paths, not accidentally left permanently open beyond intended use | green |
 | T-K06 | logic | K-06 | host | While standby A is HEATING at a real 50C, set `Regen temp` to 30 via the API | `hold_elapsed_s` starts accumulating immediately since 50 &gt;= 30; regen is declared complete after `regen_hold_min` with no protection against the bad write | green |

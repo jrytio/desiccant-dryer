@@ -326,10 +326,10 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 
 | ID | Failure | Pri | Kind | Verify | Gap |
 |---|---|---|---|---|---|
-| K-01 | Manual `Heater A/B` switch turned on from Home Assistant or the web server. With the dryer enabled it stays on until the next 5 s tick re-asserts outputs; with `Dryer Enabled` off the tick returns before `apply_outputs` and before the overtemp check (`base.yaml` interval guard), so the heater stays on indefinitely with no protection. Pass: the switches are `internal` with read-only mirrors, or outputs are re-asserted off every tick while disabled | 🔴 P0 | FW | virtual | ✱ |
-| K-02 | Manual `Valve A/B` switch toggled from Home Assistant opens or closes a valve outside the state machine; corrected on the next tick while enabled, never corrected while `Dryer Enabled` is off (same guard as K-01). The GPIO interlock still stops both opening together. Pass: same fix as K-01 | 🟠 P1 | FW | virtual | ✱ |
-| K-03 | HA automation or script spamming outputs faster than the tick; relay chatter | 🟠 P1 | OPS | virtual |  |
-| K-04 | Unauthenticated web server on port 80 lets anyone on the LAN toggle heaters and valves | 🟠 P1 | OPS | bench |  |
+| K-01 | Manual `Heater A/B` switch turned on from Home Assistant or the web server. Fixed in 1.2.4: the four output switches are `internal` in the production build, so no commandable heater or valve entity exists on the API or the web UI (read-only `Heater A Relay` mirrors show their state), and the disabled path of the control tick now drives every output off instead of returning early. The bench builds still expose the switches for relay bring-up, and there the tick leaves them alone. Pass: T-K01 and T-K01L | 🔴 P0 | FW | virtual |  |
+| K-02 | Manual `Valve A/B` switch toggled from Home Assistant opens or closes a valve outside the state machine. Fixed in 1.2.4 with K-01: the switches are `internal` in the production build and the tick re-asserts outputs off while `Dryer Enabled` is off, so a valve driven from anywhere but `apply_outputs` closes within one tick. The GPIO interlock still stops both opening together. Pass: T-K01 | 🟠 P1 | FW | virtual |  |
+| K-03 | HA automation or script spamming outputs faster than the tick; relay chatter. Narrowed by the K-01 fix: in the production build an automation can no longer reach the heater and valve switches at all, so the remaining chatter surface is the tunables and `Dryer Enabled` | 🟠 P1 | OPS | virtual |  |
+| K-04 | Unauthenticated web server on port 80. Since 1.2.4 it can no longer toggle heaters or valves (K-01), but it still exposes every tunable, `Dryer Enabled`, `Clear Fault` and `Force Swap` to anyone on the LAN | 🟠 P1 | OPS | bench |  |
 | K-05 | Improv or captive-portal AP left active; anyone can rejoin the device to their own network and control it | 🟡 P2 | OPS | bench |  |
 | K-06 | HA sends a tunable write with a bad value while a regen is in progress (e.g. `regen_temp` 30 °C); regen declared complete instantly | 🟡 P2 | FW | virtual |  |
 | K-07 | HA `Restart` button pressed while HEATING; one extra regen cycle per press | 🔵 P3 | OPS | virtual |  |
@@ -413,7 +413,7 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 | 31 | Verify regen-completion correctness across reboots and cold starts | I-10, I-11, I-12, I-15, I-21 | P2 |
 | 32 | Add tunable cross-validation and detect a regen with no RH improvement | I-14, I-16, I-17, I-18, I-22, I-26 | P2 |
 | 33 | Guard tunable persistence against unsafe ranges, NVS loss and hostname/API collisions | J-08, J-09, J-10 | P1 |
-| 34 | Guard manual switch toggles and automations against racing the control tick, including while the dryer is disabled | K-01, K-02, K-03 | P0 |
+| 34 | Guard manual switch toggles and automations against racing the control tick, including while the dryer is disabled — K-01/K-02 done in 1.2.4 (internal switches with read-only mirrors, outputs re-asserted off while disabled); K-03 narrowed to the tunables | K-01, K-02, K-03 | P0 |
 | 35 | Harden network exposure (unauthenticated web server, captive portal left open) | K-04, K-05 | P1 |
 | 36 | Verify HA tunable-write and Restart button edge cases mid-cycle | K-06, K-07, K-15 | P2 |
 | 37 | Verify control loop resilience under WiFi/API/web-client load | K-08, K-09 | P2 |

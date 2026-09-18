@@ -32,7 +32,7 @@ for n, ln in enumerate(SRC.read_text().splitlines(), 1):
         items.append({"id": i, "cat": cur, "text": text, "pri": pri, "kind": kind, "verify": ver, "gap": bool(gap)})
 
 PLAN = SRC.parent / "verification-plan.md"
-TEST = re.compile(r"^\| (T-[A-L]\d\d) \| (logic|detect|infer|lint|physical|hil) \| ((?:[A-L]-\d\d(?:, )?)+) \| (host|ci-lint|checklist|bench|live) \| (.+?) \| (.+?) \| (green|red|manual|later) \|$")
+TEST = re.compile(r"^\| (T-[A-L]\d\d[A-Z]?) \| (logic|detect|infer|lint|physical|hil) \| ((?:[A-L]-\d\d(?:, )?)+) \| (host|ci-lint|checklist|bench|live) \| (.+?) \| (.+?) \| (green|red|manual|later) \|$")
 tests = []
 if PLAN.exists():
     in_tests = False
@@ -49,9 +49,12 @@ if PLAN.exists():
     test_of = {}
     for t in tests:
         for c in t["covers"]:
-            if c in test_of:
+            # A suffixed id (T-K01L) is the second half of the test named by its
+            # stem (T-K01) — a lint check beside a host case, say — so the two
+            # may cover the same row. Two unrelated tests may not.
+            if c in test_of and test_of[c][:5] != t["id"][:5]:
                 sys.exit(f"{PLAN}: {c} is covered by both {test_of[c]} and {t['id']}")
-            test_of[c] = t["id"]
+            test_of[c] = min(test_of.get(c, t["id"]), t["id"], key=len)
     known = {it["id"] for it in items}
     uncovered = sorted(known - set(test_of))
     unknown = sorted(set(test_of) - known)

@@ -83,8 +83,17 @@ First unit (2026-09-15), probes labelled to match:
 
 ## 3. Outputs, one at a time, from HA
 
+The `Heater A/B` and `Valve A/B` switches exist only in the bench builds
+(`desiccant-dryer-hw-test.yaml` and `desiccant-dryer-virtual.yaml`, which set
+`outputs_internal: "false"`). The released firmware makes them `internal`, so
+Home Assistant and the web server see only the read-only `Heater A Relay`
+mirrors and nothing but the control tick can energise a relay (K-01/K-02).
+Do this step on the hw-test build.
+
 Turn `Dryer Enabled` off first: the control tick re-asserts outputs every
-5 s while it is on and would undo your toggles.
+5 s while it is on and would undo your toggles. (With `outputs_internal`
+true the tick drives every output off while disabled as well, which is why
+this step needs a bench build.)
 
 The heater stages have no load until the relays are fitted, so an open
 collector floats near 0 V whether the transistor is on or off. Put a pull-up

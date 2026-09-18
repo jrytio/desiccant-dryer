@@ -21,5 +21,5 @@ steps:
     timeout_sim_min: 60
   - wait_sim_min: 10
   - expect:
-      Heater A: off
+      Heater A Relay: off
       Fault: on

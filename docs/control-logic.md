@@ -85,7 +85,12 @@ waits for WiFi, before the outputs were forced off or the counters reset.
 
 `Dryer Enabled` off: all outputs off, `active_pack` cleared, state WET, all
 counters zero. A latched fault is left alone. Turning it on again starts on
-pack A.
+pack A. While it stays off the tick keeps running and drives every output
+off each time (the `all_outputs_off` script) without touching state, so a
+relay energised from outside the state machine cannot sit on with no
+overtemp check running; the state machine itself does not run. The bench
+builds set `outputs_internal: "false"` and skip that re-assert so the
+manual switches can be used for relay bring-up.
 
 ## Faults (latched; `Clear Fault` button resets)
 
