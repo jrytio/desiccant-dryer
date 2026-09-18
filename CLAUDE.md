@@ -98,7 +98,14 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Heater A and heater B are interlocked; valve A and valve B are interlocked.
 - The active (in-service) pack's heater is never on.
 - All outputs use `restore_mode: ALWAYS_OFF` and are forced off in `on_boot`.
-- `Dryer Enabled` off → everything off, state reset.
+- `Dryer Enabled` off → everything off, state reset, and the tick keeps
+  driving the outputs off (`all_outputs_off`) without running the state
+  machine, so nothing can leave a relay on while the safety checks are idle.
+- The four heater/valve switches are `internal` wherever `outputs_internal`
+  is true (production, host): Home Assistant and the web server see only the
+  read-only `Heater A Relay` mirrors. Only the bench builds (virtual,
+  hw-test) set it false, for the relay bring-up steps in
+  docs/hardware-bringup.md. Never ship a mains build with it false.
 - The humidity override (`rh_override_on` / `rh_override`) must never survive
   a reboot, and the display must show "OVR" whenever it is active.
 - `time_scale` is only ever written by `packages/hw-virtual.yaml`. Production
@@ -174,9 +181,6 @@ service 180 min) are untested guesses meant to get first cycles logging.
   once real data is in.
 - PCB design is a separate effort; the breadboard wiring is in docs/hardware.md
   and docs/breadboard.svg.
-- Before wiring real heaters: make the four heater/valve switches
-  `internal: true` with read-only binary_sensor mirrors. A manual toggle from
-  HA can currently turn on the active pack's heater for up to one 5 s tick.
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows
   "(waiting)" if RH is also high. Decide whether `max_service_min` should

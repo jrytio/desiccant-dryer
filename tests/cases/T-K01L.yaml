@@ -1,0 +1,8 @@
+id: T-K01L
+covers: [K-01]
+type: lint
+status: green
+harness: ci-lint
+selectors: [esphome/desiccant-dryer.yaml]
+assert:
+  - every switch in [heater_a, heater_b, valve_a, valve_b] has internal true

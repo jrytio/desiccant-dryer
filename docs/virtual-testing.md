@@ -82,6 +82,7 @@ path completes on its own.
 | Sim Probe A Fault, Sim Probe B Fault | off | That pack's probe reads NaN while on; the plant keeps running underneath |
 | Sim Relay Stuck On A | off | Welded relay contact: heater A keeps heating pack A whatever Heater A is commanded to do |
 | Sim Valve Stuck A | off | Valve A's real position latches where it was and ignores further commands. Left open through a swap the wet pack stays on line, so outlet RH goes on climbing instead of resetting |
+| Sim Stray Heater A, Sim Stray Valve B | button | Energise that relay behind the state machine's back, the way Home Assistant or the web server once could (K-01/K-02). The controller must take it off again on the next tick, dryer enabled or not |
 | Sim Probe 85C | off | Pack A reads exactly 85.0 °C, the DS18B20 power-on sentinel |
 | Sim Probe Garbage A | off | Pack A reads -127 °C, the DS18B20 out-of-range fault code. Wins over Sim Probe 85C |
 | Sim Probes Swapped | off | Crossed addresses: Pack B Temperature republishes pack A's value |

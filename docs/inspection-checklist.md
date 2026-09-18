@@ -100,8 +100,8 @@ Reference: `CLAUDE.md` invariants, `docs/releasing.md`.
 ## Stage 6 · First energised check (24 V on, mains on, heaters disconnected at their terminals)
 
 - [ ] **F-07 / F-08** Rails. **Pass:** 24.0 ± 0.5 V at the PSU; 5.00 to 5.10 V at the buck OUT+; 3.3 V on the ESP 3V3 pin. *(meter)*
-- [ ] **A-29 / F-15** Power-on behaviour. **Pass:** neither relay clicks and no valve pulls in during power-up, boot, or a pressed `Restart`; the blue LED stays off until `Heater A` is genuinely commanded. *(ears, eyes, three power cycles)*
-- [ ] **A-05 / D-01** Interlock at the terminals. **Pass:** with `Dryer Enabled` off, toggling `Heater A` on then `Heater B` on from HA never shows both relay NO contacts closed at once; same for the two valves. *(meter on relay NO, eyes on valves)*
+- [ ] **A-29 / F-15** Power-on behaviour. **Pass:** neither relay clicks and no valve pulls in during power-up, boot, or a pressed `Restart`; the blue LED stays off until heater A is genuinely commanded (watch `Heater A Relay`). *(ears, eyes, three power cycles)*
+- [ ] **A-05 / D-01** Interlock at the terminals. **Pass:** on the hw-test build (the only one with the manual switches; the release makes them `internal`), with `Dryer Enabled` off, toggling `Heater A` on then `Heater B` on from HA never shows both relay NO contacts closed at once; same for the two valves. *(meter on relay NO, eyes on valves)*
 - [ ] **L-12** Operator indicators. **Pass:** the front display, not the blue LED, is the status indicator; the LED meaning is written on the enclosure. *(eyes)*
 - [ ] **A-01 / A-19** Relay contacts. **Pass:** each relay reads open across COM-NO when off and under 0.1 Ω when on, over ten cycles. *(meter)*
 

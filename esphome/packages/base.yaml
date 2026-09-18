@@ -36,6 +36,20 @@ substitutions:
   # so tolerance only applies once a valid reading has been seen.
   probe_timeout_ticks: "5"
 
+  # Who may command the four mains/valve relays.
+  #   "true"  (default, production and the host test build): the switches are
+  #           internal, so neither Home Assistant nor the unauthenticated web
+  #           server can reach them, and the control tick drives them off
+  #           every 5 s while `Dryer Enabled` is off. Read-only binary_sensor
+  #           mirrors ("Heater A Relay" and friends) still show relay state.
+  #   "false" (the bench builds, desiccant-dryer-virtual.yaml and
+  #           desiccant-dryer-hw-test.yaml): the switches are exposed and the
+  #           disabled tick leaves them alone, so the relay/interlock
+  #           bring-up steps in docs/hardware-bringup.md can toggle them by
+  #           hand. Never true of a build that drives real heaters in service.
+  # See failure modes K-01/K-02 in docs/failure-modes.md.
+  outputs_internal: "true"
+
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
@@ -278,10 +292,15 @@ number:
     icon: mdi:test-tube
 
 # ---------------------------------------------------------------- outputs
+# The four relay switches are `internal` in the production build
+# (${outputs_internal}), so the only thing that can command a 120 VAC heater
+# or a valve is the control tick's apply_outputs script; Home Assistant and
+# the web server see the read-only mirrors further down instead (K-01/K-02).
 switch:
   - platform: gpio
     name: "Heater A"
     id: heater_a
+    internal: ${outputs_internal}
     pin: GPIO13
     restore_mode: ALWAYS_OFF
     interlock: [heater_b]
@@ -290,6 +309,7 @@ switch:
   - platform: gpio
     name: "Heater B"
     id: heater_b
+    internal: ${outputs_internal}
     pin: GPIO12
     restore_mode: ALWAYS_OFF
     interlock: [heater_a]
@@ -298,6 +318,7 @@ switch:
   - platform: gpio
     name: "Valve A"
     id: valve_a
+    internal: ${outputs_internal}
     pin: GPIO11
     restore_mode: ALWAYS_OFF
     interlock: [valve_b]
@@ -306,6 +327,7 @@ switch:
   - platform: gpio
     name: "Valve B"
     id: valve_b
+    internal: ${outputs_internal}
     pin: GPIO10
     restore_mode: ALWAYS_OFF
     interlock: [valve_a]
@@ -333,11 +355,8 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
     icon: mdi:power
     on_turn_off:
+      - script.execute: all_outputs_off
       - lambda: |-
-          id(heater_a).turn_off();
-          id(heater_b).turn_off();
-          id(valve_a).turn_off();
-          id(valve_b).turn_off();
           id(active_pack) = 0;
           id(standby_state) = 0;
           id(reset_cycle_counters).execute();
@@ -435,6 +454,28 @@ binary_sensor:
     device_class: problem
     lambda: return id(fault_code) != 0;
 
+  # Read-only mirrors of the four relay outputs. With the switches internal
+  # (production) these are the only way Home Assistant, the web server or the
+  # bench dashboard see relay state, and nothing can command a heater or a
+  # valve from outside the control tick (K-01/K-02). The template platform
+  # evaluates these in the main loop, so they follow the switch immediately.
+  - platform: template
+    name: "Heater A Relay"
+    icon: mdi:radiator
+    lambda: return id(heater_a).state;
+  - platform: template
+    name: "Heater B Relay"
+    icon: mdi:radiator
+    lambda: return id(heater_b).state;
+  - platform: template
+    name: "Valve A Relay"
+    icon: mdi:valve
+    lambda: return id(valve_a).state;
+  - platform: template
+    name: "Valve B Relay"
+    icon: mdi:valve
+    lambda: return id(valve_b).state;
+
 text_sensor:
   # Single place the fault code becomes text; the display reads this too.
   - platform: template
@@ -524,6 +565,21 @@ script:
             id(standby_state_seen) = id(standby_state);
             id(standby_elapsed_s) = 0;
           }
+  # Every output off, with no state change of its own. Used by the disable
+  # path and by the control tick while `Dryer Enabled` is off, so a relay
+  # energised from outside the state machine is taken back off within one
+  # tick instead of staying on indefinitely (K-01/K-02). Each switch is
+  # written only when it is on, so this is silent when nothing is on.
+  - id: all_outputs_off
+    mode: single
+    then:
+      - lambda: |-
+          if (id(heater_a).state) id(heater_a).turn_off();
+          if (id(heater_b).state) id(heater_b).turn_off();
+          if (id(valve_a).state)  id(valve_a).turn_off();
+          if (id(valve_b).state)  id(valve_b).turn_off();
+          if (id(case_fan).state) id(case_fan).turn_off();
+
   # Outputs are a pure function of state. Runs at the end of every control
   # tick, so a reboot or a missed transition can never leave the active valve
   # closed or a heater in the wrong state. Each switch is written only when
@@ -575,7 +631,16 @@ interval:
     then:
       - lambda: |-
           if (!id(boot_done)) return;   // never run before on_boot has reset outputs and counters
-          if (!id(dryer_enabled).state) return;
+          if (!id(dryer_enabled).state) {
+            // Disabled: the state machine does not run, but the outputs are
+            // still driven off every tick, so a relay switched on behind the
+            // controller's back cannot stay on with no overtemp check running
+            // (K-01/K-02). State stays reset; the disable itself reset it.
+            // The bench builds (${outputs_internal} false) expose the manual
+            // switches for relay bring-up, so there the tick leaves them be.
+            if (${outputs_internal}) id(all_outputs_off).execute();
+            return;
+          }
           if (id(do_swap).is_running()) return;   // never fight the both-closed window
 
           // --- scaled time step
