@@ -2,16 +2,38 @@ id: T-B06
 covers: [B-06]
 type: detect
 status: red            # 85 C sentinel is accepted as a real reading today
+# Pack A is made the standby with Force Swap, because Sim Probe 85C acts on
+# pack_a_temp.
+#
+# The sentinel goes on only once the pack is HEATING, never in setup. Once the
+# firmware rejects 85.0 the reading is unavailable, and the control tick
+# returns on isnan(t_sb) before the state machine runs — so a pack that started
+# under the sentinel would never leave WET, wait_until would time out, and this
+# case could never go green after the fix it was written for.
+#
+# Regen temp sits below the sentinel so an accepted 85 counts as regen hold.
+# The thermal knobs are pinned slow enough that the pack's true temperature
+# stays well under Regen temp for the whole case (about 70 C at the end), so
+# any hold time can only have come from the sentinel; and fast enough that the
+# pack clears the 5 C rise the "not heating" check wants before the sentinel
+# masks the probe. The verdict therefore turns on no timing race.
 setup:
   Sim Speed: 60
   Sim Breakthrough Time: 5
   Sim RH Rise Rate: 5       # 0.1 %/min (the default) would take 45 sim min to reach arm_rh
+  Sim Heater Max Temp: 105
+  Sim Thermal Time Constant: 30
+  Regen temp: 80            # below the sentinel, so an accepted 85 counts as hold
+  Regen hold time: 40       # longer than this case, so hold never completes into COOLING
   Dryer Enabled: on
 steps:
+  - press: Force Swap       # air to B, so pack A is the standby
   - wait_until: {Standby State: heating}
     timeout_sim_min: 30
-  - set: {Sim Probe 85C: on}    # standby probe reports exactly 85.0 from a cold pack
-  - wait_sim_min: 3
+  - set: {Sim Probe 85C: on}
+  # Regen Hold Time publishes every 10 s real, so a 3 sim min wait could read a
+  # stale 0 at 60x and pass for the wrong reason.
+  - wait_sim_min: 20
   - expect:
-      Regen Hold Time: 0        # not counted as regen hold
+      Regen Hold Time: 0    # the sentinel must not be counted as regen hold
       Standby State: heating
