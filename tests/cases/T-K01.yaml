@@ -1,18 +1,34 @@
 id: T-K01
 covers: [K-01, K-02]
 type: logic
-status: red            # manual heater toggle while disabled is never corrected today
+status: green
+# The host build carries the production shape: the four relay switches are
+# internal, so nothing outside the controller can command them. `Sim Stray
+# Heater A` / `Sim Stray Valve B` (hw-virtual.yaml) stand in for whatever
+# could once reach them — Home Assistant, the web server on port 80, an
+# automation — by energising the relay behind the state machine's back. The
+# mirrors are the read-only view of the relay itself.
 setup:
   Sim Speed: 60
   Dryer Enabled: off
 steps:
-  - set: {Heater A: on}
-  - wait_sim_min: 1
+  # Disabled: the tick used to return before apply_outputs, so a stray
+  # command stayed on indefinitely with no overtemp check running.
+  - press: Sim Stray Heater A
   - expect:
-      Heater A: off
+      Heater A Relay: {within_ticks: 2, value: on}
+  - expect:
+      Heater A Relay: {within_ticks: 3, value: off}
+  - press: Sim Stray Valve B
+  - expect:
+      Valve B Relay: {within_ticks: 3, value: off}
+  # Enabled: the same stray command on the active pack's heater is corrected
+  # by apply_outputs at the end of the next tick.
   - set: {Dryer Enabled: on}
-  - wait_until: {Valve A: on}
+  - wait_until: {Valve A Relay: on}
     timeout_sim_min: 2
-  - set: {Heater A: on}       # active pack's heater
+  - press: Sim Stray Heater A
   - expect:
-      Heater A: {within_ticks: 1, value: off}
+      Heater A Relay: {within_ticks: 2, value: off}
+  - expect:
+      Valve A Relay: {within_ticks: 2, value: on}

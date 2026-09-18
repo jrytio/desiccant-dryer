@@ -272,6 +272,32 @@ switch:
     entity_category: config
     icon: mdi:test-tube
 
+button:
+  # Fault injectors for K-01/K-02: something outside the controller energises
+  # a relay behind the state machine's back (a manual switch on a build that
+  # exposes them, an HA automation, the unauthenticated web server). The
+  # controller must take it back off on the next control tick, whether the
+  # dryer is enabled or disabled. These exist only in the virtual and host
+  # builds; nothing in the firmware presses them.
+  - platform: template
+    name: "Sim Stray Heater A"
+    id: sim_stray_heater_a
+    entity_category: config
+    icon: mdi:test-tube
+    on_press:
+      - lambda: |-
+          ESP_LOGW("sim", "Stray command: heater A on");
+          id(heater_a).turn_on();
+  - platform: template
+    name: "Sim Stray Valve B"
+    id: sim_stray_valve_b
+    entity_category: config
+    icon: mdi:test-tube
+    on_press:
+      - lambda: |-
+          ESP_LOGW("sim", "Stray command: valve B on");
+          id(valve_b).turn_on();
+
 interval:
   - interval: 1s
     then:

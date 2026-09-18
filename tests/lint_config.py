@@ -74,7 +74,11 @@ def compare(ent, key, op, want, where):
         raise AssertionError(f"{where}: no {key}")
     got = ent[key]
     want = ent[want] if want in ent else want
-    if isinstance(got, (int, float)) and not isinstance(got, bool):
+    if isinstance(got, bool):
+        # `internal true` and friends: the dump holds a real bool, the case a word.
+        if not isinstance(want, bool):
+            want = str(want).lower() in ("true", "yes", "on")
+    elif isinstance(got, (int, float)):
         want = float(want)
     ok = {
         "<=": lambda a, b: a <= b, ">=": lambda a, b: a >= b,

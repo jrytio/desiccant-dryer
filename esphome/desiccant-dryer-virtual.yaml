@@ -11,6 +11,11 @@ substitutions:
   # the writer runs once per redraw.
   display_buffer_size: "100%"
   display_update_interval: 5s
+  # Bench build: the four relay switches stay commandable from Home
+  # Assistant so the relay and interlock steps in docs/hardware-bringup.md
+  # can toggle them by hand, and the tick does not force them off while the
+  # dryer is disabled. The production build has them internal (K-01/K-02).
+  outputs_internal: "false"
 
 packages:
   base: !include packages/base.yaml
