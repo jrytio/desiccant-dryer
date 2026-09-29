@@ -69,7 +69,7 @@ reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source 
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 6. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
-SPI 36/35, display CS 5 / DC 9 / RST 14 / BL 17, 1-wire 37.
+SPI 36/35, display CS 5 / DC 7 / RST 9 / BL 17, 1-wire 37.
 GPIO13 also drives the on-board blue LED (1 kΩ, active high) — it shows heater
 A's relay state. GPIO18 (A1) has an optional 10 kΩ pullup behind a solder
 jumper (open by default); unused. The 12-pin header carries GPIO8 and GPIO4

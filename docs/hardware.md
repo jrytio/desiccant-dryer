@@ -50,7 +50,7 @@ tables and sources in [pinout-verification.md](pinout-verification.md).
 
 16-pin header, in order: EN, 3V3, NC, GND, A0=17, A1=18, A2=14, A3=9, A4=7,
 A5=5, SCK=36, COPI=35, CIPO=37, RX1=33, TX1=34, 3.
-Used: 3V3, GND, 17 (backlight PWM), 14 (display RST), 9 (display DC),
+Used: 3V3, GND, 17 (backlight PWM), 9 (display RST), 7 (display DC),
 5 (display CS), 36 (SCK), 35 (MOSI), 37 (1-wire bus).
 
 12-pin header, in order: BAT, EN, USB, 13, 12, 11, 10, 8, 6, 4, SCL=2, SDA=1.
@@ -117,7 +117,7 @@ up with USB-C at the left, the 12-pin row is on top.
   current limit. Only pulling the wire (or JP-USB on the protoboard) prevents
   that; the protoboard's series Schottky blocks the other direction only
   (see JP-USB below).
-- Display: GND/VCC to top rails; SCL→36, SDA→35, RES→14, DC→9, CS→5, BLK→17.
+- Display: GND/VCC to top rails; SCL→36, SDA→35, RES→9, DC→7, CS→5, BLK→17.
 - DS18B20 ×3: all GND to top GND, all VDD to top 3.3 V, all DQ tied together
   → GPIO37 with one 4.7 kΩ to 3.3 V. Three-wire hookup; do not use parasitic
   power.
@@ -271,8 +271,8 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
 | GPIO6 | ESP 6 (12-pin) | 100 Ω, fan channel |
 | GPIO36 | ESP 36 (16-pin) | Display SCL |
 | GPIO35 | ESP 35 (16-pin) | Display SDA |
-| GPIO14 | ESP 14 (16-pin) | Display RES |
-| GPIO9 | ESP 9 (16-pin) | Display DC |
+| GPIO9 | ESP 9 (16-pin) | Display RES |
+| GPIO7 | ESP 7 (16-pin) | Display DC |
 | GPIO5 | ESP 5 (16-pin) | Display CS |
 | GPIO17 | ESP 17 (16-pin) | Display BLK |
 | GPIO37 / DQ | ESP 37 (16-pin) | 4.7 kΩ bottom, DS18B20 DQ ×3 |
