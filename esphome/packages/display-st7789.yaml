@@ -2,7 +2,7 @@
 # hw-test builds. On the virtual build nothing is attached; the driver still
 # runs so the frame buffer allocation on the S2 gets exercised. The drawing
 # itself is ${display_lambda} from packages/display-draw.yaml.
-#   GPIO36/35 SPI SCK/MOSI, GPIO5 CS, GPIO9 DC, GPIO14 RST, GPIO17 backlight
+#   GPIO36/35 SPI SCK/MOSI, GPIO5 CS, GPIO7 DC, GPIO9 RST, GPIO17 backlight
 #
 # mipi_spi, not ili9xxx, because ili9xxx cannot buffer less than a full frame
 # (get_buffer_length_() is width * height, so 57,600 B is its floor) and that
@@ -72,8 +72,8 @@ display:
       offset_height: 0     # try 80 if the image is shifted / cropped
       offset_width: 0
     cs_pin: GPIO5
-    dc_pin: GPIO9
-    reset_pin: GPIO14
+    dc_pin: GPIO7
+    reset_pin: GPIO9
     invert_colors: true    # most 1.54" IPS modules need this
     # ili9xxx defaulted to 40MHz; mipi_spi defaults to 10MHz and the ST7789V
     # model sets no override, so the driver swap quartered the SPI clock.

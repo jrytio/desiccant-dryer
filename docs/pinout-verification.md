@@ -32,9 +32,9 @@ All GPIO numbers in `esphome/packages/hw-real.yaml` (sensors), `base.yaml`
 | 4 | GND | — | top GND rail |
 | 5 | A0 | 17 | display backlight (PWM) |
 | 6 | A1 | 18 | — (optional pullup via solder jumper) |
-| 7 | A2 | 14 | display RST |
-| 8 | A3 | 9 | display DC |
-| 9 | A4 | 7 | |
+| 7 | A2 | 14 | |
+| 8 | A3 | 9 | display RST |
+| 9 | A4 | 7 | display DC |
 | 10 | A5 | 5 | display CS |
 | 11 | SCK | 36 | SPI clock |
 | 12 | COPI (MOSI) | 35 | SPI data to display |
@@ -73,7 +73,7 @@ Qwiic (J3): GND, 3.3 V, SDA=GPIO1, SCL=GPIO2. SHT45 plugs in here.
 3. **The 12-pin header does not carry GPIO9 or GPIO5.** Where a standard
    Feather has "9" and "5", this board has GPIO8 and GPIO4. GPIO9 and GPIO5
    exist only as A3 and A5 on the 16-pin header — which is where the design
-   takes them from (display DC and CS). Don't wire "pin 9" from the 12-pin
+   takes them from (display RST and CS). Don't wire "pin 9" from the 12-pin
    side expecting GPIO9.
 4. **RX1/TX1 (GPIO33/34) are on the 16-pin header**, not back pads. Not
    used, but available.
