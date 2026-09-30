@@ -11,7 +11,7 @@
 #   GPIO12  Heater B relay coil                          interlocked with A
 #   GPIO11  Valve A  (24 V solenoid, low-side MOSFET)   interlocked with B
 #   GPIO10  Valve B                                      interlocked with A
-#   GPIO6   Case fan (24 V, low-side MOSFET)
+#   GPIO8   Case fan (24 V, low-side MOSFET)
 #
 # Cycle logic (control tick every 5 s):
 #   One pack is "active" (valve open, heater off). The other is "standby" and
@@ -336,7 +336,7 @@ switch:
   - platform: gpio
     name: "Case Fan"
     id: case_fan
-    pin: GPIO6
+    pin: GPIO8
     restore_mode: ALWAYS_OFF
     icon: mdi:fan
 

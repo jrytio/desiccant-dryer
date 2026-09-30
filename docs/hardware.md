@@ -55,7 +55,7 @@ Used: 3V3, GND, 17 (backlight PWM), 9 (display RST), 7 (display DC),
 
 12-pin header, in order: BAT, EN, USB, 13, 12, 11, 10, 8, 6, 4, SCL=2, SDA=1.
 Used: USB (5 V in), 13 (heater A), 12 (heater B), 11 (valve A), 10 (valve B),
-6 (fan). Note the "9" and "5" Feather positions are GPIO8 and GPIO4 here.
+8 (fan). Note the "9" and "5" Feather positions are GPIO8 and GPIO4 here.
 Qwiic connector: SDA=1, SCL=2, 3.3 V, GND.
 
 Both header orders above run from the USB end. Component side up with the
@@ -279,7 +279,7 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
 | GPIO12 | ESP 12 (12-pin) | 1 kΩ → harness pin 4 |
 | GPIO11 | ESP 11 (12-pin) | 100 Ω, valve A channel |
 | GPIO10 | ESP 10 (12-pin) | 100 Ω, valve B channel |
-| GPIO6 | ESP 6 (12-pin) | 100 Ω, fan channel |
+| GPIO8 | ESP 8 (12-pin) | 100 Ω, fan channel |
 | GPIO36 | ESP 36 (16-pin) | Display SCL |
 | GPIO35 | ESP 35 (16-pin) | Display SDA |
 | GPIO9 | ESP 9 (16-pin) | Display RES |

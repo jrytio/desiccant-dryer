@@ -54,8 +54,8 @@ All GPIO numbers in `esphome/packages/hw-real.yaml` (sensors), `base.yaml`
 | 5 | 12 | 12 | heater B relay |
 | 6 | 11 | 11 | valve A |
 | 7 | 10 | 10 | valve B |
-| 8 | 8 | 8 | |
-| 9 | 6 | 6 | case fan |
+| 8 | 8 | 8 | case fan |
+| 9 | 6 | 6 | |
 | 10 | 4 | 4 | |
 | 11 | SCL | 2 | I2C (also on Qwiic) |
 | 12 | SDA | 1 | I2C (also on Qwiic) |
