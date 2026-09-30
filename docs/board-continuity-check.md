@@ -85,9 +85,17 @@ RST→14). A board copied from an older breadboard leaves the display dark.
 
 | | From → To | Mode | Expect |
 |---|---|---|---|
-| [ ] | GPIO37 (16-pin #13) → 3V3 (16-pin #2), the pullup | Ω | ~4.7 kΩ |
+| [ ] | GPIO37 (16-pin #13) → 3V3 (16-pin #2), the 5.1 kΩ pullup | Ω | 4.85–5.35 kΩ |
 | [ ] | GPIO37 → each DS18B20 DQ screw terminal (×3) | beep | ~0 Ω |
 | [ ] | Each probe's GND terminal → GND, VDD terminal → 3V3 (×3) | beep | ~0 Ω |
+
+With the probes connected, DQ → 3V3 can start lower (around 3.4 kΩ) and
+climb to 5.1 kΩ, and DQ → GND can read a steady 10–15 kΩ. That can be the
+probes' protection diodes turned partly on by the meter, with the 3V3
+decoupling capacitors charging. Unplug the probes: DQ → GND must then read
+open or climb toward it. A steady reading with the probes out is leakage on
+the board. Powered, DQ should idle near 3.3 V; around 2.2 V or lower means a
+real path to ground.
 
 ## 5. Power path
 
@@ -119,7 +127,7 @@ beep.**
 | [ ] | 16-pin socket: every neighbouring pair, #1–2 through #15–16. Watch **9–7** (RES–DC), **36–35** (SCK–MOSI) and **35–37** | beep | no beep |
 | [ ] | Display 8-pin header: each neighbouring pair, 1–2 through 7–8 | beep | no beep |
 | [ ] | JST harness header, on both boards: 1–2, 2–3, 3–4 | beep | no beep |
-| [ ] | 9-position sensor block: each neighbouring pair. 3V3–DQ reads the pullup | Ω | ~4.7 kΩ, never 0 |
+| [ ] | 9-position sensor block: each neighbouring pair. 3V3–DQ reads the pullup | Ω | ~5.1 kΩ, never 0 |
 | [ ] | 24 V load blocks (valve A, valve B, fan): 24+ to SW on each | beep | no beep |
 | [ ] | Every used GPIO socket position → GND, → 3V3, → 5 V | beep | no beep |
 | [ ] | Each IRLZ44N: gate → source | Ω | ~10 kΩ, never 0 |

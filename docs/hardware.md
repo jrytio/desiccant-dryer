@@ -6,7 +6,7 @@
 |---|---|---|
 | MCU | SparkFun ESP32-S2 Thing Plus (WRL-17743) | Feather footprint, Qwiic, CP2102 |
 | Humidity/temp | Sensirion SHT45 breakout (Qwiic/STEMMA QT) | In outlet air, after the valves |
-| Pack/case temp | 3× DS18B20 (probe style) | Shared 1-wire bus, 4.7 kΩ pullup, 125 °C max |
+| Pack/case temp | 3× DS18B20 (probe style) | Shared 1-wire bus, 5.1 kΩ pullup, 125 °C max |
 | Display | 1.54" IPS 240×240, ST7789 | 4-wire SPI, no MISO needed |
 | Heater relays | 2× Songle SRD-05VDC-SL-C | 5 V coil ~70 mA, 10 A / 250 VAC contacts |
 | Relay drivers | 2× PN2222A (TO-92, E-B-C); do not substitute P2N2222A unless rotated 180° | 1 kΩ base (logic-board end), 1 kΩ base pulldown (relay board) |
@@ -32,7 +32,7 @@ addition to the parts above:
 | JP-USB | 2-pin header + shunt | Manual disconnect between buck and USB pin |
 | Harness | JST-XH 4-way: B4B-XH-A header on each board, 2× XHP-4 housings, crimps, cable | Or an equivalent keyed 0.1" housing |
 | Display cable | 8-pin male header + 8-way female-female cable ≤ 15 cm | |
-| Resistors | 4.7 kΩ (1-wire pullup) plus the driver-stage resistors above | |
+| Resistors | 5.1 kΩ (1-wire pullup) plus the driver-stage resistors above | 4.7 kΩ is the usual DS18B20 value and also works; the protoboard was built with 5.1 kΩ, which is fine for three probes on short leads |
 | Sensor terminals | 9-position 5.08 mm screw terminal block | DS18B20 ×3 |
 | 24 V terminals | 4× 2-position 5.08 mm screw terminal block | 24 V in, valve A, valve B, fan |
 | Mains terminals | 4× 2-position 5.08 mm **mains-rated** screw terminal block (UL 1059 300 V / 10 A or IEC 250 V class) | 120 VAC in, heater A, heater B, 24 V PSU feed |
@@ -130,7 +130,7 @@ up with USB-C at the left, the 12-pin row is on top.
   (see JP-USB below).
 - Display: GND/VCC to top rails; SCL→36, SDA→35, RES→9, DC→7, CS→5, BLK→17.
 - DS18B20 ×3: all GND to top GND, all VDD to top 3.3 V, all DQ tied together
-  → GPIO37 with one 4.7 kΩ to 3.3 V. Three-wire hookup; do not use parasitic
+  → GPIO37 with one 5.1 kΩ to 3.3 V. Three-wire hookup; do not use parasitic
   power.
 - SHT45: Qwiic cable to the board's connector; nothing on the breadboard.
 - Five driver columns below the board, one per output. Relays and the 24 V
@@ -273,7 +273,7 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
 | Net | From | To |
 |---|---|---|
 | GND | 24 V IN 0V | Buck IN− / OUT− (one net on the module), 100 µF −, ESP GND (16-pin), display GND, harness pin 2, GND bus → 10 kΩ gate pulldowns ×3 and IRLZ44N sources ×3, DS18B20 GND ×3 |
-| 3V3 | ESP 3V3 (16-pin) | 3V3 bus → display 3V3, 4.7 kΩ top, DS18B20 3V3 ×3 |
+| 3V3 | ESP 3V3 (16-pin) | 3V3 bus → display 3V3, 5.1 kΩ top, DS18B20 3V3 ×3 |
 | 5 V | Buck OUT+ | 100 µF +, Schottky anode, harness pin 1 |
 | VBUS | Schottky cathode | JP-USB pin 2; JP-USB pin 1 → ESP USB (12-pin) |
 | 24V+ | 24 V IN 24+ | 24V+ bus → load blocks 24+ ×3, 1N4007 cathodes ×3; insulated feed → buck IN+ |
@@ -288,7 +288,7 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
 | GPIO7 | ESP 7 (16-pin) | Display DC |
 | GPIO5 | ESP 5 (16-pin) | Display CS |
 | GPIO17 | ESP 17 (16-pin) | Display BLK |
-| GPIO37 / DQ | ESP 37 (16-pin) | 4.7 kΩ bottom, DS18B20 DQ ×3 |
+| GPIO37 / DQ | ESP 37 (16-pin) | 5.1 kΩ bottom, DS18B20 DQ ×3 |
 | Gate A / B / C | 100 Ω far end | IRLZ44N G, 10 kΩ top (each channel) |
 | Drain A / B / C (SW) | IRLZ44N D | 1N4007 anode, load block SW (load −) |
 

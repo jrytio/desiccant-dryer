@@ -73,7 +73,7 @@ Reference: `docs/hardware.md` relay board section, `docs/datasheets/thermal-fuse
 - [ ] **B-12** DS18B20 leads on the packs. **Pass:** probe cable rated for the pack temperature (silicone, 150 °C class) or the stock PVC lead is re-terminated short of the hot zone; no lead touches a heater sheath. *(eyes, wire marking)*
 - [ ] **B-14** Probe position. **Pass:** each pack probe is clamped to the **pack body** beside its thermal fuse, not on the heater sheath, not on a fitting. *(eyes, hands)*
 - [ ] **B-05 / J-05** Probe identity. **Pass:** with the board powered from USB only, warm the pack A probe by hand and `Pack A Temperature` rises while B does not; repeat for B and for the case probe. Addresses in `hw-real.yaml` were read from **this** unit's log, not copied. *(hands, ESPHome log)*
-- [ ] **B-10** 1-wire pullup. **Pass:** 4.7 kΩ between DQ and 3.3 V; all three probes on VDD/GND/DQ (not parasitic, VDD not tied to GND). *(meter)*
+- [ ] **B-10** 1-wire pullup. **Pass:** 5.1 kΩ between DQ and 3.3 V; all three probes on VDD/GND/DQ (not parasitic, VDD not tied to GND). *(meter)*
 - [ ] **G-06** Sensor screw terminals. **Pass:** each of the nine positions holds its conductor on a pull, no stray strand bridging to a neighbour. *(hands)*
 - [ ] **C-03** SHT45 position. **Pass:** mounted in the outlet stream **downstream of both valves**, in moving air, not in a dead leg and not where condensate can reach it. *(eyes, air-path drawing)*
 - [ ] **C-13** SHT45 config. **Pass:** the `sht4x` entry in `hw-real.yaml` has no `heater_*` options enabled. *(read config)*
