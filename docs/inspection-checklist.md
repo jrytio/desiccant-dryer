@@ -23,7 +23,7 @@ Sign off each stage at the bottom before moving to the next.
 
 ## Stage 1 · Board and header assembly (mains off, 24 V off)
 
-Reference: `docs/hardware.md`, `docs/board-layout.svg`, `docs/pinout-verification.md`.
+Reference: `docs/hardware.md`, `docs/board-layout.svg`, `docs/pinout-verification.md`. The pin-by-pin meter pass (connections and pad bridges) is `docs/board-continuity-check.md`.
 
 - [ ] **G-02** ESP32-S2 Thing Plus seated in its 16-pin and 12-pin sockets. **Pass:** USB-C end and antenna end match the silkscreen, no empty socket pin at either end, no pin bent under the module. *(eyes, torch)*
 - [ ] **A-04** Both relay-driver transistors. **Pass:** marking reads `PN2222A` (pinout E-B-C, flat face toward you). A `P2N2222A` (C-B-E) is a reject; do not power the board. *(magnifier)*

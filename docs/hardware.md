@@ -184,7 +184,9 @@ Geometry sources, all in [datasheets/](datasheets/README.md):
    reads open with JP-USB out and about 0.3–0.4 V low with it in.) A fixed-5 V
    module avoids the trimmer.
 2. Fit the parts; check every net in the tables below with a meter before
-   the ESP goes into its sockets.
+   the ESP goes into its sockets, using
+   [board-continuity-check.md](board-continuity-check.md) (connections,
+   then bridges between neighbouring pads).
 3. Relay board: identify NC on each relay before wiring. With the coil
    unpowered, NC has continuity to COM; the pin pattern gives no other way
    to tell NO from NC. Wire "L sw" to NO. NC is live whenever the heater is
