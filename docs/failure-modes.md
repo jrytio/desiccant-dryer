@@ -111,7 +111,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | A-20 | Relay contact arcs and pits from switching the 1 A inductive-ish load every regen; life ends with a weld | 🟠 P1 | HW | live |  |
 | A-21 | Relay coil open; heater cannot be commanded on | 🟡 P2 | HW | bench |  |
 | A-22 | Heater element open circuit; no heat | 🟡 P2 | HW | live |  |
-| A-23 | PN2222A base resistor or 10 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
+| A-23 | PN2222A base resistor or 1 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
 | A-24 | Relay harness (JST-XH 4-way) unplugged or one conductor open; both heaters dead, or one dead | 🟡 P2 | WIRE | bench |  |
 | A-25 | Relay chatter from marginal 5 V coil supply (buck sag under two coils plus WiFi peak) | 🟠 P1 | HW | bench |  |
 | A-26 | Heater partially failed (higher resistance); heats too slowly, trips the no-rise fault or never reaches regen temperature | 🔵 P3 | HW | virtual |  |

@@ -209,7 +209,7 @@
 <polyline points="41.57,23.79 40.3,23.79 40.3,35.22 7.28,35.22 7.28,36.49 6.01,36.49" fill="none" stroke="#D64545" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="6.01,28.87 7.28,28.87 7.28,30.14 39.03,30.14 39.03,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="6.01,26.33 8.55,26.33 8.55,27.6 51.73,27.6 51.73,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
-<polyline points="6.01,21.25 9.82,21.25 9.82,32.68 64.43,32.68 64.43,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
+<polyline points="6.01,23.79 9.82,23.79 9.82,32.68 64.43,32.68 64.43,36.49" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="6.01,33.95 11.09,33.95 11.09,17.44 41.57,17.44 41.57,16.17" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="6.01,31.41 12.36,31.41 12.36,19.98 44.11,19.98 44.11,16.17" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
 <polyline points="26.33,23.79 29.85,23.79 29.85,18.71 36.49,18.71" fill="none" stroke="#B8860B" stroke-width="0.32" stroke-linejoin="round" opacity="0.9"/>
@@ -235,8 +235,8 @@
 <text x="8.1" y="14.03" font-size="1.05" fill="#5A1515" text-anchor="start">SDA</text>
 <text x="8.1" y="16.57" font-size="1.05" fill="#5A1515" text-anchor="start">SCL</text>
 <text x="8.1" y="19.11" font-size="1.05" fill="#5A1515" text-anchor="start">4</text>
-<text x="8.1" y="21.65" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">6</text>
-<text x="8.1" y="24.19" font-size="1.05" fill="#5A1515" text-anchor="start">8</text>
+<text x="8.1" y="21.65" font-size="1.05" fill="#5A1515" text-anchor="start">6</text>
+<text x="8.1" y="24.19" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">8</text>
 <text x="8.1" y="26.73" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">10</text>
 <text x="8.1" y="29.27" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">11</text>
 <text x="8.1" y="31.81" font-size="1.05" fill="#5A1515" text-anchor="start" font-weight="bold">12</text>
@@ -309,7 +309,7 @@
 <text x="86.15" y="57.21" font-size="0.95" fill="#FFF" text-anchor="start">DQ</text>
 <text x="86.15" y="62.29" font-size="0.95" fill="#FFF" text-anchor="start">GND</text>
 <text x="84.75" y="17.05" font-size="1.05" fill="#2C2C2A" text-anchor="middle" font-weight="bold">DS18B20 ×3</text>
-<text x="75.93" y="17.69" font-size="1" fill="#2C2C2A" text-anchor="end">4.7k</text>
+<text x="75.93" y="17.69" font-size="1" fill="#2C2C2A" text-anchor="end">5.1k</text>
 <text x="40.23" y="39.79" font-size="1" fill="#2C2C2A" text-anchor="start">100Ω</text>
 <text x="37.59" y="53.25" font-size="1" fill="#2C2C2A" text-anchor="start">10k</text>
 <text x="41.59" y="46.5" font-size="0.8" fill="#FFF" text-anchor="middle">IRLZ44N</text>
@@ -336,7 +336,7 @@
 <text x="69.51" y="48.75" font-size="0.85" fill="#FFF" text-anchor="middle" font-weight="bold">S</text>
 <text x="61.89" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">24+</text>
 <text x="66.97" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">SW</text>
-<text x="66.09" y="37.55" font-size="1.05" fill="#2C2C2A" text-anchor="start" font-weight="bold">FAN ← 6</text>
+<text x="66.09" y="37.55" font-size="1.05" fill="#2C2C2A" text-anchor="start" font-weight="bold">FAN ← 8</text>
 <text x="72.05" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">24+</text>
 <text x="77.13" y="67.43" font-size="1.1" fill="#FFF" text-anchor="middle">0V</text>
 <text x="91.4" y="26.33" font-size="1.3" fill="#1B4332" text-anchor="middle" font-weight="bold" transform="rotate(-90 91.4 26.33)">PACK A</text>
@@ -456,7 +456,7 @@
 <text x="21.25" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">C</text>
 <text x="14.31" y="14.03" font-size="0.95" fill="#2C2C2A" text-anchor="end" font-weight="bold">PN2222A *</text>
 <text x="18.71" y="7.28" font-size="1" fill="#2C2C2A" text-anchor="start"></text>
-<text x="15.81" y="7.58" font-size="0.9" fill="#2C2C2A" text-anchor="end">10k</text>
+<text x="15.81" y="7.58" font-size="0.9" fill="#2C2C2A" text-anchor="end">1k</text>
 <text x="19.98" y="19.3" font-size="1.2" fill="#2C2C2A" text-anchor="middle" font-weight="bold">HEATER A ← 13</text>
 <text x="50.46" y="33.51" font-size="1" fill="#1B3A78" text-anchor="middle" font-weight="bold">SRD-05VDC-SL-C</text>
 <text x="50.46" y="34.91" font-size="0.9" fill="#1B3A78" text-anchor="middle">19.2 × 15.5 mm</text>
@@ -471,7 +471,7 @@
 <text x="49.19" y="15.93" font-size="0.9" fill="#2C2C2A" text-anchor="middle" font-weight="bold">C</text>
 <text x="56.13" y="14.03" font-size="0.95" fill="#2C2C2A" text-anchor="start" font-weight="bold">PN2222A *</text>
 <text x="51.73" y="7.28" font-size="1" fill="#2C2C2A" text-anchor="start"></text>
-<text x="54.63" y="7.58" font-size="0.9" fill="#2C2C2A" text-anchor="start">10k</text>
+<text x="54.63" y="7.58" font-size="0.9" fill="#2C2C2A" text-anchor="start">1k</text>
 <text x="50.46" y="19.3" font-size="1.2" fill="#2C2C2A" text-anchor="middle" font-weight="bold">HEATER B ← 12</text>
 <text x="35" y="28.5" font-size="0.95" fill="#B03A3A" text-anchor="middle" font-weight="bold">LOW VOLTAGE above</text>
 <text x="35" y="34.6" font-size="0.95" fill="#B03A3A" text-anchor="middle" font-weight="bold">120 VAC below (and COM)</text>
@@ -494,7 +494,7 @@
 <text x="340.38" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">VALVE B ← GPIO10</text>
 <text x="340.38" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · SW</text>
 <text x="340.38" y="549" font-size="7.5" text-anchor="middle" fill="#2C2C2A">(drain, load −)</text>
-<text x="416.58" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">FAN ← GPIO6</text>
+<text x="416.58" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">FAN ← GPIO8</text>
 <text x="416.58" y="540" font-size="7.5" text-anchor="middle" fill="#2C2C2A">24+ · SW</text>
 <text x="416.58" y="549" font-size="7.5" text-anchor="middle" fill="#2C2C2A">(drain, load −)</text>
 <text x="477.54" y="531" font-size="7.5" text-anchor="middle" fill="#2C2C2A" font-weight="bold">24 V IN</text>
@@ -630,7 +630,7 @@
 <text x="30" y="0" font-size="1" fill="none"></text>
 <text x="40" y="957.15" font-size="10.5" fill="#2C2C2A">Harness: JST-XH 4-way, B4B-XH-A on each board, XHP-4 housings, 1:1 cable: 1 = 5 V, 2 = GND, 3 = GPIO13</text>
 <text x="40" y="971.32" font-size="10.5" fill="#2C2C2A">through 1 kΩ (heater A), 4 = GPIO12 through 1 kΩ (heater B). The 1 kΩ base resistors sit at the logic-</text>
-<text x="40" y="985.5" font-size="10.5" fill="#2C2C2A">board end; the 10 kΩ pull-downs stay on the relay board. The relay board carries no 24 V. XH pitch is 2.50</text>
+<text x="40" y="985.5" font-size="10.5" fill="#2C2C2A">board end; the 1 kΩ pull-downs stay on the relay board. The relay board carries no 24 V. XH pitch is 2.50</text>
 <text x="40" y="999.67" font-size="10.5" fill="#2C2C2A">mm (0.12 mm short of 0.1" over four pins).</text>
 <circle cx="33" cy="953.65" r="1.8" fill="#2C2C2A"/>
 <text x="30" y="0" font-size="1" fill="none"></text>
