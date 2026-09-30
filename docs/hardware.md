@@ -9,7 +9,7 @@
 | Pack/case temp | 3× DS18B20 (probe style) | Shared 1-wire bus, 4.7 kΩ pullup, 125 °C max |
 | Display | 1.54" IPS 240×240, ST7789 | 4-wire SPI, no MISO needed |
 | Heater relays | 2× Songle SRD-05VDC-SL-C | 5 V coil ~70 mA, 10 A / 250 VAC contacts |
-| Relay drivers | 2× PN2222A (TO-92, E-B-C); do not substitute P2N2222A unless rotated 180° | 1 kΩ base (logic-board end), 10 kΩ base pulldown (relay board) |
+| Relay drivers | 2× PN2222A (TO-92, E-B-C); do not substitute P2N2222A unless rotated 180° | 1 kΩ base (logic-board end), 1 kΩ base pulldown (relay board) |
 | Valve/fan drivers | 3× IRLZ44N | 100 Ω gate, 10 kΩ gate pulldown |
 | Flyback diodes | 5× 1N4007 (or Schottky) | Across every coil/fan, band (cathode) to + |
 | Valves | 2× SMC VDW22QABXB | 24 VDC, 3 W, 2-port NC, brass |
@@ -73,11 +73,22 @@ Relay channel (×2):
 ```
   GPIO ──[1 kΩ]──┬── base   PN2222A
                  │          emitter ── GND
-              [10 kΩ]       collector ── relay coil ── +5 V
+              [1 kΩ]        collector ── relay coil ── +5 V
                  │                       (1N4007 across coil, band (cathode) to +5 V)
                 GND
   relay NO contact switches L to the 120 VAC heater
 ```
+
+The base pulldown was specified as 10 kΩ; the protoboard was built with
+1 kΩ, tested there, and kept. The pulldown takes about 0.75 mA of the
+~2.55 mA through the series resistor, leaving roughly 1.8 mA of base drive
+(2.5 mA with 10 kΩ) for a ~72 mA coil: a forced gain of about 40 against
+the PN2222A's minimum hFE of 75–100 in this range, so the stage still
+saturates, with less margin. The stronger pulldown holds the relay off
+harder while the ESP boots or is out of its socket. Keep the 1 kΩ values
+the right way round: 10 kΩ in series with 1 kΩ to ground leaves the base
+near 0.3 V and the relay never pulls in. With the harness plugged in, a
+GPIO13/12 socket position reads about 2 kΩ to GND, base to GND about 1 kΩ.
 
 MOSFET channel (×3, valves + fan):
 
@@ -219,7 +230,7 @@ not in this layout.
 - Harness: JST-XH 4-way, a B4B-XH-A on each board with XHP-4 housings and a
   1:1 cable. Pin 1 = 5 V, 2 = GND, 3 = GPIO13 through 1 kΩ (heater A),
   4 = GPIO12 through 1 kΩ (heater B). The 1 kΩ base resistors sit at the
-  logic-board end; the 10 kΩ pulldowns stay on the relay board. The relay
+  logic-board end; the 1 kΩ pulldowns stay on the relay board. The relay
   board carries no 24 V. XH pitch is 2.50 mm, which fits 0.1" holes over
   four pins.
 - Display: 8-pin 1:1 cable to the panel on the enclosure front; keep it
@@ -284,9 +295,9 @@ dashed boundary, and route them as a pair so they do not enclose loop area.
 | Net | From | To |
 |---|---|---|
 | 5 V | Harness pin 1 | 5 V bus → 100 µF +, coil pin (5 V side) ×2, 1N4007 cathodes ×2 |
-| GND | Harness pin 2 | GND bus → 100 µF −, 10 kΩ bottom ×2, PN2222A emitters ×2 |
-| Base A | Harness pin 3 (GPIO13 via 1 kΩ) | PN2222A A base, 10 kΩ top |
-| Base B | Harness pin 4 (GPIO12 via 1 kΩ) | PN2222A B base, 10 kΩ top |
+| GND | Harness pin 2 | GND bus → 100 µF −, 1 kΩ pulldown bottom ×2, PN2222A emitters ×2 |
+| Base A | Harness pin 3 (GPIO13 via 1 kΩ) | PN2222A A base, 1 kΩ pulldown top |
+| Base B | Harness pin 4 (GPIO12 via 1 kΩ) | PN2222A B base, 1 kΩ pulldown top |
 | Coil A − / coil B − | PN2222A collector | Relay coil pin (other side), 1N4007 anode |
 | L (unfused) | 120 VAC IN "L" | F1 clip 1 |
 | L (fused) | F1 clip 2 | Relay A COM, relay B COM, "24 V PSU" block L |

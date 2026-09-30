@@ -93,7 +93,7 @@
 </g>
 <g font-size="11" fill="#2C2C2A" dominant-baseline="central">
 <text x="110" y="416">1k</text><text x="226" y="416">1k</text><text x="342" y="416">100</text><text x="458" y="416">100</text><text x="574" y="416">100</text>
-<text x="62" y="428" text-anchor="end">10k</text><text x="178" y="428" text-anchor="end">10k</text><text x="294" y="428" text-anchor="end">10k</text><text x="410" y="428" text-anchor="end">10k</text><text x="526" y="428" text-anchor="end">10k</text>
+<text x="62" y="428" text-anchor="end">1k</text><text x="178" y="428" text-anchor="end">1k</text><text x="294" y="428" text-anchor="end">10k</text><text x="410" y="428" text-anchor="end">10k</text><text x="526" y="428" text-anchor="end">10k</text>
 </g>
 <g fill="none" stroke="#3A9A5B" stroke-width="1.5">
 <polyline points="126,472 144,472 144,530"/><polyline points="242,472 260,472 260,530"/><polyline points="358,472 376,472 376,530"/><polyline points="474,472 492,472 492,530"/><polyline points="590,472 608,472 608,530"/>
