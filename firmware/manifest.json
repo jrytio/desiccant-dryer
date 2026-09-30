@@ -1,18 +1,18 @@
 {
   "name": "Desiccant Dryer",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "home_assistant_domain": "esphome",
   "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32-S2",
       "ota": {
-        "path": "desiccant-dryer-1.2.3.ota.bin",
-        "md5": "ee993b6797688748bbff790d9c24c21b",
-        "summary": "Desiccant Dryer 1.2.3",
-        "release_url": "https://github.com/jrytio/desiccant-dryer/releases/tag/v1.2.3"
+        "path": "desiccant-dryer-1.2.4.ota.bin",
+        "md5": "392fc3fde843d88fb5bbbf55a2b4cd62",
+        "summary": "Desiccant Dryer 1.2.4",
+        "release_url": "https://github.com/jrytio/desiccant-dryer/releases/tag/v1.2.4"
       },
-      "parts": [{ "path": "desiccant-dryer-1.2.3.factory.bin", "offset": 0 }]
+      "parts": [{ "path": "desiccant-dryer-1.2.4.factory.bin", "offset": 0 }]
     }
   ]
 }
