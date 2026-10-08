@@ -21,8 +21,15 @@ Both rows counted from the USB end. **Bold** = wired on this board.
 
 | # | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 12-pin | BAT | EN | **USB** (5 V in) | **13** heater A | **12** heater B | **11** valve A | **10** valve B | **8** fan | 6 | 4 | SCL=2 | SDA=1 | | | | |
-| 16-pin | EN | **3V3** | NC | **GND** | **17** BLK | 18 | 14 | **9** RES | **7** DC | **5** CS | **36** SCK | **35** MOSI | **37** 1-wire | 33 | 34 | 3 |
+| 12-pin | BAT | LDO EN | **USB** (5 V in) | **13** heater A | **12** heater B | **11** valve A | **10** valve B | **8** fan | 6 | 4 | SCL=2 | SDA=1 | | | | |
+| 16-pin | RESET (EN/CHIP_PU) | **3V3** | NC | **GND** | **17** BLK | 18 | 14 | **9** RES | **7** DC | **5** CS | **36** SCK | **35** MOSI | **37** 1-wire | 33 | 34 | 3 |
+
+Two different pins go by "EN", and neither is wired here. 16-pin #1
+is the ESP's own reset (CHIP_PU; silkscreen RST, RESET on the back):
+10 kΩ to 3.3 V, the RESET button and the USB auto-reset transistor.
+12-pin #2 (silkscreen EN) enables the 3.3 V regulator, 100 kΩ to VIN;
+pulled low, it turns the whole 3.3 V rail off. 16-pin #8 "RES" is the
+display's reset on GPIO9, not the ESP's.
 
 ## 1. Shorts
 
@@ -123,7 +130,7 @@ beep.**
 
 | | Between | Mode | Expect |
 |---|---|---|---|
-| [ ] | 12-pin socket: every neighbouring pair, #1–2 through #11–12. Watch **USB–13** (#3–4, 5 V onto a 3.3 V pin) and **EN–USB** (#2–3) | beep | no beep |
+| [ ] | 12-pin socket: every neighbouring pair, #1–2 through #11–12. Watch **USB–13** (#3–4, 5 V onto a 3.3 V pin) and **LDO EN–USB** (#2–3) | beep | no beep |
 | [ ] | 16-pin socket: every neighbouring pair, #1–2 through #15–16. Watch **9–7** (RES–DC), **36–35** (SCK–MOSI) and **35–37** | beep | no beep |
 | [ ] | Display 8-pin header: each neighbouring pair, 1–2 through 7–8 | beep | no beep |
 | [ ] | JST harness header, on both boards: 1–2, 2–3, 3–4 | beep | no beep |
