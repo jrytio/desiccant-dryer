@@ -48,15 +48,23 @@ Datasheets for these parts, with sources and revisions, are in
 From SparkFun's Eagle schematic (J4 = 16-pin, J2 = 12-pin); pin-by-pin
 tables and sources in [pinout-verification.md](pinout-verification.md).
 
-16-pin header, in order: EN, 3V3, NC, GND, A0=17, A1=18, A2=14, A3=9, A4=7,
-A5=5, SCK=36, COPI=35, CIPO=37, RX1=33, TX1=34, 3.
+16-pin header, in order: RESET (EN/CHIP_PU), 3V3, NC, GND, A0=17, A1=18,
+A2=14, A3=9, A4=7, A5=5, SCK=36, COPI=35, CIPO=37, RX1=33, TX1=34, 3.
 Used: 3V3, GND, 17 (backlight PWM), 9 (display RST), 7 (display DC),
 5 (display CS), 36 (SCK), 35 (MOSI), 37 (1-wire bus).
 
-12-pin header, in order: BAT, EN, USB, 13, 12, 11, 10, 8, 6, 4, SCL=2, SDA=1.
+12-pin header, in order: BAT, LDO EN, USB, 13, 12, 11, 10, 8, 6, 4, SCL=2,
+SDA=1.
 Used: USB (5 V in), 13 (heater A), 12 (heater B), 11 (valve A), 10 (valve B),
 8 (fan). Note the "9" and "5" Feather positions are GPIO8 and GPIO4 here.
 Qwiic connector: SDA=1, SCL=2, 3.3 V, GND.
+
+The two "EN" pins are different nets; neither is used. 16-pin #1 is the
+ESP's CHIP_PU (the module's EN pin), silkscreened RST on the component
+side and RESET on the back: R10 10 kΩ to 3.3 V, C8 0.1 µF, the RESET
+button and the auto-reset transistor Q2. Pulling it low resets the ESP.
+12-pin #2, silkscreened EN, is the AP2112 regulator's enable, R8 100 kΩ
+to VIN. Pulling it low turns the 3.3 V rail off; it is not a reset.
 
 Both header orders above run from the USB end. Component side up with the
 USB-C at the left, the 12-pin row is on top and the 16-pin row at the bottom.
@@ -156,9 +164,9 @@ Geometry sources, all in [datasheets/](datasheets/README.md):
 - ESP32-S2 Thing Plus, verified from SparkFun's Eagle `.brd`/`.sch` and
   dimension drawing: PCB 64.77 × 22.86 mm, header rows 1.27 mm in from each
   long edge and 20.32 mm apart, both ending 12.70 mm before the antenna end;
-  16-pin pin 1 (EN) 13.97 mm and 12-pin pin 1 (BAT) 24.13 mm from the USB
-  end; Qwiic at the USB end on the 12-pin edge; mounting holes only at the
-  USB end; the WROOM antenna occupies the last 6.3 mm.
+  16-pin pin 1 (RESET) 13.97 mm and 12-pin pin 1 (BAT) 24.13 mm from the
+  USB end; Qwiic at the USB end on the 12-pin edge; mounting holes only at
+  the USB end; the WROOM antenna occupies the last 6.3 mm.
 - Placement used: the ESP stands along the left edge, antenna end at the top
   edge (nothing under or beside it), USB-C at the bottom edge with its face
   3.2 mm inside the board (the plug comes in below the elevated board), and

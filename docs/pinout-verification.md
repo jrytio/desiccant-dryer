@@ -1,7 +1,9 @@
 # Pinout verification — SparkFun ESP32-S2 Thing Plus (WRL-17743)
 
 Date: 2026-09-14. Re-checked 2026-09-15 by parsing the schematic's nets
-(J2, J4, J7, D3/R4, GPIO18PU/R14) against the module's IO pins.
+(J2, J4, J7, D3/R4, GPIO18PU/R14) against the module's IO pins, and
+2026-10-08 for the two EN pins (J4 pin 1, J2 pin 2) against the `.sch`
+and `.brd` in [datasheets/mcu/](datasheets/mcu/).
 
 ## Source of truth
 
@@ -26,7 +28,7 @@ All GPIO numbers in `esphome/packages/hw-real.yaml` (sensors), `base.yaml`
 
 | Pos | Net | GPIO | Our use |
 |---|---|---|---|
-| 1 | EN | — | |
+| 1 | CHIP_PU | — | — (ESP reset, silkscreen RST; see 7 below) |
 | 2 | 3V3 | — | top 3.3 V rail |
 | 3 | NC | — | |
 | 4 | GND | — | top GND rail |
@@ -48,7 +50,7 @@ All GPIO numbers in `esphome/packages/hw-real.yaml` (sensors), `base.yaml`
 | Pos | Net | GPIO | Our use |
 |---|---|---|---|
 | 1 | BAT | — | |
-| 2 | EN | — | |
+| 2 | EN | — | — (3.3 V regulator enable, not a reset; see 7 below) |
 | 3 | USB | — | 5 V in from buck (same net as USB-C VBUS) |
 | 4 | 13 | 13 | heater A relay (also lights on-board LED) |
 | 5 | 12 | 12 | heater B relay |
@@ -84,6 +86,14 @@ Qwiic (J3): GND, 3.3 V, SDA=GPIO1, SCL=GPIO2. SHT45 plugs in here.
    so nothing separates the two sources. Never connect the breadboard 5 V
    rail to the USB pin and a USB-C cable at the same time: pull the USB-pin
    wire before flashing over USB, or flash over the air.
+7. **The two "EN" pins are different nets.** J4 pin 1 is `CHIP_PU`, the
+   module's EN pin: the ESP reset, with R10 10 kΩ to 3.3 V, C8 0.1 µF,
+   the RESET button S1, the JTAG !RESET pin and the collector of Q2,
+   the DTR/RTS auto-reset transistor. Its silkscreen is RST on the
+   component side and RESET on the back. J2 pin 2 is net `EN`: the
+   AP2112 LDO's enable, R8 100 kΩ to VIN, silkscreened EN. Pulling it
+   low turns the 3.3 V rail off rather than resetting the ESP. Neither
+   is used.
 
 ## Chip-level constraints (TRM)
 
