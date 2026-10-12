@@ -1,0 +1,20 @@
+# Production build for the SparkFun Thing Plus ESP32-C6: the same firmware
+# as desiccant-dryer.yaml with the C6's board package. The device name is
+# the same on purpose, so a replacement board looks like the same kind of
+# unit to Home Assistant; the build directory is not, so the two production
+# compiles never share one. CI compiles it and the release workflow builds
+# the published C6 images from it.
+# Contents: packages/production.yaml. See docs/releasing.md.
+substitutions:
+  name: desiccant-dryer
+  friendly_name: Desiccant Dryer
+
+esphome:
+  build_path: build/desiccant-dryer-c6
+
+packages:
+  production: !include packages/production.yaml
+  board: !include packages/board-c6.yaml
+  ui: !include packages/ui-code-local.yaml
+  # Home Assistant provisions the API key at adoption time.
+  api: !include packages/api-provisioned.yaml

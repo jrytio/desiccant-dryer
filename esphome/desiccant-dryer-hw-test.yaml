@@ -21,6 +21,7 @@ substitutions:
 packages:
   base: !include packages/base.yaml
   platform: !include packages/platform-esp32.yaml
+  board: !include packages/board-s2.yaml
   secrets: !include packages/dev-secrets.yaml
   hardware: !include packages/hw-real.yaml
   draw: !include packages/display-draw.yaml

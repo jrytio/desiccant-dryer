@@ -2,7 +2,7 @@
 
 Every hardware and software failure we could think of for this ESP32
 desiccant dryer controller, which replaces the original control board in an
-Azco VMD-08 dryer: an ESP32-S2, two 120 VAC pack heaters on Songle relays,
+Azco VMD-08 dryer: an ESP32-S2 or ESP32-C6 Thing Plus, two 120 VAC pack heaters on Songle relays,
 two 24 V SMC valves, DS18B20 pack and case probes, an SHT45 outlet humidity
 sensor, SF129E thermal fuses, a Mean Well LRS-35-24 supply and an MP1584 buck.
 
@@ -10,6 +10,11 @@ Nothing here is verified against the running firmware. It is the starting
 inventory for a test and verification suite, in the spirit of the
 thermal-runaway and "heating but no temperature rise" protection in Marlin
 and Prusa firmware.
+
+Rows that name GPIO numbers use the ESP32-S2 board's. On an ESP32-C6 board
+the same header positions carry the numbers in
+`docs/pinout-verification.md`. The rows that exist only because of the C6
+board say so.
 
 **How to read a row:** the fault comes first, then what it does to the dryer,
 then where detection or prevention is expected and what counts as a pass. A
@@ -73,13 +78,13 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | [A. Heater mains path (relays, drivers, fuses, wiring)](#a-heater-mains-path-relays-drivers-fuses-wiring) | 17 | 8 | 4 | 2 |  | 31 |
 | [B. Pack temperature sensing and thermal control](#b-pack-temperature-sensing-and-thermal-control) | 2 | 14 | 7 | 3 |  | 26 |
 | [C. Outlet humidity sensing (SHT45)](#c-outlet-humidity-sensing-sht45) |  |  | 10 | 4 |  | 14 |
-| [D. Valves and airflow](#d-valves-and-airflow) |  | 10 | 5 | 2 |  | 17 |
+| [D. Valves and airflow](#d-valves-and-airflow) |  | 11 | 5 | 2 |  | 18 |
 | [E. Case cooling, enclosure and fan](#e-case-cooling-enclosure-and-fan) | 1 | 4 | 3 | 1 | 1 | 10 |
-| [F. Power supplies and rails](#f-power-supplies-and-rails) | 2 | 9 | 8 | 1 |  | 20 |
-| [G. Wiring, connectors, mechanical, environmental](#g-wiring-connectors-mechanical-environmental) | 4 | 7 | 4 | 1 |  | 16 |
-| [H. MCU and firmware runtime](#h-mcu-and-firmware-runtime) | 1 | 11 | 5 | 1 |  | 18 |
+| [F. Power supplies and rails](#f-power-supplies-and-rails) | 2 | 9 | 9 | 1 |  | 21 |
+| [G. Wiring, connectors, mechanical, environmental](#g-wiring-connectors-mechanical-environmental) | 4 | 7 | 5 | 1 |  | 17 |
+| [H. MCU and firmware runtime](#h-mcu-and-firmware-runtime) | 1 | 11 | 5 | 3 |  | 20 |
 | [I. Control logic and state machine](#i-control-logic-and-state-machine) |  | 6 | 12 | 7 |  | 25 |
-| [J. Persistence and configuration](#j-persistence-and-configuration) | 4 | 1 | 4 | 1 |  | 10 |
+| [J. Persistence and configuration](#j-persistence-and-configuration) | 5 | 1 | 4 | 1 |  | 11 |
 | [K. Remote control, Home Assistant and network](#k-remote-control-home-assistant-and-network) | 1 | 4 | 6 | 4 |  | 15 |
 | [L. Display and telemetry](#l-display-and-telemetry) |  |  |  | 3 | 9 | 12 |
 
@@ -192,6 +197,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | D-15 | Force Swap pressed with the standby pack WET or HEATING; wet pack into service, hot pack retired mid-heat | 🟡 P2 | OPS | virtual |  |
 | D-16 | Swap while the retiring pack's heater is still commanded (`do_swap` already turns the retiring heater off before closing valves; verify this order holds under future edits) | 🟠 P1 | FW | virtual |  |
 | D-17 | No valve position feedback: valve state is assumed from the command, so a valve stuck open (D-04) or closed (D-05) is invisible to both the firmware and Home Assistant | 🟡 P2 | FW | virtual | ✱ |
+| D-18 | ESP32-C6 board fitted with its ALRT jumper still closed: the MAX17048 gauge's open-drain alert shares GPIO11 with valve A, so an asserted alert shorts the pin to ground while the firmware drives the valve on; valve A stays shut and the output is overloaded. Pass: no continuity across the ALRT jumper's pads | 🟠 P1 | WIRE | inspect |  |
 
 ## E. Case cooling, enclosure and fan
 
@@ -232,6 +238,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | F-18 | Ground loop between PSU 0 V, PE, USB host ground and the display cable; noise on 1-wire and I2C | 🟡 P2 | HW | bench |  |
 | F-19 | LiPo charger / BAT pin accidentally fed 5 V; DMG2307L or MCP73831 damage | 🔵 P3 | WIRE | inspect |  |
 | F-20 | Nothing measures the 24 V rail, so a dead PSU or a tripped supply is reported only indirectly, as valves that never move. Pass: a rail monitor exists, or the state machine cross-checks valve commands against pack behaviour | 🟡 P2 | FW | virtual | ✱ |
+| F-21 | The ESP32-C6 board pulls RESET up with 100 kΩ where the S2 has 10 kΩ, so a tenth of the leakage on the RESET pin (flux residue, a damp socket) holds the chip in reset or resets it at random; every output goes off and the dryer stops. Pass: RESET measures at the 3.3 V rail, not below it, with the board seated and powered | 🟡 P2 | HW | bench |  |
 
 ## G. Wiring, connectors, mechanical, environmental
 
@@ -253,6 +260,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | G-14 | Thermal fuse leads crimped badly; high-resistance joint heats and opens the fuse spuriously, or melts | 🟠 P1 | WIRE | inspect |  |
 | G-15 | Buck module footprint different from the drilled holes; forced fit, cracked joints | 🔵 P3 | HW | inspect |  |
 | G-16 | Packs, heater tails, probe leads and valves not permanently labelled A and B, so a service reassembly can cross a pair (A-06, B-05, D-07) with nothing to check the wiring against | 🟠 P1 | WIRE | inspect |  |
+| G-17 | ESP32-C6 board with a µSD card in its slot, or its SD_DET jumper still closed: the slot shares the display's SPI lines, the 1-wire bus and heater A's line, and the detect switch shares heater B's, so a card can corrupt probe readings and load both heater pins. Pass: slot empty and taped over, no continuity across the SD_DET jumper's pads | 🟡 P2 | WIRE | inspect |  |
 
 ## H. MCU and firmware runtime
 
@@ -276,6 +284,8 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | H-18 | Flash image mismatch (virtual build flashed to the real unit); plant model drives real relays | 🔴 P0 | OPS | inspect |  |
 | H-19 | Watchdog unverified: A-03 and H-02 both assume the ESP-IDF task watchdog reboots a hung loop, but no config sets its period and no test proves it. Pass: a deliberately blocked lambda reboots the board and the relays drop within the watchdog period | 🟠 P1 | FW | bench | ✱ |
 | H-20 | ESP-IDF panic handler set to halt or to the GDB stub instead of reboot; a crash freezes the board with the relays in their last state and no watchdog reset follows | 🟠 P1 | CFG | inspect |  |
+| H-21 | On an ESP32-C6 board the fan pin (GPIO8) is a boot strap and the fan's 10 kΩ gate pulldown holds it low, which the datasheet calls an invalid combination with download mode; a USB flash with the board seated may fail or misbehave. Pass: the result of one seated flash attempt is recorded and the docs say which way to flash | 🔵 P3 | HW | bench |  |
+| H-22 | An image for the other chip is flashed by hand over USB during a recovery (the S2 factory file onto a C6 board or the reverse). The file name is the only sure protection. Read from esptool's source and not tried: it refuses the C6 file on an S2 board, but does not notice the S2 file on a C6 board (that file starts with padding; its image header is at 0x1000) unless `--chip` is given and names the other board. Pass: all four cases are tried and recorded in docs/releasing.md, and a wrongly flashed board drives no output | 🔵 P3 | OPS | bench |  |
 
 ## I. Control logic and state machine
 
@@ -321,6 +331,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | J-09 | `number` entity min/max allow physically unsafe values (`regen_hold_min` down to 0, `regen_temp` above `overtemp`); only `overtemp` has been bounded by its datasheet limit, and no firmware validation checks one tunable against another | 🟠 P1 | CFG | virtual | ✱ |
 | J-10 | Two controllers with the same hostname/API key on one network; HA writes tunables to the wrong unit | 🟡 P2 | OPS | bench |  |
 | J-11 | Persisted globals are restored by key with no schema version, so renumbering `standby_state` or changing a counter's units in a later firmware silently misreads stored state after an update | 🟡 P2 | CFG | inspect | ✱ |
+| J-12 | A GPIO number in `board-s2.yaml` or `board-c6.yaml` is wrong for its chip, or a selector includes the other chip's board package; the firmware drives a different header position from the one wired, such as a heater relay where a valve is expected | 🔴 P0 | CFG | inspect |  |
 
 ## K. Remote control, Home Assistant and network
 
@@ -400,10 +411,10 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 | 18 | Verify PSU FG/PE bonding and output-to-mains short protection | F-01, F-02 | P0 |
 | 19 | Verify 24 V rail fault tolerance (reverse polarity, overvoltage, hiccup, inrush) | F-03, F-04, F-05, F-06, F-20 | P1 |
 | 20 | Verify MP1584 buck regulation, ripple and USB back-feed paths | F-07, F-08, F-09, F-10 | P1 |
-| 21 | Verify 5 V rail protection, brownout margin and mains-dip relay state | F-11, F-12, F-14, F-15, F-16 | P1 |
+| 21 | Verify 5 V rail protection, brownout margin and mains-dip relay state | F-11, F-12, F-14, F-15, F-16, F-21 | P1 |
 | 22 | Verify power-loss-mid-swap recovery and ground-loop noise | F-17, F-18 | P2 |
-| 23 | Verify header pin-map, socket seating and solder-bridge risks | G-01, G-06, G-08, G-11 | P0 |
-| 24 | Verify watchdog reboot-loop and boot-priority output safety | H-02, H-07, H-08, H-12, H-16, H-19, H-20 | P1 |
+| 23 | Verify header pin-map, socket seating and solder-bridge risks | G-01, G-06, G-08, G-11, H-21 | P0 |
+| 24 | Verify watchdog reboot-loop and boot-priority output safety | H-02, H-07, H-08, H-12, H-16, H-19, H-20, H-22 | P1 |
 | 25 | Verify loop-stall, heap and stack exhaustion effects on fault timers | H-03, H-04, H-06, H-15 | P1 |
 | 26 | Harden persisted counters against NVS wear, corruption and `millis()` wrap | H-05, H-09, H-10 | P2 |
 | 27 | Verify `apply_outputs`/interlock ordering races and the `time_scale` invariant | H-13, H-14, H-17 | P1 |
@@ -424,8 +435,8 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 | 42 | Write mains wiring, creepage and earthing inspection checklist | A-12, A-14, A-15, A-16, A-17, G-09 | P0 |
 | 43 | Write enclosure and mechanical assembly inspection checklist | G-07, G-12, G-13, G-14, E-08, E-09, G-16 | P0 |
 | 44 | Write sensor wiring and placement inspection checklist | B-12, B-14, C-03, C-13, G-05, G-10 | P1 |
-| 45 | Write board, header and display assembly inspection checklist | G-02, G-03, G-04, G-15, F-13, F-19 | P1 |
-| 46 | Write firmware build and config pre-flight inspection checklist | J-02, J-03, J-04, J-05, J-06, J-07, J-11 | P0 |
+| 45 | Write board, header and display assembly inspection checklist | G-02, G-03, G-04, G-15, F-13, F-19, D-18, G-17 | P1 |
+| 46 | Write firmware build and config pre-flight inspection checklist | J-02, J-03, J-04, J-05, J-06, J-07, J-11, J-12 | P0 |
 | 47 | Write deployment and adoption-selector inspection checklist | H-18, K-10, L-12 | P0 |
 | 48 | Review the heater circuit's hardware protection layers (current sense, resettable cutout) | A-30, A-31 | P1 |
 
@@ -433,10 +444,10 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 
 | Priority | Count | Themes |
 |---|---|---|
-| P0 | 32 | Welded or stuck-on heater path, missing thermal fuse, probe/valve/relay mapping errors, mains wiring and creepage, firmware hang with heater on, no software detection of "heater off but still heating" |
-| P1 | 74 | Single-layer protection losses, sensor plausibility gaps, unverified watchdog and panic behaviour, 24 V and 5 V rail faults, valves stuck, manual Home Assistant toggles |
-| P2 | 68 | Wet air delivered, silent stalls, NaN and frozen sensors, no feedback from valves or fan, state machine dead ends |
-| P3 | 30 | Wasted regens, nuisance faults, manual resets |
+| P0 | 33 | Welded or stuck-on heater path, missing thermal fuse, probe/valve/relay mapping errors, mains wiring and creepage, firmware hang with heater on, no software detection of "heater off but still heating" |
+| P1 | 75 | Single-layer protection losses, sensor plausibility gaps, unverified watchdog and panic behaviour, 24 V and 5 V rail faults, valves stuck, manual Home Assistant toggles |
+| P2 | 70 | Wet air delivered, silent stalls, NaN and frozen sensors, no feedback from valves or fan, state machine dead ends |
+| P3 | 32 | Wasted regens, nuisance faults, manual resets |
 | P4 | 10 | Display and telemetry only |
 
 Suggested first targets for the verify suite, in order: A-01/B-02 (welded

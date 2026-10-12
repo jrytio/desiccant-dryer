@@ -1,17 +1,19 @@
 # Real hardware: sensor buses and sensors. Provides the sensor ids base.yaml
 # expects: air_rh, air_temp, pack_a_temp, pack_b_temp, case_temp.
-#   GPIO1/2 I2C (Qwiic) - SHT45 in the process-air stream after the valves
-#   GPIO37  1-wire (MISO header pin) - DS18B20 x3: pack A, pack B, case
+#   I2C (Qwiic connector) - SHT45 in the process-air stream after the valves
+#   1-wire (16-pin position 13) - DS18B20 x3: pack A, pack B, case
+# The GPIOs are ${pin_i2c_sda}, ${pin_i2c_scl} and ${pin_onewire} from
+# packages/board-s2.yaml or packages/board-c6.yaml.
 
 # ---------------------------------------------------------------- buses
 i2c:
-  sda: GPIO1
-  scl: GPIO2
+  sda: ${pin_i2c_sda}
+  scl: ${pin_i2c_scl}
   frequency: 100kHz
 
 one_wire:
   - platform: gpio
-    pin: GPIO37
+    pin: ${pin_onewire}
 
 sensor:
   - platform: sht4x

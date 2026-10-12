@@ -1,7 +1,9 @@
 # desiccant-dryer
 
-ESPHome firmware for an ESP32-S2 replacement of the Azco VMD-08 desiccant
-air dryer control board. Swaps packs on measured humidity and pack
+ESPHome firmware for an ESP32 replacement of the Azco VMD-08 desiccant
+air dryer control board, on a SparkFun ESP32-S2 Thing Plus or a SparkFun
+Thing Plus ESP32-C6 (same sockets and wiring, one image each). Swaps packs
+on measured humidity and pack
 temperature instead of a fixed timer. See `CLAUDE.md` for decisions,
 `docs/hardware.md` for wiring and BOM, `docs/control-logic.md` for the
 state machine, `docs/virtual-testing.md` for testing without hardware,
@@ -12,8 +14,8 @@ Three builds share `esphome/packages/base.yaml`:
 
 | Build | File | Sensors | Runs on |
 |---|---|---|---|
-| Production | `esphome/desiccant-dryer.yaml` | SHT45 + 3× DS18B20 (`packages/hw-real.yaml`) | ESP32-S2 |
-| Hardware test | `esphome/desiccant-dryer-hw-test.yaml` | Same real sensors, dev credentials and OTA | ESP32-S2 |
+| Production | `esphome/desiccant-dryer.yaml`, `esphome/desiccant-dryer-c6.yaml` | SHT45 + 3× DS18B20 (`packages/hw-real.yaml`) | ESP32-S2, ESP32-C6 |
+| Hardware test | `esphome/desiccant-dryer-hw-test.yaml`, `esphome/desiccant-dryer-hw-test-c6.yaml` | Same real sensors, dev credentials and OTA | ESP32-S2, ESP32-C6 |
 | Virtual | `esphome/desiccant-dryer-virtual.yaml` | On-device plant model (`packages/hw-virtual.yaml`) | ESP32-S2, nothing attached |
 | Host | `esphome/desiccant-dryer-host.yaml` | Same plant model | Your Mac, display in an SDL window |
 | Screen scenarios | `esphome/desiccant-dryer-scenarios.yaml` | Fixed table of twelve screen states, no controller | Your Mac; `scripts/scenario-shots.sh` renders them to `docs/display/` |

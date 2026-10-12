@@ -1,0 +1,78 @@
+# SparkFun Thing Plus ESP32-C6 (DEV-22924): everything that depends on the
+# chip. The board and framework block, the port the log goes out on, and the
+# GPIO behind each header position. packages/board-s2.yaml is the same file
+# for the ESP32-S2 Thing Plus. The main board is wired by header position
+# and takes either board, so the two tables read row for row.
+# Source: SparkFun's schematic, see docs/pinout-verification.md.
+#
+#   Position     Function             GPIO
+#   16-pin  5    display backlight      0
+#   16-pin  8    display RST            3
+#   16-pin  9    display DC             4   strapping
+#   16-pin 10    display CS             5   strapping
+#   16-pin 11    SPI clock             19   also the uSD slot's clock
+#   16-pin 12    SPI data (MOSI)       20   also the uSD slot's CMD
+#   16-pin 13    1-wire, 3x DS18B20    21   also the uSD slot's DAT0
+#   12-pin  4    heater A relay        18   also the uSD slot's CS
+#   12-pin  5    heater B relay        22   card detect unless SD_DET is cut
+#   12-pin  6    valve A               11   gauge alert unless ALRT is cut
+#   12-pin  7    valve B               10
+#   12-pin  8    case fan               8   strapping, 100k pull-up on board
+#   12-pin 11    I2C SCL (and Qwiic)    7
+#   12-pin 12    I2C SDA (and Qwiic)    6
+#
+# Before this board goes in a socket: cut the ALRT and SD_DET jumpers on
+# its back and keep the uSD slot empty. docs/hardware.md has the steps.
+# The 12-pin silkscreen reads GPIO0..GPIO6; those are SparkFun's header
+# labels, not chip GPIO numbers ("GPIO0" is IO18).
+
+substitutions:
+  pin_heater_a: GPIO18
+  pin_heater_b: GPIO22
+  pin_valve_a: GPIO11
+  pin_valve_b: GPIO10
+  # GPIO8 picks the boot mode together with GPIO9, and only when GPIO9 is
+  # low (download mode). The fan's gate pulldown holds it low at reset,
+  # which keeps the fan off; normal boot ignores it.
+  pin_fan:
+    number: GPIO8
+    ignore_strapping_warning: true
+  pin_i2c_sda: GPIO6
+  pin_i2c_scl: GPIO7
+  pin_onewire: GPIO21
+  pin_spi_clk: GPIO19
+  pin_spi_mosi: GPIO20
+  # GPIO4 and GPIO5 only set SDIO timing at reset, and the panel's DC and
+  # CS inputs do not drive them.
+  pin_lcd_cs:
+    number: GPIO5
+    ignore_strapping_warning: true
+  pin_lcd_dc:
+    number: GPIO4
+    ignore_strapping_warning: true
+  pin_lcd_rst: GPIO3
+  pin_lcd_bl: GPIO0
+
+esp32:
+  board: sparkfun_esp32c6_thing_plus
+  variant: esp32c6
+  framework:
+    type: esp-idf
+    # The same TLS and WiFi buffer settings as packages/board-s2.yaml,
+    # where the reasons are written down. The C6 has the heap to do
+    # without them; they are kept so the firmware update path runs the
+    # same TLS configuration on both chips.
+    sdkconfig_options:
+      CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
+      CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA: y
+      CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT: y
+      CONFIG_MBEDTLS_ASYMMETRIC_CONTENT_LEN: y
+      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: "4096"
+      CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM: "6"
+      CONFIG_ESP_WIFI_RX_BA_WIN: "4"
+
+logger:
+  # This board's USB-C port is the chip's own USB-Serial-JTAG; there is no
+  # UART bridge. That is also ESPHome's default for the C6, stated here so
+  # it does not depend on one. The log level is set in base.yaml.
+  hardware_uart: USB_SERIAL_JTAG

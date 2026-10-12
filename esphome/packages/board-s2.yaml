@@ -1,0 +1,70 @@
+# SparkFun ESP32-S2 Thing Plus (WRL-17743): everything that depends on the
+# chip. The board and framework block, the port the log goes out on, and the
+# GPIO behind each header position. packages/board-c6.yaml is the same file
+# for the ESP32-C6 Thing Plus. The main board is wired by header position
+# and takes either board, so the two tables read row for row.
+# Source: SparkFun's schematic, see docs/pinout-verification.md.
+#
+#   Position     Function             GPIO
+#   16-pin  5    display backlight     17
+#   16-pin  8    display RST            9
+#   16-pin  9    display DC             7
+#   16-pin 10    display CS             5
+#   16-pin 11    SPI clock             36
+#   16-pin 12    SPI data (MOSI)       35
+#   16-pin 13    1-wire, 3x DS18B20    37
+#   12-pin  4    heater A relay        13   also the on-board blue LED
+#   12-pin  5    heater B relay        12
+#   12-pin  6    valve A               11
+#   12-pin  7    valve B               10
+#   12-pin  8    case fan               8
+#   12-pin 11    I2C SCL (and Qwiic)    2
+#   12-pin 12    I2C SDA (and Qwiic)    1
+
+substitutions:
+  pin_heater_a: GPIO13
+  pin_heater_b: GPIO12
+  pin_valve_a: GPIO11
+  pin_valve_b: GPIO10
+  pin_fan: GPIO8
+  pin_i2c_sda: GPIO1
+  pin_i2c_scl: GPIO2
+  pin_onewire: GPIO37
+  pin_spi_clk: GPIO36
+  pin_spi_mosi: GPIO35
+  pin_lcd_cs: GPIO5
+  pin_lcd_dc: GPIO7
+  pin_lcd_rst: GPIO9
+  pin_lcd_bl: GPIO17
+
+esp32:
+  board: sparkfun_esp32s2_thing_plus   # if rejected, esp32-s2-saola-1 works (same module)
+  variant: esp32s2
+  framework:
+    type: esp-idf
+    # A TLS session reserves ~16 KB per direction by default. With WiFi,
+    # the API, the web server and the display up the S2 has ~35 KB free,
+    # so 1.0.0's HTTPS manifest fetch failed with mbedtls_ssl_setup
+    # -0x7F00 (alloc failed). Allocate the record buffers only while in
+    # use and cap the outgoing one: requests to GitHub are small.
+    # That alone got to the handshake, which then failed verifying
+    # GitHub's certificate (alloc of 4437 B failed, largest free block
+    # ~12 KB). So also free the TLS config and CA data as soon as the
+    # handshake no longer needs them, and keep fewer permanent WiFi RX
+    # buffers (10 x ~1.6 KB by default; the block-ack window must not
+    # exceed them).
+    sdkconfig_options:
+      CONFIG_MBEDTLS_DYNAMIC_BUFFER: y
+      CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA: y
+      CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT: y
+      CONFIG_MBEDTLS_ASYMMETRIC_CONTENT_LEN: y
+      CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN: "4096"
+      CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM: "6"
+      CONFIG_ESP_WIFI_RX_BA_WIN: "4"
+
+logger:
+  # The S2 Thing Plus's USB port is a CP2102 on UART0. ESPHome's S2 default
+  # is USB_CDC, which is the bare native-USB pins on this board, so nothing
+  # would ever reach `esphome logs` over the cable. The log level is set in
+  # base.yaml; ESPHome merges the logger blocks.
+  hardware_uart: UART0

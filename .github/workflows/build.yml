@@ -47,6 +47,10 @@ jobs:
           docker run --rm -v "$PWD:/config" -w /config \
             --entrypoint bash "ghcr.io/esphome/esphome:$ESPHOME_VERSION" \
             -c 'python3 tests/lint_config.py'
+      # Plain bash and python3 on the runner: the script only copies files
+      # and writes JSON, so its test needs neither the image nor a compile.
+      - name: Test the release manifest script
+        run: bash tests/make_manifest_test.sh
 
   host-cases:
     name: host cases
@@ -85,15 +89,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # One toolchain cache per chip: ESPHome installs the ESP-IDF tools
+          # for the target it is building (Xtensa for the S2, RISC-V for the
+          # C6), so a cache saved by one chip's job lacks the other's
+          # compiler. The C6 variants are named c6-<build>, not <build>-c6,
+          # so the `build-...-production-` and `build-...-hw-test-` restore
+          # prefixes below can never pick up a C6 build directory.
+          # `package` runs the release packaging check on a production image.
           - variant: production
             yaml: esphome/desiccant-dryer.yaml
-            toolchain: esp32
+            toolchain: esp32s2
+            package: esp32s2=esphome/.esphome/build/desiccant-dryer/build
+          - variant: c6-production
+            yaml: esphome/desiccant-dryer-c6.yaml
+            toolchain: esp32c6
+            package: esp32c6=esphome/.esphome/build/desiccant-dryer-c6/build
           - variant: virtual
             yaml: esphome/desiccant-dryer-virtual.yaml
-            toolchain: esp32
+            toolchain: esp32s2
           - variant: hw-test
             yaml: esphome/desiccant-dryer-hw-test.yaml
-            toolchain: esp32
+            toolchain: esp32s2
+          - variant: c6-hw-test
+            yaml: esphome/desiccant-dryer-hw-test-c6.yaml
+            toolchain: esp32c6
           # The host builds compile natively. The sdl display validates by
           # running sdl2-config, so SDL2 must be installed before even
           # `esphome config` would pass.
@@ -115,7 +134,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.TOOL_CACHE }}
-          key: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-${{ hashFiles('esphome/packages/platform-*.yaml') }}
+          key: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-${{ hashFiles('esphome/packages/platform-*.yaml', 'esphome/packages/board-*.yaml') }}
           restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-${{ matrix.toolchain }}-
       - name: Restore build directory
         id: build
@@ -135,6 +154,12 @@ jobs:
 
       - name: Hand caches back to the runner user
         run: sudo chown -R "$(id -u):$(id -g)" "$TOOL_CACHE" esphome/.esphome
+      # The packaging the release workflow does, on this job's own image:
+      # proves the build directory is where release.yml looks for it and
+      # that the image header names this chip.
+      - name: Check the release packaging of this image
+        if: matrix.package
+        run: scripts/make-manifest.sh 0.0.0 "$RUNNER_TEMP/site" "" "${{ matrix.package }}"
       - name: Save toolchains
         if: steps.toolchains.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6

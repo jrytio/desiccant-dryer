@@ -1,0 +1,34 @@
+# Hardware test build for the SparkFun Thing Plus ESP32-C6: the same build
+# as desiccant-dryer-hw-test.yaml (production controller, real sensors and
+# panel, developer credentials, password-protected OTA) with the C6's board
+# package. Not a release. Appears in Home Assistant as its own device.
+# Flash:  esphome run esphome/desiccant-dryer-hw-test-c6.yaml
+#         (first time over USB with the board out of its socket, then
+#         --device <board> over the network; docs/hardware-bringup.md §8)
+substitutions:
+  name: desiccant-dryer-hw-test-c6
+  # "(C6 Test)", not "(HW Test C6)": the setup access point's SSID is this
+  # name plus " Setup", and an SSID may not be longer than 32 characters.
+  friendly_name: Desiccant Dryer (C6 Test)
+  # No on-device updater here, so the panel keeps a full frame buffer and
+  # the writer runs once per redraw.
+  display_buffer_size: "100%"
+  display_update_interval: 5s
+  # Bench build: the four relay switches stay commandable from Home
+  # Assistant so the relay and interlock steps in docs/hardware-bringup.md
+  # can toggle them by hand, and the tick does not force them off while the
+  # dryer is disabled. The production build has them internal (K-01/K-02).
+  outputs_internal: "false"
+
+packages:
+  base: !include packages/base.yaml
+  platform: !include packages/platform-esp32.yaml
+  board: !include packages/board-c6.yaml
+  secrets: !include packages/dev-secrets.yaml
+  hardware: !include packages/hw-real.yaml
+  draw: !include packages/display-draw.yaml
+  ui: !include packages/ui-code-local.yaml
+  display: !include packages/display-st7789.yaml
+
+logger:
+  level: DEBUG
