@@ -95,7 +95,8 @@ resolved against the `id:` in the config dump:
 
 `<op>` is `<=`, `>=`, `<`, `>` or omitted for equality. A `<value>` that
 names another key of the same entity compares the two (`initial_value <=
-max_value`).
+max_value`). A dotted `<key>` walks into a nested mapping: `switch heater_a
+has pin.number 13` reads the GPIO of that switch's `pin:`.
 
 ## Case format
 

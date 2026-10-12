@@ -46,10 +46,11 @@ def dump(selector):
 #
 # Three shapes cover every lint case in the plan. Values are matched against
 # the entity's own dict first, so `initial_value <= max_value` compares two
-# keys of the same entity; anything else is a literal.
+# keys of the same entity; anything else is a literal. A dotted key walks
+# into nested mappings: `pin.number` is the GPIO of a switch's `pin:`.
 
-EVERY = re.compile(r"^every (\w+) in \[([^\]]+)\] has (\w+) (<=|>=|<|>|is|) ?(.+)$")
-ONE = re.compile(r"^(\w+) (\w+) has (\w+) (<=|>=|<|>|is|) ?(.+)$")
+EVERY = re.compile(r"^every (\w+) in \[([^\]]+)\] has ([\w.]+) (<=|>=|<|>|is|) ?(.+)$")
+ONE = re.compile(r"^(\w+) (\w+) has ([\w.]+) (<=|>=|<|>|is|) ?(.+)$")
 INCLUDES = re.compile(r"^(\w+)\.(\w+) includes (\w+)$")
 
 
@@ -70,9 +71,11 @@ def find(config, eid):
 
 
 def compare(ent, key, op, want, where):
-    if key not in ent:
-        raise AssertionError(f"{where}: no {key}")
-    got = ent[key]
+    got = ent
+    for part in key.split("."):
+        if not isinstance(got, dict) or part not in got:
+            raise AssertionError(f"{where}: no {key}")
+        got = got[part]
     want = ent[want] if want in ent else want
     if isinstance(got, bool):
         # `internal true` and friends: the dump holds a real bool, the case a word.

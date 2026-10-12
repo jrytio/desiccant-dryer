@@ -1,0 +1,10 @@
+id: T-J12
+covers: [J-12]
+type: lint
+status: green          # the S2 pin table: packages/board-s2.yaml
+harness: ci-lint
+selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
+assert:
+  - switch heater_a has pin.number 13 and switch heater_b has pin.number 12
+  - switch valve_a has pin.number 11 and switch valve_b has pin.number 10
+  - switch case_fan has pin.number 8
