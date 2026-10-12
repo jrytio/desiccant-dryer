@@ -1,7 +1,8 @@
 name: release
 
-# Builds the production firmware for a version tag, attaches the binaries
-# and an esp-web-tools manifest to a GitHub Release, and copies them to the
+# Builds the production firmware for a version tag, one image per supported
+# chip (ESP32-S2 and ESP32-C6), attaches the binaries and one esp-web-tools
+# manifest listing both to a GitHub Release, and copies them to the
 # gh-pages branch so web.esphome.io can install them. The on-device `update:`
 # entity installs releases published here itself. The image carries no
 # secrets, so the build needs none. Procedure: docs/releasing.md.
@@ -36,32 +37,48 @@ jobs:
           fi
           echo "version=$tag" >> "$GITHUB_OUTPUT"
 
+      # The S2's toolchain cache from build.yml. The C6 compile below adds
+      # its own compiler to the same directory as it goes, which costs a few
+      # minutes; releases are rare and this workflow never saves a cache.
       - name: Restore toolchains
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.TOOL_CACHE }}
-          key: toolchains-${{ env.ESPHOME_VERSION }}-esp32-${{ hashFiles('esphome/packages/platform-*.yaml') }}
-          restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-esp32-
-      - name: Restore build directory
+          key: toolchains-${{ env.ESPHOME_VERSION }}-esp32s2-${{ hashFiles('esphome/packages/platform-*.yaml', 'esphome/packages/board-*.yaml') }}
+          restore-keys: toolchains-${{ env.ESPHOME_VERSION }}-esp32s2-
+      # Two caches into one directory: each holds only its own build
+      # subdirectory (build/desiccant-dryer, build/desiccant-dryer-c6).
+      - name: Restore S2 build directory
         uses: actions/cache/restore@v6
         with:
           path: esphome/.esphome
           key: build-${{ env.ESPHOME_VERSION }}-production-${{ hashFiles('esphome/**') }}
           restore-keys: build-${{ env.ESPHOME_VERSION }}-production-
+      - name: Restore C6 build directory
+        uses: actions/cache/restore@v6
+        with:
+          path: esphome/.esphome
+          key: build-${{ env.ESPHOME_VERSION }}-c6-production-${{ hashFiles('esphome/**') }}
+          restore-keys: build-${{ env.ESPHOME_VERSION }}-c6-production-
 
-      - name: Compile
+      - name: Compile both chips
         run: |
           mkdir -p "$TOOL_CACHE"
-          docker run --rm -v "$PWD:/config" -w /config \
-            -v "$PWD/$TOOL_CACHE:/cache" \
-            "ghcr.io/esphome/esphome:$ESPHOME_VERSION" compile esphome/desiccant-dryer.yaml
+          for selector in desiccant-dryer desiccant-dryer-c6; do
+            docker run --rm -v "$PWD:/config" -w /config \
+              -v "$PWD/$TOOL_CACHE:/cache" \
+              "ghcr.io/esphome/esphome:$ESPHOME_VERSION" compile "esphome/$selector.yaml"
+          done
           sudo chown -R "$(id -u):$(id -g)" esphome/.esphome
 
+      # make-manifest.sh reads each image's header and refuses one built for
+      # the other chip, so a mixed-up build directory stops the release here.
       - name: Assemble manifest and binaries
         run: |
-          scripts/make-manifest.sh "${{ steps.ver.outputs.version }}" \
-            esphome/.esphome/build/desiccant-dryer/build \
-            site "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          scripts/make-manifest.sh "${{ steps.ver.outputs.version }}" site \
+            "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}" \
+            esp32s2=esphome/.esphome/build/desiccant-dryer/build \
+            esp32c6=esphome/.esphome/build/desiccant-dryer-c6/build
           cat site/manifest.json
 
       - name: Create the GitHub Release
