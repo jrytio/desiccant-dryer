@@ -199,7 +199,9 @@ numbers.
   renaming the files is safe. The manifest grows to about 1 KB.
 - web.esphome.io chooses the factory image by the chip it detects.
 - Version **1.3.0**, bumped in the PR. One version number for both chips.
-- `build.yml`: the compile matrix gains `production-c6` and `hw-test-c6`.
+- `build.yml`: the compile matrix gains `c6-production` and `c6-hw-test`
+  (named that way round so the existing `production-` and `hw-test-` cache
+  restore prefixes cannot match them).
   The toolchain cache key gains the chip, since the C6 needs the RISC-V
   compiler and a shared key would be saved by whichever job finished first.
   The repository's Actions cache was empty when checked (2026-10-12), so the
@@ -284,10 +286,10 @@ itself.
 ## Unverified — measure, do not assume
 
 1. **USB download mode while seated.** The fan's 10 kΩ gate pulldown holds
-   GPIO8 low. From memory of Espressif's datasheet, GPIO8 low with GPIO9 low
-   is not a valid boot combination; confirm against the PDF when it is added
-   to `docs/datasheets/`, and by bench step 7. The docs then say what was
-   seen.
+   GPIO8 low. Espressif's datasheet (pre-release v0.5, Table 2-14) lists
+   GPIO8 low with GPIO9 low as an invalid boot combination. Whether the
+   chip's USB-Serial-JTAG reset-to-download path runs into that is for
+   bench step 7. The docs then say what was seen.
 2. **40 MHz SPI on glass.** The S2's 35/36 are its dedicated SPI pins; the
    C6's 19/20 go through the GPIO matrix. If the image shows artefacts,
    `data_rate` becomes a per-board substitution.
