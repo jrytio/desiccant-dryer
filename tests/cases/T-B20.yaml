@@ -3,7 +3,7 @@ covers: [B-20, J-09]
 type: lint
 status: green          # max_value is 118, the SF129E holding temperature (issue #34)
 harness: ci-lint
-selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-hw-test.yaml]
+selectors: [esphome/desiccant-dryer.yaml, esphome/desiccant-dryer-c6.yaml, esphome/desiccant-dryer-hw-test.yaml, esphome/desiccant-dryer-hw-test-c6.yaml]
 assert:
   - number overtemp has max_value <= 118
   - number overtemp has initial_value <= max_value
