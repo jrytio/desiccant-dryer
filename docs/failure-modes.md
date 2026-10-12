@@ -285,7 +285,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | H-19 | Watchdog unverified: A-03 and H-02 both assume the ESP-IDF task watchdog reboots a hung loop, but no config sets its period and no test proves it. Pass: a deliberately blocked lambda reboots the board and the relays drop within the watchdog period | 🟠 P1 | FW | bench | ✱ |
 | H-20 | ESP-IDF panic handler set to halt or to the GDB stub instead of reboot; a crash freezes the board with the relays in their last state and no watchdog reset follows | 🟠 P1 | CFG | inspect |  |
 | H-21 | On an ESP32-C6 board the fan pin (GPIO8) is a boot strap and the fan's 10 kΩ gate pulldown holds it low, which the datasheet calls an invalid combination with download mode; a USB flash with the board seated may fail or misbehave. Pass: the result of one seated flash attempt is recorded and the docs say which way to flash | 🔵 P3 | HW | bench |  |
-| H-22 | An image for the other chip is flashed by hand over USB during a recovery (the S2 file onto a C6 board or the reverse). Pass: esptool refuses the mismatch and the board still boots what it had | 🔵 P3 | OPS | bench |  |
+| H-22 | An image for the other chip is flashed by hand over USB during a recovery (the S2 factory file onto a C6 board or the reverse). The file name is the only sure protection. Read from esptool's source and not tried: it refuses the C6 file on an S2 board, but does not notice the S2 file on a C6 board (that file starts with padding; its image header is at 0x1000) unless `--chip` is given and names the other board. Pass: all four cases are tried and recorded in docs/releasing.md, and a wrongly flashed board drives no output | 🔵 P3 | OPS | bench |  |
 
 ## I. Control logic and state machine
 

@@ -41,7 +41,7 @@ Reference: `docs/hardware.md`, `docs/board-layout.svg`, `docs/pinout-verificatio
 - [ ] **G-05** SHT45 on the Qwiic cable. **Pass:** genuine Qwiic/STEMMA QT breakout on a 4-pin JST-SH cable, black to GND, red to 3.3 V. A breakout with a different 4-pin order is rewired before plugging in. *(eyes)*
 - [ ] **G-08** Solder side of both boards under magnification. **Pass:** no bridge between adjacent pins on GPIO12/13 (heaters), GPIO10/11 (valves), or between any mains pad and its neighbours. *(magnifier, continuity)*
 - [ ] **A-28** *S2 only.* Blue LED on GPIO13. **Pass:** understood as "heater A relay commanded", nothing else connected to that net on the board. *(eyes)*
-- [ ] **D-18** *C6 only.* ALRT jumper on the back of the ESP32-C6 board. **Pass:** cut; no continuity across its two pads, and 12-pin 6 to 3V3 reads open, not about 100 kΩ. *(meter, board unpowered and out of its socket)*
+- [ ] **D-18** *C6 only.* ALRT jumper on the back of the ESP32-C6 board. **Pass:** cut; no continuity across its two pads. *(meter, board unpowered and out of its socket)*
 - [ ] **G-17** *C6 only.* µSD slot and SD_DET jumper on the ESP32-C6 board. **Pass:** slot empty and taped over; SD_DET cut, no continuity across its two pads. *(eyes, meter)*
 
 ## Stage 2 · Mains heater path (mains off)

@@ -218,9 +218,10 @@ Before a C6 goes into a socket:
 1. Cut jumpers **ALRT** and **SD_DET** on the back (both are closed-trace
    jumpers; a solder blob restores them).
 2. Check with a meter, unpowered: no continuity across either jumper's two
-   pads. For ALRT there is a second reading: 12-pin 6 to 3V3 is about
-   100 kΩ before the cut and open after. (SD_DET's pull-up goes to the
-   switched rail, so it has no equivalent reading to 3V3.)
+   pads. (A draft of this step added a 100 kΩ reading from 12-pin 6 to 3V3
+   for ALRT. The branch review dropped it: the reading depends on which way
+   round the meter leads are, because the chip's input protection conducts
+   one way.)
 3. Leave the µSD slot empty; tape over it.
 4. Leave LP, I2C, RGB, CHG, PWR, SHLD and MEAS as delivered.
 

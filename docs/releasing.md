@@ -119,8 +119,16 @@ physical access, and on an installed unit it means opening the enclosure.
 Weigh that before publishing a release.
 
 A USB reflash needs the image for the chip that is fitted. web.esphome.io
-chooses it from the manifest; by hand, use the `-esp32s2` or `-esp32c6`
-factory file to match. An ESP32-C6 board comes out of its socket first.
+chooses it from the manifest. By hand, use the `-esp32s2` or `-esp32c6`
+factory file to match, and tell esptool which chip the file is for
+(`--chip esp32s2` or `--chip esp32c6`): it then stops if the board is the
+other kind. Do not count on esptool to notice by itself. Read from its
+source (5.1.0), not tried on these boards: without `--chip` it checks only
+a file that begins with an image header, which the C6 factory file does
+and the S2 factory file, whose header sits at 0x1000, does not. A board
+flashed with the other chip's file does not boot and drives no output;
+flash the right file over it. An ESP32-C6 board comes out of its socket
+first.
 
 Two security properties of this arrangement were raised during the 1.2.0
 work and **deliberately accepted** rather than fixed. They are recorded here

@@ -96,8 +96,9 @@ Before the board goes in a socket:
    ALRT ties valve A's pin to the battery gauge's alert output. SD_DET ties
    heater B's pin to the card-detect switch.
 2. **Check both cuts with a meter, board unpowered:** no continuity across
-   either jumper's two pads. For ALRT there is a second reading: 12-pin 6
-   to 3V3 reads about 100 kΩ before the cut and open after.
+   either jumper's two pads. That is the whole test. A resistance reading
+   from the header pin to 3V3 is not one: it depends on which way round the
+   meter leads are, because the chip's input protection conducts one way.
 3. **Leave the µSD slot empty** and tape over it. The slot shares the
    display's SPI lines, the 1-wire bus and heater A's line.
 4. Leave the other jumpers (LP, I2C, RGB, CHG, PWR, SHLD, MEAS) as

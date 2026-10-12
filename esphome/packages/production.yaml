@@ -1,8 +1,14 @@
-# Everything in the production firmware. One selector wraps it:
-#   esphome/desiccant-dryer.yaml   CI, and the published release images
-# Logic:  base.yaml           (shared with the virtual and host builds)
-# Board:  platform-esp32.yaml (board, WiFi, web server)
-# Wiring: hw-real.yaml        (the only file the hardware side needs)
+# Everything in the production firmware that does not depend on the chip.
+# Two selectors wrap it, one per supported board; CI compiles both and the
+# release workflow builds the published images from them:
+#   esphome/desiccant-dryer.yaml      SparkFun ESP32-S2 Thing Plus
+#   esphome/desiccant-dryer-c6.yaml   SparkFun Thing Plus ESP32-C6
+# Each selector adds its board package (board-s2.yaml or board-c6.yaml): the
+# chip, the port the log uses and the GPIO behind each header position.
+# Logic:   base.yaml           (shared with the virtual and host builds)
+# Network: platform-esp32.yaml (WiFi, setup access point, web server)
+# Wiring:  hw-real.yaml        (buses and sensors; pins come from the board
+#          package)
 # Release: ../version.yaml + release.yaml (version, provisioning,
 #         diagnostics). No secrets: the owner sets WiFi at flash time,
 #         Home Assistant sets the API key on adoption, and the unit
@@ -12,7 +18,7 @@
 # the version CI and the release workflow pin. The floor records that, not a
 # feature requirement: mipi_spi's buffer_size and color_depth both exist in
 # 2026.8.2, and packages/display-st7789.yaml (shared by every build) emits
-# them for the bench builds too. Only the production selector carries the
+# them for the bench builds too. Only the production build carries the
 # floor because only it is released; the bench builds are free to run on
 # whatever CLI is to hand.
 esphome:

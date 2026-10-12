@@ -58,8 +58,8 @@ server) or `packages/platform-host.yaml` (native build on the Mac). Board:
 `packages/board-s2.yaml` or `packages/board-c6.yaml` (that chip's `esp32:`
 block, logger port and `pin_*` substitutions; every ESP32 selector includes
 exactly one). Hardware:
-`packages/hw-real.yaml` (buses and real sensors; the hardware side edits only
-this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
+`packages/hw-real.yaml` (buses and real sensors; the hardware side edits this
+and the board package's pin table) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
 `packages/display-draw.yaml` (fonts, SVG sprites from `esphome/assets/display/`,
 and the `ui_draw` script that gathers ids into a `UiState` for
 `components/dryer_ui/display_ui.h`, where all drawing lives with no `id()`
