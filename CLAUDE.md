@@ -13,7 +13,10 @@ based on measured outlet humidity and measured pack temperatures instead.
 - **ESPHome on ESP-IDF**, not MicroPython/Arduino/Tasmota. All control logic
   runs on-device; Home Assistant is for tuning and observation only. The unit
   must keep working with WiFi or HA down.
-- **Board: SparkFun ESP32-S2 Thing Plus (WRL-17743).** Single core, 320 KB RAM,
+- **Boards: SparkFun ESP32-S2 Thing Plus (WRL-17743) and SparkFun Thing
+  Plus ESP32-C6 (DEV-22924)**, in the same sockets with the same wiring and
+  one firmware image each (`packages/board-s2.yaml`, `packages/board-c6.yaml`).
+- **The S2 board:** single core, 320 KB RAM,
   no PSRAM, no Bluetooth, CP2102 UART for flashing. The full 16-bit 240x240
   display buffer (~115 KB) does not allocate once WiFi, API and the web server
   are up (seen on the first bench flash), so the display runs `mipi_spi` with
@@ -23,6 +26,17 @@ based on measured outlet humidity and measured pack temperatures instead.
   `buffer_size` multiplies redraw cost — see `packages/display-st7789.yaml`.
   The logger must use `hardware_uart: UART0`;
   ESPHome's S2 default of USB_CDC is the unconnected native-USB pins.
+- **The C6 board** (ESP32-C6-WROOM-1-N16: single RISC-V core, 512 KB RAM,
+  no PSRAM, the chip's own USB-Serial-JTAG, no CP2102) is supported from
+  1.3.0. Before one goes in a socket its ALRT and SD_DET jumpers are cut
+  and its µSD slot stays empty: the battery gauge's alert shares valve A's
+  pin, card detect shares heater B's, and the slot shares the display SPI,
+  1-wire and heater A lines. Its fan pin (GPIO8) is a boot strap that the
+  gate pulldown holds low, so it is flashed out of its socket. It keeps
+  the S2's 50% display buffer until its heap and redraw time are measured.
+  Nothing about it is bench-verified: the open list is "Unverified" in
+  `docs/superpowers/specs/2026-10-12-esp32-c6-board-support-design.md`
+  and the steps are docs/hardware-bringup.md section 8.
 - **Heaters are 120 VAC (~117 W, 123 Ω each)**, switched by Songle SRD-05VDC
   relays driven by PN2222A low-side stages (TO-92 E-B-C; a P2N2222A is C-B-E).
   Mains stays off the ESP board.
@@ -39,8 +53,11 @@ based on measured outlet humidity and measured pack temperatures instead.
 
 Three builds share one logic file via ESPHome packages. `esphome/packages/base.yaml`
 is the controller (globals, tunables, GPIO outputs, state machine, derived
-entities). Platform: `packages/platform-esp32.yaml` (board, WiFi, OTA, web
-server) or `packages/platform-host.yaml` (native build on the Mac). Hardware:
+entities). Platform: `packages/platform-esp32.yaml` (WiFi, setup AP, web
+server) or `packages/platform-host.yaml` (native build on the Mac). Board:
+`packages/board-s2.yaml` or `packages/board-c6.yaml` (that chip's `esp32:`
+block, logger port and `pin_*` substitutions; every ESP32 selector includes
+exactly one). Hardware:
 `packages/hw-real.yaml` (buses and real sensors; the hardware side edits only
 this) or `packages/hw-virtual.yaml` (plant model and sim knobs). Display:
 `packages/display-draw.yaml` (fonts, SVG sprites from `esphome/assets/display/`,
@@ -53,7 +70,9 @@ which loads the `dryer_ui` component from this checkout, plus a driver,
 (window on the Mac); both give the display id `panel`. `desiccant-dryer.yaml`, `desiccant-dryer-virtual.yaml`,
 `desiccant-dryer-hw-test.yaml` and `desiccant-dryer-host.yaml` are short
 selectors; the production one wraps `packages/production.yaml`
-(docs/releasing.md); `desiccant-dryer-scenarios.yaml`
+(docs/releasing.md); `desiccant-dryer-c6.yaml` and
+`desiccant-dryer-hw-test-c6.yaml` are the production and hw-test builds
+with the C6 board package; `desiccant-dryer-scenarios.yaml`
 is a fourth, host-only build that swaps the controller for a fixed table of
 twelve screen states (`packages/display-scenarios.yaml`) so
 `scripts/scenario-shots.sh` can render them all through the panel's palette
@@ -64,8 +83,16 @@ airflow in/out of the pack tops per `docs/superpowers/specs/2026-09-15-airflow-i
 and the colours themselves per `docs/superpowers/specs/2026-09-15-semantic-palette-design.md`.
 Base must only reference the five sensor ids `air_rh`, `air_temp`, `pack_a_temp`, `pack_b_temp`,
 `case_temp` from the hardware package; `display-draw.yaml` additionally
-reads `ip_addr` from the platform package. `hw-real.yaml` is the pin-map source of truth for sensors,
-`base.yaml` for outputs, `display-st7789.yaml` for the display.
+reads `ip_addr` from the platform package. `board-s2.yaml` and `board-c6.yaml` are the pin-map source of truth,
+one table per chip by header position; `base.yaml`, `hw-real.yaml` and
+`display-st7789.yaml` hold no GPIO numbers.
+
+The main board is wired by header position and takes either board. On the
+C6, at the same positions: heater A 18, heater B 22, valve A 11, valve B 10,
+fan 8; I2C 6/7 (Qwiic), SPI 19/20, display CS 5 / DC 4 / RST 3 / BL 0,
+1-wire 21. Its 12-pin silkscreen reads GPIO0 to GPIO6, which are header
+labels, not chip GPIOs. Checked against SparkFun's Eagle files only
+(docs/pinout-verification.md). The rest of this section is the S2.
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
 valve B 10, fan 8. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
@@ -115,11 +142,16 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Outputs are applied from state by `apply_outputs` every tick. Never toggle
   a heater or valve from a state transition alone; change the state and let
   the apply step do it.
+- Every ESP32 selector includes exactly one board package, and the shared
+  packages contain no GPIO numbers. The T-J12 and T-J12C lint cases pin
+  each board's five output pins; change a pin only together with its case
+  and docs/pinout-verification.md.
 
 ## Working conventions
 
 - Flash with `esphome run esphome/desiccant-dryer.yaml` (real hardware) or
-  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). Bench
+  `esphome run esphome/desiccant-dryer-virtual.yaml` (bare board). A C6
+  board takes the `-c6` selector of the same build. Bench
   testing on real hardware uses `esphome/desiccant-dryer-hw-test.yaml`
   (production controller plus dev secrets, so it takes OTA; see
   docs/hardware-bringup.md). For the virtual, host and hw-test builds copy `secrets.yaml.example` to `secrets.yaml`
@@ -148,7 +180,8 @@ service 180 min) are untested guesses meant to get first cycles logging.
   (docs/host-preview.md), not on the dashboard. Keep it in step with the dashboard
   published on the dev instance, and keep its help text in step with the
   control logic when either changes.
-- Only `packages/production.yaml` (wrapped by `desiccant-dryer.yaml`)
+- Only `packages/production.yaml` (wrapped by `desiccant-dryer.yaml` and
+  `desiccant-dryer-c6.yaml`, one release image per chip in one manifest)
   includes `esphome/version.yaml` (semver, bumped in the PR) and
   `packages/release.yaml` (project version, Improv and captive-portal
   provisioning, safe mode, debug sensors, the update entity). It has no
@@ -176,6 +209,8 @@ service 180 min) are untested guesses meant to get first cycles logging.
 
 ## Open items
 
+- Bench-verify the ESP32-C6 board (docs/hardware-bringup.md section 8), then
+  decide its display buffer size from measured heap and redraw time.
 - Confirm real breakthrough curve and regen time; retune defaults.
 - Decide whether a proper dew-point transmitter (4–20 mA / Modbus) is needed
   once real data is in.

@@ -8,10 +8,15 @@ manifest published on this repository's GitHub Pages site. Test builds
 ## How it works
 
 - `esphome/version.yaml` holds the semantic version. The production build
-  (`packages/production.yaml`) includes it, and one selector wraps that
-  build: `esphome/desiccant-dryer.yaml`, which takes the screen's drawing
-  component (`components/dryer_ui`) and SVG art from this checkout. CI
-  compiles it and the release workflow builds the published images from it.
+  (`packages/production.yaml`) includes it, and two selectors wrap that
+  build, one per supported board: `esphome/desiccant-dryer.yaml` (SparkFun
+  ESP32-S2 Thing Plus, `packages/board-s2.yaml`) and
+  `esphome/desiccant-dryer-c6.yaml` (SparkFun Thing Plus ESP32-C6,
+  `packages/board-c6.yaml`). They differ only in the board package: the
+  chip, the port the log uses and the GPIO behind each header position.
+  Both take the screen's drawing component (`components/dryer_ui`) and SVG
+  art from this checkout. CI compiles both, and the release workflow builds
+  the published images from them under one version number.
 - `esphome/packages/release.yaml` gives the firmware a project name and
   version, Improv serial provisioning, safe mode, diagnostics (free heap,
   largest free block, loop time, reset reason, running version) and the
@@ -33,7 +38,9 @@ manifest published on this repository's GitHub Pages site. Test builds
   6 h. When the manifest's version differs from the running `${version}`,
   Home Assistant shows an update on the `Firmware` entity; installing pulls
   the `.ota.bin` over HTTPS (relative path, resolved next to the manifest)
-  and checks its md5.
+  and checks its md5. The manifest lists one build per chip (`chipFamily`
+  `ESP32-S2` and `ESP32-C6`); a unit takes the one that names its own chip
+  and ignores the other.
   - GitHub Pages, not the GitHub Release download URL: that one redirects to
     an RSA-certificate host behind a ~900-byte signed URL, and the S2 has
     too little free heap for the second handshake. `follow_redirects: false`
@@ -50,8 +57,10 @@ manifest published on this repository's GitHub Pages site. Test builds
     off in `on_boot`, so the reboot drops the heaters and valves.
 - Pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`, which
   refuses to build unless the tag equals the version in `version.yaml`,
-  compiles `desiccant-dryer.yaml`, writes an esp-web-tools manifest with
-  `scripts/make-manifest.sh`, attaches everything to a GitHub Release and
+  compiles `desiccant-dryer.yaml` and `desiccant-dryer-c6.yaml`, writes one
+  esp-web-tools manifest listing both with `scripts/make-manifest.sh`
+  (which refuses an image whose header names the other chip), attaches
+  everything to a GitHub Release and
   copies the same files to `firmware/` on the `gh-pages` branch (GitHub
   Pages). The copy on `gh-pages` is what web.esphome.io installs from and
   what deployed units poll; the GitHub Release is for humans.
@@ -59,9 +68,13 @@ manifest published on this repository's GitHub Pages site. Test builds
 ## Installing a release on a dryer (owner)
 
 1. Open https://web.esphome.io in Chrome or Edge, plug the board in over
-   USB, and install the release's `.factory.bin` (from the GitHub Release)
-   or point it at
-   `https://jrytio.github.io/desiccant-dryer/firmware/manifest.json`.
+   USB, and point it at
+   `https://jrytio.github.io/desiccant-dryer/firmware/manifest.json`, which
+   picks the image for the chip it finds. To install a file from the GitHub
+   Release by hand instead, take the `.factory.bin` named for the board:
+   `-esp32s2` for the ESP32-S2 Thing Plus, `-esp32c6` for the Thing Plus
+   ESP32-C6. An ESP32-C6 board is flashed out of its socket
+   (docs/hardware.md, "Fitting an ESP32-C6 Thing Plus").
 2. Enter the WiFi network when asked (Improv over the USB serial port), or
    join the open `Desiccant Dryer Setup` access point the board raises when
    it has no network and enter the WiFi there.
@@ -104,6 +117,10 @@ own network gone, or a release that boots but breaks networking — the only
 way back is to reflash the board over USB with web.esphome.io. That means
 physical access, and on an installed unit it means opening the enclosure.
 Weigh that before publishing a release.
+
+A USB reflash needs the image for the chip that is fitted. web.esphome.io
+chooses it from the manifest; by hand, use the `-esp32s2` or `-esp32c6`
+factory file to match. An ESP32-C6 board comes out of its socket first.
 
 Two security properties of this arrangement were raised during the 1.2.0
 work and **deliberately accepted** rather than fixed. They are recorded here
@@ -185,8 +202,9 @@ should be protected accordingly.
   esphome -s version 1.2.0-test run --device <board> desiccant-dryer.yaml
   ```
 - Production redraws the panel every 10 s and each redraw blocks for about
-  699 ms, because the halved frame buffer makes `mipi_spi` run the writer
-  twice (`packages/display-st7789.yaml` has the measurements). A fault or
+  699 ms on the S2 (not yet measured on the C6), because the halved frame
+  buffer makes `mipi_spi` run the writer twice
+  (`packages/display-st7789.yaml` has the measurements). A fault or
   overtemp indication can therefore be up to 10 s stale on the panel.
 - The first 1.x releases log at DEBUG (set in `packages/production.yaml`)
   so the unit can be brought up and tested remotely through `esphome logs`,
@@ -194,13 +212,13 @@ should be protected accordingly.
 - To dry-run the packaging locally:
 
   ```bash
-  esphome compile esphome/desiccant-dryer.yaml && scripts/make-manifest.sh 1.2.0 esphome/.esphome/build/desiccant-dryer/build /tmp/site
+  esphome compile esphome/desiccant-dryer.yaml && esphome compile esphome/desiccant-dryer-c6.yaml && scripts/make-manifest.sh 1.3.0 /tmp/site "" esp32s2=esphome/.esphome/build/desiccant-dryer/build esp32c6=esphome/.esphome/build/desiccant-dryer-c6/build
   ```
 
 - To test the update path before publishing a release, serve a manifest and
   `.ota.bin` built from your branch at any HTTPS URL the unit can reach and
   override `update_manifest_url` (`-s update_manifest_url <url>`). The
   substitution is defined in `packages/release.yaml`, which only the
-  production selector includes, so override it on `desiccant-dryer.yaml`
-  itself — the virtual, host, hw-test and scenarios builds have no updater
+  production selectors include, so override it on `desiccant-dryer.yaml`
+  or `desiccant-dryer-c6.yaml` — the virtual, host, hw-test and scenarios builds have no updater
   and no such substitution.
