@@ -6,12 +6,13 @@
 # case_temp. Board, WiFi, OTA and the web server live in the platform
 # package, not here.
 #
-# Outputs (12-pin header), identical on every build (the host build drives no pins):
-#   GPIO13  Heater A relay coil (5 V, low-side NPN)     interlocked with B
-#   GPIO12  Heater B relay coil                          interlocked with A
-#   GPIO11  Valve A  (24 V solenoid, low-side MOSFET)   interlocked with B
-#   GPIO10  Valve B                                      interlocked with A
-#   GPIO8   Case fan (24 V, low-side MOSFET)
+# Outputs (12-pin header positions 4 to 8): heater A and B relay coils
+# (5 V, low-side NPN, interlocked), valve A and B (24 V solenoids, low-side
+# MOSFETs, interlocked) and the case fan. The GPIO behind each one depends
+# on the board and comes from ${pin_heater_a}, ${pin_heater_b},
+# ${pin_valve_a}, ${pin_valve_b} and ${pin_fan} in packages/board-s2.yaml or
+# packages/board-c6.yaml (placeholders in platform-host.yaml: the host build
+# drives no pins).
 #
 # Cycle logic (control tick every 5 s):
 #   One pack is "active" (valve open, heater off). The other is "standby" and
@@ -301,7 +302,7 @@ switch:
     name: "Heater A"
     id: heater_a
     internal: ${outputs_internal}
-    pin: GPIO13
+    pin: ${pin_heater_a}
     restore_mode: ALWAYS_OFF
     interlock: [heater_b]
     interlock_wait_time: 500ms
@@ -310,7 +311,7 @@ switch:
     name: "Heater B"
     id: heater_b
     internal: ${outputs_internal}
-    pin: GPIO12
+    pin: ${pin_heater_b}
     restore_mode: ALWAYS_OFF
     interlock: [heater_a]
     interlock_wait_time: 500ms
@@ -319,7 +320,7 @@ switch:
     name: "Valve A"
     id: valve_a
     internal: ${outputs_internal}
-    pin: GPIO11
+    pin: ${pin_valve_a}
     restore_mode: ALWAYS_OFF
     interlock: [valve_b]
     interlock_wait_time: 500ms
@@ -328,7 +329,7 @@ switch:
     name: "Valve B"
     id: valve_b
     internal: ${outputs_internal}
-    pin: GPIO10
+    pin: ${pin_valve_b}
     restore_mode: ALWAYS_OFF
     interlock: [valve_a]
     interlock_wait_time: 500ms
@@ -336,7 +337,7 @@ switch:
   - platform: gpio
     name: "Case Fan"
     id: case_fan
-    pin: GPIO8
+    pin: ${pin_fan}
     restore_mode: ALWAYS_OFF
     icon: mdi:fan
 

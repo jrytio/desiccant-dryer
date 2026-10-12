@@ -9,6 +9,7 @@ substitutions:
 
 packages:
   production: !include packages/production.yaml
+  board: !include packages/board-s2.yaml
   ui: !include packages/ui-code-local.yaml
   # Home Assistant provisions the API key at adoption time.
   api: !include packages/api-provisioned.yaml

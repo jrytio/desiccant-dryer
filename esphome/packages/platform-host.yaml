@@ -3,6 +3,16 @@
 # the host block and the one entity the display reads that would otherwise
 # come from WiFi. Home Assistant reaches the process over the API.
 
+# base.yaml takes its five output pins from the board package. The host
+# build has no board and drives no pins, so these are placeholders; they are
+# the S2's numbers so that this build's config is the same as it always was.
+substitutions:
+  pin_heater_a: GPIO13
+  pin_heater_b: GPIO12
+  pin_valve_a: GPIO11
+  pin_valve_b: GPIO10
+  pin_fan: GPIO8
+
 host:
 
 text_sensor:
