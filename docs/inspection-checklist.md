@@ -19,13 +19,18 @@ Item format, for people and for agents:
 
 Sign off each stage at the bottom before moving to the next.
 
+GPIO numbers in the items are the ESP32-S2 board's. On an ESP32-C6 board
+the same socket positions carry the numbers in
+`docs/pinout-verification.md`. Items marked *C6 only* or *S2 only* apply to
+that board alone.
+
 ---
 
 ## Stage 1 · Board and header assembly (mains off, 24 V off)
 
 Reference: `docs/hardware.md`, `docs/board-layout.svg`, `docs/pinout-verification.md`. The pin-by-pin meter pass (connections and pad bridges) is `docs/board-continuity-check.md`.
 
-- [ ] **G-02** ESP32-S2 Thing Plus seated in its 16-pin and 12-pin sockets. **Pass:** USB-C end and antenna end match the silkscreen, no empty socket pin at either end, no pin bent under the module. *(eyes, torch)*
+- [ ] **G-02** Thing Plus (ESP32-S2 or ESP32-C6) seated in its 16-pin and 12-pin sockets. **Pass:** USB-C end and antenna end match the silkscreen, no empty socket pin at either end, no pin bent under the module. *(eyes, torch)*
 - [ ] **A-04** Both relay-driver transistors. **Pass:** marking reads `PN2222A` (pinout E-B-C, flat face toward you). A `P2N2222A` (C-B-E) is a reject; do not power the board. *(magnifier)*
 - [ ] **F-13** Both 100 µF electrolytics. **Pass:** stripe (negative) on the GND side of the silkscreen on each board, can flat, no bulge or residue. *(eyes)*
 - [ ] **F-19** ESP BAT pin and JST battery connector. **Pass:** nothing wired to BAT; 5 V from the buck lands only on the USB pin through the Schottky and JP-USB. *(eyes, continuity: BAT to 5 V bus open)*
@@ -35,7 +40,9 @@ Reference: `docs/hardware.md`, `docs/board-layout.svg`, `docs/pinout-verificatio
 - [ ] **G-04** Display backlight input. **Pass:** BLK to VCC measures about 10 kΩ unpowered, showing an on-module transistor. A near-zero or diode-like reading means BLK is a bare LED anode; do not connect GPIO17 to it. *(meter)*
 - [ ] **G-05** SHT45 on the Qwiic cable. **Pass:** genuine Qwiic/STEMMA QT breakout on a 4-pin JST-SH cable, black to GND, red to 3.3 V. A breakout with a different 4-pin order is rewired before plugging in. *(eyes)*
 - [ ] **G-08** Solder side of both boards under magnification. **Pass:** no bridge between adjacent pins on GPIO12/13 (heaters), GPIO10/11 (valves), or between any mains pad and its neighbours. *(magnifier, continuity)*
-- [ ] **A-28** Blue LED on GPIO13. **Pass:** understood as "heater A relay commanded", nothing else connected to that net on the board. *(eyes)*
+- [ ] **A-28** *S2 only.* Blue LED on GPIO13. **Pass:** understood as "heater A relay commanded", nothing else connected to that net on the board. *(eyes)*
+- [ ] **D-18** *C6 only.* ALRT jumper on the back of the ESP32-C6 board. **Pass:** cut; no continuity across its two pads, and 12-pin 6 to 3V3 reads open, not about 100 kΩ. *(meter, board unpowered and out of its socket)*
+- [ ] **G-17** *C6 only.* µSD slot and SD_DET jumper on the ESP32-C6 board. **Pass:** slot empty and taped over; SD_DET cut, no continuity across its two pads. *(eyes, meter)*
 
 ## Stage 2 · Mains heater path (mains off)
 
@@ -85,6 +92,7 @@ Reference: `docs/hardware.md` relay board section, `docs/datasheets/thermal-fuse
 Reference: `CLAUDE.md` invariants, `docs/releasing.md`.
 
 - [ ] **J-02** Selector used. **Pass:** the real unit is flashed from `esphome/desiccant-dryer.yaml` (production) or `desiccant-dryer-hw-test.yaml`; never from the virtual or host selector. `esphome config` output for the chosen selector contains no `Sim ` entities and no `hw-virtual`. *(read config dump)*
+- [ ] **J-12** Board package. **Pass:** the image is the one for the chip fitted: an ESP32-S2 board runs `desiccant-dryer.yaml` or `desiccant-dryer-hw-test.yaml` (`board-s2.yaml`), an ESP32-C6 board runs `desiccant-dryer-c6.yaml` or `desiccant-dryer-hw-test-c6.yaml` (`board-c6.yaml`); esptool or web.esphome.io names that chip before flashing, and the five output pins in the config dump match that chip's table in `docs/pinout-verification.md`. *(flasher output, config dump)*
 - [ ] **H-18** Image identity. **Pass:** after flashing, the device log's project name and version match the selector, and no `Sim *` entity appears in Home Assistant. *(log, HA)*
 - [ ] **J-03** Output restore modes. **Pass:** `heater_a`, `heater_b`, `valve_a`, `valve_b`, `case_fan` each have `restore_mode: ALWAYS_OFF` in the config dump. *(grep config dump)*
 - [ ] **J-04** Interlocks. **Pass:** `heater_a` and `heater_b` list each other under `interlock`; `valve_a` and `valve_b` do the same; both pairs have `interlock_wait_time: 500ms`. *(grep config dump)*

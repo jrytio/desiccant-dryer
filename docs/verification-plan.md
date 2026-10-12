@@ -134,9 +134,10 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 
 - Test IDs are `T-` plus the primary catalogue ID without its dash. A test
   that covers several rows is named after the highest-priority one. IDs are
-  never reused or renumbered. A trailing letter (`T-K01L`) is a second test
-  of the same row under another harness — a `ci-lint` check beside a `host`
-  case — and is the only way one row appears in two tests' Covers.
+  never reused or renumbered. A trailing letter marks a second test of the
+  same row and is the only way one row appears in two tests' Covers:
+  `T-K01L` is its row under another harness (a `ci-lint` check beside a
+  `host` case), `T-J12C` is its row on the other board's selectors.
 - Every catalogue row is in exactly one test's Covers. Adding a catalogue
   row means adding it to an existing test's Covers or adding a new test in
   the same change; `scripts/failure-modes-report.py` fails if a row is
@@ -230,6 +231,7 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-D14 | hil | D-14 | live | Live rig: introduce a small leak between the two pack manifolds | wet air bypasses the active pack into the outlet | later |
 | T-D15 | logic | D-15 | host | Press `Force Swap` while the standby pack is WET, then again while HEATING | swap proceeds immediately in both cases; no readiness check blocks putting a wet or hot pack into service | green |
 | T-D16 | logic | D-16 | host | Trigger a normal READY-to-swap transition; log heater and valve switch timestamps during `do_swap` | the retiring pack's heater is commanded off strictly before its valve closes, in that order | green |
+| T-D18 | physical | D-18 | checklist | Stage 1 check, ESP32-C6 board only: meter across the two pads of the ALRT jumper on the back of the board, unpowered | no continuity; 12-pin 6 to 3V3 no longer reads about 100 kΩ | manual |
 | T-E01 | hil | E-01, E-02 | bench | Bench rig: open-circuit the fan (bearing/coil) for one run, then short its MOSFET for a second run | run 1: enclosure temp climbs unchecked; run 2: fan runs continuously, masking a later real stall | later |
 | T-E03 | hil | E-03 | live | Live rig: detach the case DS18B20 from its mount so it reads ambient instead of the hot zone, heat the enclosure | `case_temp` stays low while the enclosure is genuinely hot; fan thermostat never starts | later |
 | T-E05 | logic | E-05 | host | Toggle `Dryer Enabled` off then on while a fault is separately latched | thermostat mode goes to `OFF` then back to `COOL`; the latched fault never touches the thermostat and cooling resumes | green |
@@ -257,6 +259,7 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-F18 | hil | F-18 | bench | Bench rig: measure noise on 1-wire/I2C with PSU 0V, PE, USB host ground and the display cable all bonded | ground loop coupling visible as noise on sensor buses | later |
 | T-F19 | physical | F-19 | checklist | Stage 1 check: verify nothing is wired to the ESP's BAT/LiPo charger pin | BAT pin isolated; no path from the 5V bus other than through the Schottky and JP-USB | manual |
 | T-F20 | infer | F-20 | host | `Sim Valve Stuck A` on (valve never actually moves) representing a dead 24V rail, run a normal swap | loss of the 24 V rail is detected, either by a rail-sense input or because valves not moving fails the T-I22 no-improvement check within one service period | red |
+| T-F21 | hil | F-21 | bench | Bench rig, ESP32-C6 board seated and powered: measure RESET (16-pin 1) to GND, and again after ten minutes | RESET reads the 3.3 V rail both times; a reading that sags is leakage the 100 kΩ pull-up cannot hold | later |
 | T-G01 | hil | G-01 | bench | Bench rig: seat the board one pin off on the 12-pin header (GPIO8/GPIO4 vs Feather "9"/"5" positions) | wrong physical outputs are driven relative to the intended pin map | later |
 | T-G02 | physical | G-02 | checklist | Stage 1 check: verify ESP32-S2 module seating in both sockets | USB-C and antenna ends match silkscreen, no empty end pin, no bent pin | manual |
 | T-G03 | physical | G-03 | checklist | Stage 1 check: verify display cable pinout against module type (Waveshare vs LCDWIKI) | header order matches board 1:1; a straight-through cable on the wrong module type is rejected | manual |
@@ -273,6 +276,7 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-G14 | physical | G-14 | checklist | Stage 2 check: pull-test thermal fuse and heater tail crimps | correctly crimped (no solder/twist-tape), sleeved for 133C+, holds under pull | manual |
 | T-G15 | physical | G-15 | checklist | Stage 1 check: verify MP1584 buck module fit and measure its output preset | sits flat on its own header, no forced pins; output 5.00 to 5.10V with JP-USB removed | manual |
 | T-G16 | physical | G-16 | checklist | Stage 3/7 check: verify packs, heater tails, probe leads and valves are permanently labelled A/B | every A/B pair is labelled and matches the wiring diagram at reassembly | manual |
+| T-G17 | physical | G-17 | checklist | Stage 1 check, ESP32-C6 board only: look into the µSD slot and meter across the SD_DET jumper's pads | slot empty and taped over; no continuity across SD_DET | manual |
 | T-H03 | hil | H-03, K-08, K-09 | bench | Bench rig: load the web server, TLS/OTA and API client connections simultaneously while forcing WiFi reconnect storms | heap pressure and loop time rise; the 60s `dt` clamp hides how long a heater actually ran uncontrolled during the stall | later |
 | T-H04 | hil | H-04 | bench | Bench rig: deliberately deepen recursion in a display-draw lambda to provoke a stack overflow | reset occurs with outputs held at their last state until reboot completes | later |
 | T-H05 | lint | H-05 | ci-lint | Script inspects the interval lambda's `dt_real`/`dt` computation for unsigned-subtraction wraparound safety | `dt_real` is computed and clamped so a `millis()` wrap cannot produce a negative or huge `dt` | green |
@@ -289,6 +293,8 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-H17 | lint | H-17 | ci-lint | Script dumps `esphome config` for `desiccant-dryer.yaml` and searches for any reference to `hw-virtual.yaml` or `time_scale` writers | production selector includes only `hw-real.yaml`; `time_scale` is written only from `packages/hw-virtual.yaml` | green |
 | T-H18 | physical | H-18 | checklist | Deployment check: verify the flashed image matches the target build (production vs virtual) before install | binary/manifest identifies `desiccant-dryer.yaml`, not a virtual or host build, for a real unit | manual |
 | T-H20 | lint | H-20 | ci-lint | Script inspects the ESP-IDF sdkconfig/panic handler setting used by the build | panic handler is set to reboot, not halt or the GDB stub | green |
+| T-H21 | hil | H-21 | bench | ESP32-C6 board seated in the main board, JP-USB pulled: attempt one USB flash of the hw-test-c6 build | the outcome is recorded either way, and docs/hardware.md states whether a seated board can be flashed over USB | later |
+| T-H22 | hil | H-22 | bench | Bench: with esptool, try to write the ESP32-S2 release image to an ESP32-C6 board, and the C6 image to an S2 board | esptool refuses both for the wrong chip and each board still boots its previous image | later |
 | T-I03 | infer | I-03, A-06 | host | `Sim Manual Temps` on, slowly raise `Sim Pack A Temp` while pack A is active (heater nominally off), simulating a mis-wired relay | active pack rising more than 5 C above case temperature with its heater off raises `Fault` and turns both heaters off (same check as T-B23) | red |
 | T-I04 | logic | I-04, I-23 | host | `Sim Heater Fault` on for standby A but delayed 6 min after HEATING starts (probe shows a small early bump then flatlines exactly at minute 6) | heater failing after the 5 min check still produces `Fault Message` Standby heater not heating within 10 sim min of the failure; a probe that never moves is caught by the same continuous check | red |
 | T-I05 | logic | I-05 | host | Force fault 1 (active pack overtemp) while the active pack keeps supplying air; wait 20 sim min | a fault latched for longer than 30 sim min closes both valves or raises a distinct alarm entity, and `Service Time` stops counting | red |
@@ -315,8 +321,10 @@ values are literals or `{not: v}`, `{min: v}`, `{max: v}`,
 | T-J08 | hil | J-08 | bench | Bench rig: fill or erase NVS during a flash update | all tunables revert to firmware defaults mid-run with no notification to the operator | later |
 | T-J10 | hil | J-10 | bench | Bench rig: flash two boards with the same hostname and API encryption key on one network | Home Assistant writes a tunable change to the wrong unit | later |
 | T-J11 | lint | J-11 | ci-lint | Script inspects the `globals:` block for any schema-version marker alongside `standby_state` or the elapsed counters | a persisted schema-version global exists and a mismatch at boot resets the persisted state to defaults with one log line | red |
+| T-J12 | lint | J-12 | ci-lint | Script dumps `esphome config` for `desiccant-dryer.yaml` and `desiccant-dryer-hw-test.yaml` and reads the five output switches' `pin.number` | heater A 13, heater B 12, valve A 11, valve B 10, fan 8: the ESP32-S2 table in `board-s2.yaml` | green |
+| T-J12C | lint | J-12 | ci-lint | The same check on `desiccant-dryer-c6.yaml` and `desiccant-dryer-hw-test-c6.yaml` | heater A 18, heater B 22, valve A 11, valve B 10, fan 8: the ESP32-C6 table in `board-c6.yaml` | green |
 | T-K01 | logic | K-01, K-02 | host | `Dryer Enabled` off, then press `Sim Stray Heater A` and `Sim Stray Valve B` (hw-virtual fault injectors: the switches themselves are `internal` in this build, so nothing outside the controller can command them); repeat on the active pack's heater with the dryer enabled | a relay energised from outside the state machine is off again within 3 ticks while disabled and within 2 ticks while enabled, and the active valve stays open | green |
-| T-K01L | lint | K-01 | ci-lint | Script dumps `esphome config` for `desiccant-dryer.yaml` and checks the four output switches | `heater_a`, `heater_b`, `valve_a` and `valve_b` are all `internal: true`, so the released image exposes no commandable relay entity to Home Assistant or the web server | green |
+| T-K01L | lint | K-01 | ci-lint | Script dumps `esphome config` for `desiccant-dryer.yaml` and `desiccant-dryer-c6.yaml` and checks the four output switches | `heater_a`, `heater_b`, `valve_a` and `valve_b` are all `internal: true`, so the released image exposes no commandable relay entity to Home Assistant or the web server | green |
 | T-K03 | logic | K-03 | host | Script toggles `Valve A` on/off via the API 10 times within one 5s tick interval, on a bench build that still exposes the switches (`outputs_internal: "false"`) | each optimistic switch state change is applied immediately with no debounce, confirming automation-driven chatter is possible on a build that exposes the outputs; the production build exposes none (T-K01L) | green |
 | T-K04 | lint | K-04 | ci-lint | Script dumps `esphome config`'s `web_server:` block | no `auth:` is configured; port 80 is reachable by anyone on the LAN, as documented | green |
 | T-K05 | lint | K-05 | ci-lint | Script dumps `esphome config` for `packages/release.yaml` and checks Improv/captive-portal settings | Improv serial and captive portal are present as documented provisioning paths, not accidentally left permanently open beyond intended use | green |
