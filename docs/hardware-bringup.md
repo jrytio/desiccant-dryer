@@ -21,6 +21,10 @@ through Improv or that access point); it installs its own updates from the
 published manifest instead. It goes on last,
 as its own step (section 7).
 
+An ESP32-C6 board uses `esphome/desiccant-dryer-hw-test-c6.yaml` wherever
+this page says `desiccant-dryer-hw-test.yaml`, and has steps of its own in
+[section 8](#8-esp32-c6-board). GPIO numbers on this page are the S2's.
+
 ## 1. Flash the test build (USB, once)
 
 1. First pull JP-USB (protoboard) or the wire from the board's USB pin to
@@ -169,3 +173,51 @@ trade-offs of this arrangement.
 Also note that the production image redraws the panel every 10 s (the test
 builds use 5 s), so a fault or overtemp indication can be up to 10 s stale
 on the screen.
+
+## 8. ESP32-C6 board
+
+For a SparkFun Thing Plus ESP32-C6 (DEV-22924). Nothing in this section had
+been run on a C6 when it was written (2026-10-12). Record what you see
+under each step, including a step that fails.
+
+Preparation, before the board goes near a socket: cut ALRT and SD_DET,
+check the cuts with a meter and keep the µSD slot empty
+([hardware.md](hardware.md#fitting-an-esp32-c6-thing-plus)).
+
+- [ ] **8.1 Flash the test build, board out of the socket.** Plug the
+  USB-C cable straight into the board; the port is `/dev/cu.usbmodem*`.
+
+  ```bash
+  ls /dev/cu.usbmodem*
+  esphome run --device /dev/cu.usbmodemXXXX esphome/desiccant-dryer-hw-test-c6.yaml
+  ```
+
+  Pass: it flashes without the BOOT button, the log appears on the same
+  port, and the board joins WiFi as `desiccant-dryer-hw-test-c6`.
+- [ ] **8.2 Seat it and power the main board** (JP-USB fitted, no USB
+  cable). Pass: the panel shows the normal screen with no torn or shifted
+  areas (40 MHz SPI through the C6's GPIO matrix is untested); the SHT45
+  and all three DS18B20s read; no relay clicks, no valve pulls in and the
+  fan stays off at power-up.
+- [ ] **8.3 Sections 3 to 5 of this page**, on the C6 test build. Pass: as
+  written there, except that no LED lights with heater A.
+- [ ] **8.4 One USB flash attempt while seated.** Pull JP-USB first, plug
+  in USB-C and run the 8.1 command again. Record whether it flashes: the
+  fan's gate pulldown holds the GPIO8 boot strap low, which the datasheet
+  calls an invalid combination with download mode. Either result is
+  useful; write it into
+  [pinout-verification.md](pinout-verification.md#thing-plus-esp32-c6-dev-22924)
+  and hardware.md.
+- [ ] **8.5 Release image.** After the first release that carries a C6
+  image (1.3.0) is published: flash it from the manifest with
+  web.esphome.io, board out of the socket; give it WiFi over Improv; reboot
+  it once. Pass: `Firmware Version` reads the release, the `Firmware`
+  update entity reads up to date, and Improv worked over the native USB
+  port. Record `Free Heap`, `Largest Free Block` and, if the log shows a
+  `display took a long time for an operation` warning, its figure.
+- [ ] **8.6 The unit updates itself.** After the next release (a
+  version-only one will do). Pass: the C6 unit installs it from the
+  `Firmware` entity and comes back on the new version with reset reason
+  "Reboot request from http_request.update".
+- [ ] **8.7 An S2 unit still updates.** Pass: an S2 unit on 1.2.4 offers
+  and installs 1.3.0 from the same manifest.

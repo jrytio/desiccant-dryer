@@ -4,7 +4,7 @@
 
 | Item | Part | Notes |
 |---|---|---|
-| MCU | SparkFun ESP32-S2 Thing Plus (WRL-17743) | Feather footprint, Qwiic, CP2102 |
+| MCU | SparkFun ESP32-S2 Thing Plus (WRL-17743), or SparkFun Thing Plus ESP32-C6 (DEV-22924) | Same sockets and wiring for either. The C6 needs two jumpers cut first: [Fitting an ESP32-C6 Thing Plus](#fitting-an-esp32-c6-thing-plus) |
 | Humidity/temp | Sensirion SHT45 breakout (Qwiic/STEMMA QT) | In outlet air, after the valves |
 | Pack/case temp | 3× DS18B20 (probe style) | Shared 1-wire bus, 5.1 kΩ pullup, 125 °C max |
 | Display | 1.54" IPS 240×240, ST7789 | 4-wire SPI, no MISO needed |
@@ -45,6 +45,11 @@ Datasheets for these parts, with sources and revisions, are in
 
 ## Board pinout used
 
+The GPIO numbers in this document are the ESP32-S2 board's. The wiring is
+by header position and is the same for the ESP32-C6 board, whose numbers
+are in the table under
+[Fitting an ESP32-C6 Thing Plus](#fitting-an-esp32-c6-thing-plus).
+
 From SparkFun's Eagle schematic (J4 = 16-pin, J2 = 12-pin); pin-by-pin
 tables and sources in [pinout-verification.md](pinout-verification.md).
 
@@ -73,6 +78,67 @@ On-board blue LED: GPIO13 via 1 kΩ, active high (lights with heater A).
 Avoid: GPIO0 (boot button), GPIO19/20 (USB D-/D+), 45/46 (strapping, back
 pads only). GPIO18 has an optional pullup (solder jumper, open by default).
 GPIO33–37 are free on this quad-SPI module.
+
+## Fitting an ESP32-C6 Thing Plus
+
+The SparkFun Thing Plus ESP32-C6 (DEV-22924) goes in the same two sockets
+as the S2 board, with no change to either protoboard. It runs its own
+firmware image (`esphome/desiccant-dryer-c6.yaml`); the published manifest
+carries both images and each board takes its own. The source and the
+reasoning for every line here are in
+[pinout-verification.md](pinout-verification.md#thing-plus-esp32-c6-dev-22924).
+None of it has been run on a C6 yet.
+
+Before the board goes in a socket:
+
+1. **Cut jumpers ALRT and SD_DET** on the back of the C6 board (a knife
+   through the trace between the two pads; a solder blob restores it).
+   ALRT ties valve A's pin to the battery gauge's alert output. SD_DET ties
+   heater B's pin to the card-detect switch.
+2. **Check both cuts with a meter, board unpowered:** no continuity across
+   either jumper's two pads. For ALRT there is a second reading: 12-pin 6
+   to 3V3 reads about 100 kΩ before the cut and open after.
+3. **Leave the µSD slot empty** and tape over it. The slot shares the
+   display's SPI lines, the 1-wire bus and heater A's line.
+4. Leave the other jumpers (LP, I2C, RGB, CHG, PWR, SHLD, MEAS) as
+   delivered, and solder the headers on as for the S2.
+5. **Flash it before seating it**, over USB-C, from the published manifest
+   (docs/releasing.md). Seated, the fan's gate pulldown holds the chip's
+   GPIO8 boot strap low, and download mode with GPIO8 low is not a valid
+   boot mode for the C6. The JP-USB rule is the same as for the S2: never
+   a USB cable and the buck's 5 V together.
+
+The same header positions, with each board's GPIO:
+
+| Position | Function | S2 GPIO | C6 GPIO |
+|---|---|---|---|
+| 16-pin 5 | display backlight | 17 | 0 |
+| 16-pin 8 | display RST | 9 | 3 |
+| 16-pin 9 | display DC | 7 | 4 |
+| 16-pin 10 | display CS | 5 | 5 |
+| 16-pin 11 | SPI clock | 36 | 19 |
+| 16-pin 12 | SPI data | 35 | 20 |
+| 16-pin 13 | 1-wire | 37 | 21 |
+| 12-pin 4 | heater A | 13 | 18 |
+| 12-pin 5 | heater B | 12 | 22 |
+| 12-pin 6 | valve A | 11 | 11 |
+| 12-pin 7 | valve B | 10 | 10 |
+| 12-pin 8 | case fan | 8 | 8 |
+| 12-pin 11 / 12, Qwiic | I2C SCL / SDA | 2 / 1 | 7 / 6 |
+
+Differences that show up in use:
+
+- The C6 board's 12-pin silkscreen reads GPIO0 to GPIO6. Those are header
+  labels, not the chip's GPIO numbers.
+- No LED lights with heater A: the S2's blue LED on GPIO13 has no
+  counterpart.
+- The USB port is the chip's own (`/dev/cu.usbmodem*` on macOS), not a
+  CP2102.
+- RESET is pulled up by 100 kΩ where the S2 has 10 kΩ, so the pin
+  tolerates a tenth of the leakage. Keep flux off that end of the socket.
+- Four positions the wiring leaves empty must stay empty, because the C6
+  gives them a job: 16-pin 16 (BOOT), 16-pin 15 (UART0 TX), 12-pin 10
+  (a boot strap) and 12-pin 9 (the RGB LED).
 
 ## Driver stages
 
@@ -121,6 +187,10 @@ toward you, legs down: G D S. Tab is tied to drain.
 
 ![Breadboard layout](breadboard.svg)
 
+GPIO labels in the drawing are the ESP32-S2 board's. The wiring is by
+header position and is the same for the ESP32-C6 board
+([table](#fitting-an-esp32-c6-thing-plus)).
+
 The ESP board in this picture is drawn from its solder side; component side
 up with USB-C at the left, the 12-pin row is on top.
 
@@ -150,6 +220,10 @@ up with USB-C at the left, the 12-pin row is on top.
 ## Protoboard layout (proposal)
 
 ![Protoboard layout](board-layout.svg)
+
+GPIO labels in the drawing are the ESP32-S2 board's. The wiring is by
+header position and is the same for the ESP32-C6 board
+([table](#fitting-an-esp32-c6-thing-plus)).
 
 Two boards, split at the mains boundary rather than by voltage: a 90 × 70 mm
 logic + 24 V board (ESP socketed, buck, three MOSFET channels, 1-wire block,

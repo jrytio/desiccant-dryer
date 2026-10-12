@@ -31,6 +31,10 @@ is the ESP's own reset (CHIP_PU; silkscreen RST, RESET on the back):
 pulled low, it turns the whole 3.3 V rail off. 16-pin #8 "RES" is the
 display's reset on GPIO9, not the ESP's.
 
+The numbers in the map are the ESP32-S2 board's GPIOs. The checks on this
+page go by socket position and hold for the ESP32-C6 board too; its
+numbers are in [hardware.md](hardware.md#fitting-an-esp32-c6-thing-plus).
+
 ## 1. Shorts
 
 Beep mode. **Nothing here should beep.** The 100 µF caps may chirp while
@@ -41,6 +45,7 @@ they charge, then the reading climbs; a steady beep is a short.
 - [ ] 3V3 (16-pin #2) and GND (16-pin #4): open
 - [ ] Neighbouring 12-pin positions 13 / 12 / 11 / 10 / 8 to each other: open
 - [ ] BAT (12-pin #1) to anything: open
+- [ ] 16-pin #15 and #16, 12-pin #9 and #10, each to GND, 3V3, the 5 V bus and its neighbours: open. Nothing is wired to these four; on an ESP32-C6 board they are UART0 TX, the BOOT strap, the RGB LED's data and a boot strap
 
 ## 2. Output channels
 
