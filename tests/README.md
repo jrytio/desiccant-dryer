@@ -27,6 +27,11 @@ Both exit non-zero if a `green` case fails or a `red` case passes: a
 passing `red` case means the gap closed and the case must be marked
 `green` in the same change.
 
+`tests/test_pinmap.py` holds `esphome/packages/board-*.yaml` against
+`hardware/dryer_board/pinmap.py` (the PCB's header-position wiring); it runs in
+the `lint-config` job in `.github/workflows/build.yml`, not in the hardware suite.
+It is plain python3 with no PyYAML: `python3 tests/test_pinmap.py`.
+
 Add a case by copying an existing file, changing `id`, `covers`, `status`
 and the steps. Entity names are the Home Assistant friendly names exactly
 as `esphome/packages/base.yaml` and `hw-virtual.yaml` declare them.
