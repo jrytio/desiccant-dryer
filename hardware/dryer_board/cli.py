@@ -31,6 +31,14 @@ def cmd_generate(_args):
     return 0
 COMMANDS["generate"] = cmd_generate
 
+def cmd_route(args):
+    from . import route, circuit
+    pcb = os.path.join(kicad_env.PROJECT_DIR, circuit.PROJECT + ".kicad_pcb")
+    passes = int(args[0]) if args else 50
+    print("tracks:", route.route(pcb, passes))
+    return 0
+COMMANDS["route"] = cmd_route
+
 def main(argv):
     if len(argv) < 2 or argv[1] not in COMMANDS:
         print("usage: python -m dryer_board <%s>" % "|".join(sorted(COMMANDS)))

@@ -5,7 +5,7 @@ Generated from `dryer_board/` (see `docs/superpowers/specs/2026-10-14-pcb-design
     scripts/hardware.sh env       # where KiCad was found
     scripts/hardware.sh test      # unit tests (KiCad's Python)
     scripts/hardware.sh generate  # schematic, project, board (keeps existing tracks)
-    scripts/hardware.sh route     # Freerouting in Docker, imports the result
+    scripts/hardware.sh route [passes]  # Freerouting 2.5.0 in Docker (default 50), imports the result; minutes, not deterministic
     scripts/hardware.sh check     # committed files match the model; ERC; DRC
     scripts/hardware.sh export    # fab files to hardware/out/, renders to docs/hardware/
 
