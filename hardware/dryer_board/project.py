@@ -13,6 +13,10 @@ from . import circuit
 # side; it is at mains potential, so they exclude it and mains copper passes it at the MAINS
 # in-class clearance. An M3 head or washer bears on the area round each mounting hole, so
 # mains copper keeps 6 mm from every non-plated hole (spec, "Stackup and fab").
+# The MAINS netclass clearance (1 mm) covers L to N; the L-side nets (L_IN, L_FUSED, L_SW_A,
+# L_SW_B) keep 1.6 mm from each other: a bridge between two of them bypasses the fuse or turns
+# a heater on with its relay open, so they get more margin than the netclass gives.
+# The net name is A.NetName: A.Net != 'N' parses in 10.0.6 but does not exclude N.
 RULES = """(version 1)
 (rule "mains track width"
   (condition "A.NetClass == 'MAINS'")
@@ -23,6 +27,9 @@ RULES = """(version 1)
 (rule "mains to selv"
   (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
   (constraint clearance (min 6mm)))
+(rule "mains L to L"
+  (condition "A.NetClass == 'MAINS' && B.NetClass == 'MAINS' && A.NetName != 'N' && B.NetName != 'N'")
+  (constraint clearance (min 1.6mm)))
 (rule "mains to selv at relay pads"
   (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads') && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
   (constraint clearance (min 3.5mm)))

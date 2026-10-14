@@ -62,17 +62,24 @@ PLACE = {
 #   ends at x 69.5 (SELV_POUR), so mains copper edges stay at x >= 75.5: a 1.5 mm track's
 #   centre at x >= 76.25, F1's 3 mm pad 1 centre at x >= 77.0 (it sits at 77.3);
 # - 6 mm from the M3 holes (H2 at (106, 4): nothing mains within 8.35 mm of its centre);
-# - 1 mm between mains nets (the NC pads are mains), at least 1.5 mm from L to N copper.
+# - 1 mm between mains nets (the NC pads are mains), at least 1.5 mm from L to N copper and
+#   1.8 mm between the L-side nets (project.RULES holds them to 1.6 mm). The L_FUSED stub to
+#   J_MAINS pin 7 runs at y 32.3, 2.0 mm clear of K1's NO pad (L_SW_A), and jogs up onto the pad;
+# - the relay_pads relaxation (3.5 mm) applies to a whole segment if any of it touches a relay
+#   area (insideArea tests the item, not the overlapping part), so every segment that would cross
+#   an area edge is split there: the x 85 spines at y 11/33/49 (the middle piece's 0.75 mm end
+#   caps stay outside both areas, y 12-32 and 50-70), the L_FUSED diagonal at (87, 12), and the
+#   L_IN feed and the L_FUSED stub at x 87, so no mains segment outside an area is relaxed.
 # The spine at x 85 runs between the coil pads (x <= 81.7 + 1.75) and the NC/NO pads: L_IN
 # on F.Cu, L_FUSED on B.Cu. N links all four N pins on the right of J_MAINS; the switched
 # lines reach pins 3 and 5 from the left. F1 (XFCN PTF-76-B) has its pins at x 77.3 and 92.3 on
 # y 7, where the L_IN stub and the L_FUSED spine start.
 MAINS_TRACKS = [
     ("L_IN", "F.Cu", [(82, 7), (77.3, 7)]),
-    ("L_IN", "F.Cu", [(82, 7), (85, 10), (85, 62), (99.5, 62)]),
-    ("L_FUSED", "B.Cu", [(92.3, 7), (85, 14), (85, 60), (76, 60)]),
+    ("L_IN", "F.Cu", [(82, 7), (85, 10), (85, 11), (85, 33), (85, 49), (85, 62), (87, 62), (99.5, 62)]),
+    ("L_FUSED", "B.Cu", [(92.3, 7), (87, 12), (85, 14), (85, 33), (85, 49), (85, 60), (76, 60)]),
     ("L_FUSED", "B.Cu", [(76, 22), (85, 22)]),
-    ("L_FUSED", "B.Cu", [(85, 31.52), (99.5, 31.52)]),
+    ("L_FUSED", "B.Cu", [(85, 32.3), (87, 32.3), (98.72, 32.3), (99.5, 31.52)]),
     ("L_SW_A", "F.Cu", [(90.15, 28.05), (93.5, 31.4), (93.5, 48.5), (96.84, 51.84), (99.5, 51.84)]),
     ("L_SW_B", "B.Cu", [(90.15, 66.05), (95, 61.2), (95, 41.68), (99.5, 41.68)]),
     ("N", "F.Cu", [(99.5, 26.44), (103.6, 26.44), (103.6, 56.92), (99.5, 56.92)]),

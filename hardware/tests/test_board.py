@@ -98,6 +98,27 @@ class Board(unittest.TestCase):
             self.assertEqual(t.GetWidth(), pcbnew.FromMM(1.5), t.GetNetname())
 
 
+    def test_mains_segments_do_not_carry_the_relay_relaxation_out_of_the_areas(self):
+        # insideArea relaxes a whole segment to 3.5 mm if any of it touches a relay area, so a
+        # segment that touches one must stay within a cap's reach of it (placement says why).
+        half = circuit.NETCLASSES["MAINS"][0] / 2
+        def touches(p, q, r):
+            x1, y1, x2, y2 = r
+            for i in range(101):
+                x, y = p[0] + (q[0] - p[0]) * i / 100, p[1] + (q[1] - p[1]) * i / 100
+                dx, dy = max(x1 - x, 0, x - x2), max(y1 - y, 0, y - y2)
+                if dx * dx + dy * dy < half * half:
+                    return True
+            return False
+        for net, layer, pts in placement.MAINS_TRACKS:
+            for p, q in zip(pts, pts[1:]):
+                for r in placement.RELAY_AREAS:
+                    if touches(p, q, r):
+                        g = 2 * half + 0.5
+                        for x, y in (p, q):
+                            self.assertTrue(r[0] - g <= x <= r[2] + g and r[1] - g <= y <= r[3] + g,
+                                            "%s %s segment %s-%s runs out of relay area %s" % (net, layer, p, q, r))
+
 class DanglingVias(unittest.TestCase):
     def _track(self, b, net, layer, x1, x2):
         t = pcbnew.PCB_TRACK(b)

@@ -1,6 +1,6 @@
 import os, json, tempfile, unittest
 import pcbnew
-from dryer_board import project, circuit, kicad_env, libs
+from dryer_board import project, circuit, kicad_env, libs, board, placement
 
 
 def _two_track_board(path, gap_mm):
@@ -87,6 +87,65 @@ def _mains_by_relay_board(path, gap_mm):
     _relay_board(path, gap_mm, "L_SW_A", 1.5)
 
 
+def _track_board(path, tracks, areas=(), size=(110, 85)):
+    """A bare board: tracks are (net, (x1, y1), (x2, y2), width), all on F.Cu; areas are
+    relay_pads rule areas made the way board.build makes them."""
+    b = pcbnew.BOARD()
+    edge = pcbnew.PCB_SHAPE(b)
+    edge.SetShape(pcbnew.SHAPE_T_RECT)
+    edge.SetStart(pcbnew.VECTOR2I_MM(0, 0))
+    edge.SetEnd(pcbnew.VECTOR2I_MM(*size))
+    edge.SetLayer(pcbnew.Edge_Cuts)
+    edge.SetWidth(pcbnew.FromMM(0.1))
+    b.Add(edge)
+    for rect in areas:
+        board._rule_area(b, "relay_pads", rect, fills=False)
+    nets = {}
+    for name, (x1, y1), (x2, y2), w in tracks:
+        if name not in nets:
+            nets[name] = pcbnew.NETINFO_ITEM(b, name)
+            b.Add(nets[name])
+        t = pcbnew.PCB_TRACK(b)
+        t.SetStart(pcbnew.VECTOR2I_MM(x1, y1))
+        t.SetEnd(pcbnew.VECTOR2I_MM(x2, y2))
+        t.SetWidth(pcbnew.FromMM(w))
+        t.SetLayer(pcbnew.F_Cu)
+        t.SetNet(nets[name])
+        b.Add(t)
+    pcbnew.SaveBoard(path, b)
+
+
+def _spine_board(y1, y2):
+    """The x 85 mains spine from y1 to y2 between the two real relay areas, and a GND track
+    gap_mm (copper edge to edge) to its left at y 41, level with the gap between the areas."""
+    def make(path, gap_mm):
+        x = 85 - 0.75 - gap_mm - 0.15
+        _track_board(path, [("L_FUSED", (85, y1), (85, y2), 1.5), ("GND", (x, 39), (x, 43), 0.3)],
+                     placement.RELAY_AREAS)
+    return make
+
+
+def _in_relay_area_board(path, gap_mm):
+    """A mains track and a GND track gap_mm apart, both inside a relay_pads area."""
+    _track_board(path, [("L_FUSED", (70, 16), (82, 16), 1.5), ("GND", (70, 16 + 0.75 + gap_mm + 0.15), (82, 16 + 0.75 + gap_mm + 0.15), 0.3)],
+                 [placement.RELAY_AREAS[0]])
+
+
+def _l_to_l_board(other):
+    def make(path, gap_mm):
+        _track_board(path, [("L_IN", (10, 10), (50, 10), 1.5), (other, (10, 10 + 1.5 + gap_mm), (50, 10 + 1.5 + gap_mm), 1.5)],
+                     size=(60, 40))
+    return make
+
+
+def _narrow_mains_board(path, width):
+    _track_board(path, [("L_IN", (10, 10), (50, 10), width)], size=(60, 40))
+
+
+def _mains_near_edge_board(path, gap_mm):
+    _track_board(path, [("L_IN", (10, gap_mm + 0.75), (50, gap_mm + 0.75), 1.5)], size=(60, 40))
+
+
 class Project(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.mkdtemp()
@@ -130,6 +189,45 @@ class Project(unittest.TestCase):
     def test_green_mains_track_clear_of_mounting_hole_passes(self):
         text = self._drc(7.0, _hole_board)
         self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_red_mains_between_relay_areas_keeps_6mm(self):
+        # The x 85 spine's middle piece clears both relay areas, so the 6 mm rule holds on it.
+        text = self._drc(4.0, _spine_board(33, 49))
+        self.assertIn("rule 'mains to selv'", text, text)
+
+    def test_mains_segment_touching_a_relay_area_is_relaxed_along_its_length(self):
+        # Why placement splits the spines at the area edges: a segment that reaches into a
+        # relay area gets 3.5 mm everywhere, here 4 mm at y 41, well outside both areas.
+        text = self._drc(4.0, _spine_board(31, 51))
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_red_gap_inside_relay_area_fails_the_relaxed_rule(self):
+        text = self._drc(3.0, _in_relay_area_board)
+        self.assertIn("rule 'mains to selv at relay pads'", text, text)
+
+    def test_green_gap_inside_relay_area_passes(self):
+        text = self._drc(4.0, _in_relay_area_board)
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_red_l_side_nets_closer_than_1_6mm_fail(self):
+        text = self._drc(1.2, _l_to_l_board("L_FUSED"))
+        self.assertIn("rule 'mains L to L'", text, text)
+
+    def test_green_l_side_nets_2mm_apart_pass(self):
+        text = self._drc(2.0, _l_to_l_board("L_FUSED"))
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_l_to_n_keeps_the_netclass_clearance(self):
+        text = self._drc(1.2, _l_to_l_board("N"))
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_red_narrow_mains_track_fails(self):
+        text = self._drc(1.0, _narrow_mains_board)
+        self.assertIn("rule 'mains track width'", text, text)
+
+    def test_red_mains_track_near_board_edge_fails(self):
+        text = self._drc(0.5, _mains_near_edge_board)
+        self.assertIn("rule 'mains to board edge'", text, text)
 
     def test_project_json(self):
         with open(os.path.join(self.dir, circuit.PROJECT + ".kicad_pro"), encoding="utf-8") as f:
