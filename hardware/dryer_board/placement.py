@@ -11,6 +11,12 @@ SLOT_SEGMENTS = [(3, 14), (18, 26), (30, 52), (56, 64), (68, 82)]
 MAINS_ZONE = (72.5, 0.0, 110.0, 85.0)
 ANTENNA_KEEPOUT = (5.0, 16.0, 36.0, 34.5)
 RELAY_AREAS = [(66.0, 12.0, 86.0, 32.0), (66.0, 50.0, 86.0, 70.0)]
+# No tracks or vias under U1's body (TRACO TSR-1 datasheet: avoid routing under the
+# converter). U1's courtyard in x, from its top down to y 29.5, 0.5 mm short of the pad row's
+# centre line: with the area down to y 30 the router could not reach pads 1 and 3 (nine
+# connections left unrouted). Pads and pours stay allowed. route.py's router copy keeps it as
+# a keepout.
+U1_KEEPOUT = (40.4, 24.1, 52.7, 29.5)
 SELV_POUR = (2.0, 2.0, 69.5, 83.0)
 
 # ESP sockets: pin 1 at the USB end (y = 88 is the USB-C face, 3 mm past the edge).
@@ -31,7 +37,9 @@ PLACE = {
     "R18": (40, 21.5, 0), "C5": (44, 21.5, 0), "C6": (48, 21.5, 0),
     # 5 V block
     "U1": (44, 30, 0), "C2": (38.5, 30, 90), "C3": (55, 30, 90), "C4": (62, 29, 0),
-    "R17": (40, 36, 0), "D13": (45, 36, 0),
+    # R17 sits 0.5 mm below D13: at y 36 the router, kept out from under U1, necks a GND
+    # track to 0.18 mm (under the 0.2 mm minimum) to pass its pad.
+    "R17": (40, 36.5, 0), "D13": (45, 36, 0),
     "D14": (52, 35.5, 0), "SW1": (62, 37, 0),
     # test points. TP2 sits 0.1 mm left of the 3.5 mm grid: at x 37.5 the routed board trips a
     # KiCad 10 DRC false positive (GND fill reported on TP2 and its via with 0 mm clearance, while

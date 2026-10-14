@@ -155,6 +155,7 @@ def build(pcb_path, fresh=False):
     _rule_area(b, "mains_nopour", placement.MAINS_ZONE, fills=True)
     for r in placement.RELAY_AREAS:
         _rule_area(b, "relay_pads", r, fills=False)
+    _rule_area(b, "u1_keepout", placement.U1_KEEPOUT, fills=False, tracks=True, vias=True)
     gnd = _net(b, "GND")
     _pour(b, pcbnew.F_Cu, gnd, placement.SELV_POUR)
     _pour(b, pcbnew.B_Cu, gnd, placement.SELV_POUR)

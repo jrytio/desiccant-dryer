@@ -1,6 +1,6 @@
 # hardware/tests/test_routed_board.py
 """The gate on the committed, routed board: DRC clean, fully routed, nothing in the antenna
-keep-out, wide mains tracks, bare relay NC pads. CI never routes; these run on the file."""
+keep-out or under U1, wide mains tracks, bare relay NC pads. CI never routes; these run on the file."""
 import os, unittest
 import pcbnew
 from dryer_board import board, circuit, placement, kicad_env
@@ -36,6 +36,23 @@ class RoutedBoard(unittest.TestCase):
                     continue
                 fill = z.GetFilledPolysList(layer)
                 self.assertFalse(fill.BBox().Intersects(box) and fill.Collide(box.Centre()), "pour inside the antenna keep-out")
+
+    def test_nothing_routed_under_u1(self):
+        # Exact copper outline against the rectangle, on both layers: a track that only ends at
+        # a pad's centre from below still reaches up into it by half its width.
+        x1, y1, x2, y2 = placement.U1_KEEPOUT
+        area = pcbnew.SHAPE_POLY_SET(); area.NewOutline()
+        for x, y in ((x1, y1), (x2, y1), (x2, y2), (x1, y2)):
+            area.Append(pcbnew.VECTOR2I_MM(x, y))
+        for t in self.b.GetTracks():
+            for layer in (pcbnew.F_Cu, pcbnew.B_Cu):
+                if not t.IsOnLayer(layer):
+                    continue
+                poly = pcbnew.SHAPE_POLY_SET()
+                t.TransformShapeToPolygon(poly, layer, 0, pcbnew.FromMM(0.005), pcbnew.ERROR_INSIDE)
+                poly.BooleanIntersection(area)
+                self.assertEqual(poly.OutlineCount(), 0, "%s %s under U1 at %s on %s" % (
+                    t.GetClass(), t.GetNetname(), t.GetStart(), self.b.GetLayerName(layer)))
 
     def test_mains_tracks_are_wide(self):
         for t in self.b.GetTracks():

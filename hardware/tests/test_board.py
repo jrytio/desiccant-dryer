@@ -37,7 +37,7 @@ class Board(unittest.TestCase):
         self.assertAlmostEqual(bb.GetWidth() / 1e6, placement.BOARD_W, delta=0.2)
         self.assertAlmostEqual(bb.GetHeight() / 1e6, placement.BOARD_H, delta=0.2)
         names = sorted(z.GetZoneName() for z in self.b.Zones() if z.GetIsRuleArea())
-        self.assertEqual(names, ["antenna_keepout", "mains_nopour", "relay_pads", "relay_pads"])
+        self.assertEqual(names, ["antenna_keepout", "mains_nopour", "relay_pads", "relay_pads", "u1_keepout"])
         pours = [z for z in self.b.Zones() if not z.GetIsRuleArea()]
         self.assertEqual(sorted(z.GetNetname() for z in pours), ["GND", "GND"])
 

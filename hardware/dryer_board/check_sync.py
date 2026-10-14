@@ -97,7 +97,7 @@ def board_diffs(pcb_path):
     for ref in have:
         diffs.append("%s on the board but not in the model" % ref)
     # The rule areas board.build creates, by name.
-    want_names = sorted(["antenna_keepout", "mains_nopour"] + ["relay_pads"] * len(placement.RELAY_AREAS))
+    want_names = sorted(["antenna_keepout", "mains_nopour", "u1_keepout"] + ["relay_pads"] * len(placement.RELAY_AREAS))
     names = sorted(z.GetZoneName() for z in b.Zones() if z.GetIsRuleArea())
     if names != want_names:
         diffs.append("rule areas %s, model %s" % (names, want_names))
