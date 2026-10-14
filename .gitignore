@@ -10,3 +10,6 @@ esphome/.esphome/
 esphome/.gitignore
 __pycache__/
 hardware/out/
+# KiCad local view state and the DRC report board.drc_report writes beside the board.
+hardware/dryer-controller/*.kicad_prl
+hardware/dryer-controller/*.drc.rpt

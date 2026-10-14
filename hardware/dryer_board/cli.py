@@ -24,6 +24,10 @@ def cmd_generate(_args):
     project.write(kicad_env.PROJECT_DIR)
     schematic.write_lib_tables(kicad_env.PROJECT_DIR)
     print("wrote", schematic.write(kicad_env.PROJECT_DIR))
+    from . import board, circuit
+    pcb = os.path.join(kicad_env.PROJECT_DIR, circuit.PROJECT + ".kicad_pcb")
+    board.build(pcb, fresh="--fresh" in _args)
+    print("wrote", pcb)
     return 0
 COMMANDS["generate"] = cmd_generate
 
