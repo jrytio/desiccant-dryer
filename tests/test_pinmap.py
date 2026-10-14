@@ -11,7 +11,8 @@ from dryer_board import pinmap  # noqa: E402
 def substitutions(path):
     """pin_* -> GPIO number from a board package. Handles `pin_x: GPIO8` and the nested
     `pin_x:\n    number: GPIO8` form."""
-    text = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
     out = {}
     for m in re.finditer(r"^  (pin_\w+):(?:[ \t]+GPIO(\d+)|\s*\n\s+number:\s*GPIO(\d+))", text, re.M):
         out[m.group(1)] = int(m.group(2) or m.group(3))
