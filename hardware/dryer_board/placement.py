@@ -23,7 +23,7 @@ PLACE = {
     "H1": (4, 4, 0), "H2": (106, 4, 0), "H3": (4, 81, 0), "H4": (106, 81, 0),
     # mains zone
     "K1": (76, 22, 0), "K2": (76, 60, 0),
-    "F1": (77, 7, 0),
+    "F1": (77.3, 7, 0),
     "J_MAINS": (99.5, 62, 90),
     # top strip: sensors, display
     "J_SENS": (37, 8, 0),
@@ -57,18 +57,20 @@ PLACE = {
 # (net, layer, polyline). Width is the MAINS netclass's 1.5 mm. Hand-placed because the
 # custom rules in project.RULES are not visible to the router. Distances held:
 # - 3.5 mm from the relay coil pads and the SELV coil corridors at y 16.05/28.05/54.05/66.05
-#   (5.5 mm centre to a coil pad), 6 mm from SELV left of the slot (x >= 76.25 outside the
-#   relay areas);
+#   (5.5 mm centre to a coil pad);
+# - 6 mm, copper edge to copper edge, from SELV copper outside the relay areas. The SELV pour
+#   ends at x 69.5 (SELV_POUR), so mains copper edges stay at x >= 75.5: a 1.5 mm track's
+#   centre at x >= 76.25, F1's 3 mm pad 1 centre at x >= 77.0 (it sits at 77.3);
 # - 6 mm from the M3 holes (H2 at (106, 4): nothing mains within 8.35 mm of its centre);
 # - 1 mm between mains nets (the NC pads are mains), at least 1.5 mm from L to N copper.
 # The spine at x 85 runs between the coil pads (x <= 81.7 + 1.75) and the NC/NO pads: L_IN
 # on F.Cu, L_FUSED on B.Cu. N links all four N pins on the right of J_MAINS; the switched
-# lines reach pins 3 and 5 from the left. F1 (XFCN PTF-76-B) has its pins at x 77 and 92 on
+# lines reach pins 3 and 5 from the left. F1 (XFCN PTF-76-B) has its pins at x 77.3 and 92.3 on
 # y 7, where the L_IN stub and the L_FUSED spine start.
 MAINS_TRACKS = [
-    ("L_IN", "F.Cu", [(82, 7), (77, 7)]),
+    ("L_IN", "F.Cu", [(82, 7), (77.3, 7)]),
     ("L_IN", "F.Cu", [(82, 7), (85, 10), (85, 62), (99.5, 62)]),
-    ("L_FUSED", "B.Cu", [(92, 7), (85, 14), (85, 60), (76, 60)]),
+    ("L_FUSED", "B.Cu", [(92.3, 7), (85, 14), (85, 60), (76, 60)]),
     ("L_FUSED", "B.Cu", [(76, 22), (85, 22)]),
     ("L_FUSED", "B.Cu", [(85, 31.52), (99.5, 31.52)]),
     ("L_SW_A", "F.Cu", [(90.15, 28.05), (93.5, 31.4), (93.5, 48.5), (96.84, 51.84), (99.5, 51.84)]),

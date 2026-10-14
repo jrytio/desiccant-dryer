@@ -108,7 +108,7 @@ PARTS: List[Part] = [
 
     # 24 V input: plug -> PPTC -> Schottky -> bulk -> LED
     Part("J_24V", "24 V in", "Connector_Generic:Conn_01x02",
-         "Connector_Phoenix_MSTB:PhoenixContact_MSTBVA_2,5_2-G-5,08_1x02_P5.08mm_Vertical", {"1": "+24V_RAW", "2": "GND"}, "C395734",
+         "dryer:PhoenixContact_MSTBVA_2,5_2-G-5,08_1x02_P5.08mm_Vertical_Drill1.7mm", {"1": "+24V_RAW", "2": "GND"}, "C395734",
          description="24 V supply, 2-pin 5.08 mm pluggable header; DORABO DB2EVC-5.08-2P-GN, 300 V 15 A (UL); "
                      "plug DB2EK-5.08-2P-GN-S C395732, loose; JLCPCB extended"),
     Part("F2", "PPTC 1.1 A 30 V", "Device:Polyfuse", "Fuse:Fuse_1812_4532Metric", {"1": "+24V_RAW", "2": "+24V_F"}, "C142747",
@@ -174,19 +174,19 @@ PARTS: List[Part] = [
          description="covered 5 x 20 mm holder XFCN PTF-76-B, 250 VAC 20 A (UL), pins 15 mm apart; the fuse itself "
                      "(T 3.15 A) is fitted by hand; JLCPCB extended"),
     Part("J_MAINS", "120 VAC", "Connector_Generic:Conn_01x08",
-         "Connector_Phoenix_MSTB:PhoenixContact_MSTBA_2,5_8-G-5,08_1x08_P5.08mm_Horizontal",
+         "dryer:PhoenixContact_MSTBA_2,5_8-G-5,08_1x08_P5.08mm_Horizontal_Drill1.7mm",
          {"1": "L_IN", "2": "N", "3": "L_SW_A", "4": "N", "5": "L_SW_B", "6": "N", "7": "L_FUSED", "8": "N"}, "C395786",
          description="L in, N in, heater A L-sw/N, heater B L-sw/N, PSU L (fused)/N; DORABO DB2ERC-5.08-8P-GN, "
                      "right angle, 300 V 15 A (UL); plug DB2EK-5.08-8P-GN-S C395791, loose; JLCPCB extended"),
 
     # 24 V loads and sensors
     Part("J_LOADS", "valves + fan", "Connector_Generic:Conn_01x06",
-         "Connector_Phoenix_MSTB:PhoenixContact_MSTBVA_2,5_6-G-5,08_1x06_P5.08mm_Vertical",
+         "dryer:PhoenixContact_MSTBVA_2,5_6-G-5,08_1x06_P5.08mm_Vertical_Drill1.7mm",
          {"1": "+24V", "2": "SW_VA", "3": "+24V", "4": "SW_VB", "5": "+24V", "6": "SW_FAN"}, "C395768",
          description="valve A, valve B, fan: 24+ and SW each; DORABO DB2EVC-5.08-6P-GN, 300 V 15 A (UL); "
                      "plug DB2EK-5.08-6P-GN-S C395774, loose; JLCPCB extended"),
     Part("J_SENS", "DS18B20 x3", "Connector_Generic:Conn_01x09",
-         "Connector_Phoenix_MC:PhoenixContact_MCV_1,5_9-G-3.5_1x09_P3.50mm_Vertical",
+         "dryer:PhoenixContact_MCV_1,5_9-G-3.5_1x09_P3.50mm_Vertical_Drill1.4mm",
          {"1": "+3V3", "2": "OW_DQ", "3": "GND", "4": "+3V3", "5": "OW_DQ", "6": "GND", "7": "+3V3", "8": "OW_DQ", "9": "GND"},
          "C430559",
          description="three 3V3/DQ/GND triples, 3.5 mm pluggable; DORABO DB2EVC-3.5-9P-GN; "
