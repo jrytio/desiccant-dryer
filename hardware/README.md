@@ -20,8 +20,16 @@ Needs KiCad 10 (`brew install --cask kicad`) and Docker for `route`. No Java.
 3. Run JLCPCB's DFM analysis on the uploaded gerbers before paying.
 4. In JLCPCB's placement preview, check the rotation of the SOT-23 and SMA parts (their footprint zero differs from JLCPCB's) and correct any that are off.
 5. The minimum order is five boards.
-6. The Songle relay is an extended part, so JLCPCB charges a per-part loading fee for it.
-7. The mating plugs for the four pluggable headers are ordered separately; their part numbers are filled in by a later task.
+6. Every part carries its LCSC number in the BOM (`hardware/dryer_board/circuit.py`, each part's description says basic or extended). JLCPCB charges a per-part loading fee for each extended part: the relays, the MOSFETs, the electrolytics, the PPTC, the headers and sockets, the switch and the fuse holder.
+7. U1 (the 5 V module) is hand-fitted: MornSun's K7805-1000R3 is not stocked at LCSC/JLCPCB or Mouser. It is in the BOM with no LCSC number, so deselect it in JLCPCB's BOM check. Buy the TRACO TSR 1-2450 (Mouser 495-TSR-1-2450), the part the footprint is drawn for, with the same pinout, or a MornSun K7805-1000R3 from another distributor. The 5 × 20 mm fuse (T 3.15 A) for F1's holder is also bought separately.
+8. The mating plugs for the four pluggable headers are not on the board. Order them as loose parts (LCSC numbers, DORABO screw plugs, green):
+
+   | Header | Plug | LCSC |
+   |---|---|---|
+   | J_MAINS (8-pin 5.08 mm) | DB2EK-5.08-8P-GN-S | C395791 |
+   | J_LOADS (6-pin 5.08 mm) | DB2EK-5.08-6P-GN-S | C395774 |
+   | J_24V (2-pin 5.08 mm) | DB2EK-5.08-2P-GN-S | C395732 |
+   | J_SENS (9-pin 3.5 mm) | DB2EK-3.5-9P-GN-S | C430561 |
 
 ## CI
 

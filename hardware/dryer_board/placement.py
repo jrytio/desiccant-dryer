@@ -33,8 +33,11 @@ PLACE = {
     "U1": (44, 30, 0), "C2": (38.5, 30, 90), "C3": (55, 30, 90), "C4": (62, 29, 0),
     "R17": (40, 36, 0), "D13": (45, 36, 0),
     "D14": (52, 35.5, 0), "SW1": (62, 37, 0),
-    # test points
-    "TP1": (34, 39.3, 0), "TP2": (37.5, 39.3, 0), "TP3": (41, 39.3, 0), "TP4": (44.5, 39.3, 0),
+    # test points. TP2 sits 0.1 mm left of the 3.5 mm grid: at x 37.5 the routed board trips a
+    # KiCad 10 DRC false positive (GND fill reported on TP2 and its via with 0 mm clearance, while
+    # the saved fill keeps 0.3 mm). 37.4 is the nearest position that routes clean; 37.3 and 37.6 put
+    # LCD_CS across the antenna keep-out bounding-box test, 37.7 trips the same DRC fault.
+    "TP1": (34, 39.3, 0), "TP2": (37.4, 39.3, 0), "TP3": (41, 39.3, 0), "TP4": (44.5, 39.3, 0),
     "TP5": (48, 39.3, 0), "TP6": (51.5, 39.3, 0), "TP7": (55, 39.3, 0), "TP8": (34, 55, 0), "TP9": (34, 58.5, 0),
     # 24 V input
     "J_24V": (38, 47, 0), "F2": (52, 44, 0), "D11": (60, 44, 0), "C1": (54, 51, 0),
@@ -60,11 +63,11 @@ PLACE = {
 # - 1 mm between mains nets (the NC pads are mains), at least 1.5 mm from L to N copper.
 # The spine at x 85 runs between the coil pads (x <= 81.7 + 1.75) and the NC/NO pads: L_IN
 # on F.Cu, L_FUSED on B.Cu. N links all four N pins on the right of J_MAINS; the switched
-# lines reach pins 3 and 5 from the left.
+# lines reach pins 3 and 5 from the left. F1 (XFCN PTF-76-B) has its pins at x 77 and 92 on
+# y 7, where the L_IN stub and the L_FUSED spine start.
 MAINS_TRACKS = [
     ("L_IN", "F.Cu", [(82, 7), (77, 7)]),
     ("L_IN", "F.Cu", [(82, 7), (85, 10), (85, 62), (99.5, 62)]),
-    ("L_FUSED", "F.Cu", [(92, 7), (97, 7)]),
     ("L_FUSED", "B.Cu", [(92, 7), (85, 14), (85, 60), (76, 60)]),
     ("L_FUSED", "B.Cu", [(76, 22), (85, 22)]),
     ("L_FUSED", "B.Cu", [(85, 31.52), (99.5, 31.52)]),

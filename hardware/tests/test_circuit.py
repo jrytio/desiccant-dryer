@@ -112,7 +112,6 @@ class Circuit(unittest.TestCase):
             for ref, _ in nets[n]:
                 self.assertIn(ref, ("J_MAINS", "F1", "K1", "K2"), "%s touches mains net %s" % (ref, n))
 
-    @unittest.expectedFailure
     def test_every_part_has_catalogue_status(self):
         for p in circuit.PARTS:
             if p.symbol.startswith("Mechanical:") or p.symbol.startswith("power:") or p.symbol == "Connector:TestPoint":

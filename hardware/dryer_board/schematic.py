@@ -88,7 +88,15 @@ def write_lib_tables(project_dir):
             f.write('  (lib (name "%s") (type "KiCad") (uri "${KICAD10_FOOTPRINT_DIR}/%s.pretty") (options "") (descr ""))\n' % (lib, lib))
         f.write('  (lib (name "dryer") (type "KiCad") (uri "${KIPRJMOD}/lib/dryer.pretty") (options "") (descr "local footprints"))\n')
         f.write(")\n")
-    os.makedirs(os.path.join(project_dir, "lib", "dryer.pretty"), exist_ok=True)
+    local = os.path.join(project_dir, "lib", "dryer.pretty")
+    os.makedirs(local, exist_ok=True)
+    # A scratch project (the tests) gets a copy of the local footprints, so ERC and DRC
+    # there resolve dryer: footprints the way they do in the committed project.
+    source = os.path.join(kicad_env.PROJECT_DIR, "lib", "dryer.pretty")
+    if os.path.isdir(source) and os.path.realpath(source) != os.path.realpath(local):
+        for name in sorted(os.listdir(source)):
+            if name.endswith(".kicad_mod"):
+                shutil.copy(os.path.join(source, name), os.path.join(local, name))
     # kicad-cli only reads the project-local tables when a project file sits beside the sheet.
     pro = os.path.join(project_dir, circuit.PROJECT + ".kicad_pro")
     if not os.path.exists(pro):
