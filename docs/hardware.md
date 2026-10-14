@@ -235,7 +235,11 @@ positions, so the firmware, the board packages and the pin map are
 unchanged. The mains side is the strip at x ≥ 72.5 mm, behind a 2 mm
 routed slot; the slot has four gaps, one for each relay coil track. Every
 field connection is a pluggable header with its own pitch and pin count,
-so no plug fits another header. JLCPCB fabricates and assembles it, SMD and
+so no plug fits another header, except that a smaller plug of the same
+pitch does enter a larger header: the 6-pin J_LOADS plug fits the 8-pin
+J_MAINS header, so the silkscreen labels and the loom's own labelling are
+the defence between them, and a different pitch for J_LOADS is a rev B
+option. JLCPCB fabricates and assembles it, SMD and
 through-hole, all on the top side. The hand work is seating the ESP,
 soldering the 5 V module U1 (not stocked at LCSC, see the BOM) and fitting
 the T 3.15 A fuse in F1's holder. Nothing in this section has been built yet.
@@ -504,7 +508,7 @@ high end, 5.13 V, keeps the AP2112 input far below its 6.5 V absolute
 maximum. The check is the first-article power-path measurement
 (docs/board-continuity-check.md, PCB section, item 6): TP3 4.9 to 5.1 V
 with the ESP out, and 12-pin position 3 0.2 to 0.4 V below TP3 with
-SW-USB ON. A module reading between 4.87 and 4.9 V is inside its
+SW-USB ON (with the ESP in). A module reading between 4.87 and 4.9 V is inside its
 datasheet but fails that check and is replaced.
 
 ## Protoboard layout (previous build)

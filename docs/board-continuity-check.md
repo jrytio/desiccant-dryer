@@ -27,7 +27,7 @@ hardware.md budget, not measured. The protoboard sections below
 and the socket-position numbering hold for both.
 
 **Before you start:** ESP pulled out of its sockets, 24 V supply off, mains
-unplugged, **F1 holder empty, SW-USB set OFF.** Probe socket positions with a
+unplugged, **F1 holder empty, SW-USB slid toward its OFF legend.** OFF is defined electrically: SW1 pin 2 to pin 3 closed, pin 2 to pin 1 open (item 6 checks this with the meter). Probe socket positions with a
 stiff wire or a spare header pin. Pin numbers are the ones in
 hardware.md "Header pinouts" (J_MAINS 1 to 8, J_LOADS 1 to 6, J_24V 1 = 24V+,
 2 = 0V). The test points: TP1 GND, TP2 3V3, TP3 5 V, TP4 24 V, TP5 to TP9
@@ -45,7 +45,7 @@ a steady beep is a short.
 
 | | From → To | Mode | Expect |
 |---|---|---|---|
-| [ ] | J_24V pin 1 (24V+) → J_24V pin 2 (GND) | beep | open |
+| [ ] | J_24V pin 1 (24V+) → J_24V pin 2 (GND), either probe polarity | beep | open |
 | [ ] | TP3 (5 V) → TP1 (GND) | beep | open |
 | [ ] | TP2 (3V3) → TP1 (GND) | beep | open |
 | [ ] | TP4 (24 V) → TP1 (GND) | beep | open |
@@ -88,8 +88,9 @@ Remove the fuse again before items 4 to 8 unless a step says otherwise.
 | | Check | Expect |
 |---|---|---|
 | [ ] | Each pluggable plug (24 V 2-pin, loads 6-pin, mains 8-pin, sensors 9-pin) is offered to its own header | seats fully |
-| [ ] | The 8-pin mains plug is offered to the 6-pin J_LOADS header, to the 2-pin J_24V and to the 9-pin J_SENS | does not enter |
-| [ ] | The 6-pin loads plug is offered to J_MAINS | does not enter |
+| [ ] | The 8-pin mains plug is offered to the 6-pin J_LOADS header and the 2-pin J_24V header | does not enter |
+| [ ] | The 3.5 mm sensor plug is offered to every other header | fits only J_SENS |
+| [ ] | The display cable is offered to every other header | fits only J_DISP |
 
 ### Item 5: Drivers
 
@@ -105,7 +106,7 @@ transistor pin is too small to hold.
 | [ ] | 12-pin 5 (heater B) → Q2 base (R4/R5 junction) | Ω | ~1 kΩ |
 | [ ] | Q2 base → GND | Ω | ~1 kΩ (R5) |
 | [ ] | Q1 pin 3 (collector) → K1 pad 5; Q2 pin 3 → K2 pad 5 | beep | ~0 Ω |
-| [ ] | TP3 (5 V) → K1 pad 5, and → K2 pad 5, red on TP3 | Ω | coil resistance in parallel with the LED branch; about 70 Ω (SRD-05VDC datasheet nominal, not measured) |
+| [ ] | TP3 (5 V) → K1 pad 5, and → K2 pad 5, red on TP3 | Ω | the coil alone (the LED branch does not conduct at meter voltage); about 70 Ω nominal from the Songle datasheet, not measured |
 | [ ] | 12-pin 6 (valve A) → Q3 gate | Ω | ~100 Ω (R7) |
 | [ ] | 12-pin 7 (valve B) → Q4 gate | Ω | ~100 Ω (R10) |
 | [ ] | 12-pin 8 (fan) → Q5 gate | Ω | ~100 Ω (R13) |
@@ -127,10 +128,9 @@ beep is not.
 
 | | From → To | Mode | Expect |
 |---|---|---|---|
-| [ ] | J_24V pin 1 → D11 anode (D11's pad on the F2 side) | beep | ~0 Ω (F2 is a PPTC, closed when cold) |
-| [ ] | D11 forward: red on J_24V pin 1, black on TP4 | diode | forward only, about 0.2 to 0.4 V; reversed OL |
+| [ ] | D11 forward: red on J_24V pin 1, black on TP4 (through F2, a PPTC, closed when cold) | diode | forward only, about 0.2 to 0.4 V; reversed OL |
 | [ ] | D14 forward: red on TP3, black on SW1 pin 2 | diode | forward only, about 0.2 to 0.4 V; reversed OL |
-| [ ] | SW1 slider each way: SW1 pin 2 (common) → pin 1, and pin 2 → pin 3 | beep | in one slider position pin 2 to pin 1 is closed and pin 2 to pin 3 is open; the other position swaps them. The position with 2 to 1 closed must be the one marked ON on the silkscreen; if the marking is the wrong way round, stop and report it |
+| [ ] | SW1 slider each way: SW1 pin 2 (common) → pin 1, and pin 2 → pin 3 | beep | in one slider position pin 2 to pin 1 is closed and pin 2 to pin 3 is open; the other position swaps them. The position with 2 to 1 closed must be the one toward the ON legend on the silkscreen, and 2 to 3 closed the one toward OFF; if the legend disagrees with the meter, stop |
 | [ ] | Slider OFF: 12-pin 3 → TP3 and → TP1 | Ω, top range | OL on both |
 | [ ] | Slider ON: 12-pin 3 → SW1 pin 2 | beep | closed (pin 3 of SW1 is unconnected) |
 
@@ -148,16 +148,16 @@ on TP1:
 | [ ] | The 5 V module is not hot after a minute | touch | only warm |
 
 Then set **SW-USB ON** and measure 12-pin 3 against TP1: **TP3 minus the
-SS34 drop at that current, 0.2 to 0.4 V below TP3** (hardware.md budget).
-With the ESP out the only load is the meter, so the true drop is at the
-low end or below it; a reading closer to TP3 than 0.2 V is not a fault,
-but more than 0.4 V below TP3 is. Set **SW-USB back OFF**, then turn the 24 V
+SS34 drop at that current.** With the ESP out the only load is the meter,
+so the drop is small: expect 12-pin 3 within 0.4 V of TP3 (more than 0.4 V
+below TP3 is a fault). The hardware.md budget figure of 0.2 to 0.4 V below
+TP3 is for the ESP in; read it in the bring-up steps. Set **SW-USB back OFF**, then turn the 24 V
 off. The first reading with an ESP in the sockets belongs in
 docs/hardware-bringup.md, not here.
 
 ### Item 7: LED table
 
-24 V on, ESP out, SW-USB OFF. These are the lit-state expectations; the
+Read these during item 6's power-up (24 V on, ESP out, SW-USB OFF), before turning the 24 V off. These are the lit-state expectations; the
 driven states (an output on) belong to the bring-up steps with the ESP in,
 and the LEDs there show only that the driver stage conducts.
 

@@ -86,6 +86,7 @@ SILK = [
     ("MAINS 120 VAC", 91, 75, 2.0, 0, "F.SilkS", "center"),
     ("keep 6 mm from SELV", 91, 78, 1.0, 0, "F.SilkS", "center"),
     ("SW-USB: OFF before any USB-C cable", 57.0, 40.8, 0.8, 0, "F.SilkS", "center"),
+    ("ON", 62.0, 34.6, 0.8, 0, "F.SilkS", "center"), ("OFF", 67.0, 34.6, 0.8, 0, "F.SilkS", "center"),
     ("GND 3V3 SCL SDA RES DC CS BLK", 46.5, 19.6, 0.8, 0, "F.SilkS", "center"),
     ("3V3 DQ GND  3V3 DQ GND  3V3 DQ GND", 51, 12.6, 0.8, 0, "F.SilkS", "center"),
     ("24V+  0V", 40.5, 52.3, 0.8, 0, "F.SilkS", "center"),
