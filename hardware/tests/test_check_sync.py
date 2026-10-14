@@ -78,5 +78,35 @@ class CheckSync(unittest.TestCase):
         self.assertTrue(any("via" in d for d in check_sync.board_diffs(self.wpcb)))
 
 
+    def test_shifted_relay_area_is_reported(self):
+        import pcbnew
+        b = pcbnew.LoadBoard(self.wpcb)
+        z = [z for z in b.Zones() if z.GetIsRuleArea() and z.GetZoneName() == "relay_pads"][0]
+        z.Move(pcbnew.VECTOR2I_MM(0, 2)); pcbnew.SaveBoard(self.wpcb, b)
+        diffs = check_sync.board_diffs(self.wpcb)
+        self.assertTrue(any("relay_pads" in d and "missing" in d for d in diffs), diffs)
+        self.assertTrue(any("relay_pads" in d and "not in the model" in d for d in diffs), diffs)
+
+    def test_rule_area_flag_change_is_reported(self):
+        import pcbnew
+        b = pcbnew.LoadBoard(self.wpcb)
+        z = [z for z in b.Zones() if z.GetIsRuleArea() and z.GetZoneName() == "u1_keepout"][0]
+        z.SetDoNotAllowTracks(False); pcbnew.SaveBoard(self.wpcb, b)
+        diffs = check_sync.board_diffs(self.wpcb)
+        self.assertTrue(any("u1_keepout" in d and "no tracks" in d for d in diffs), diffs)
+
+    def test_deleted_slot_segment_is_reported(self):
+        import pcbnew
+        b = pcbnew.LoadBoard(self.wpcb)
+        slot = [s for s in b.GetDrawings() if s.GetLayer() == pcbnew.Edge_Cuts and s.GetShape() == pcbnew.SHAPE_T_POLY][0]
+        b.Delete(slot); pcbnew.SaveBoard(self.wpcb, b)
+        diffs = check_sync.board_diffs(self.wpcb)
+        self.assertTrue(any("Edge.Cuts" in d and "missing" in d for d in diffs), diffs)
+
+    def test_resized_board_outline_is_reported(self):
+        with mock.patch.object(placement, "BOARD_W", 111.0):
+            diffs = check_sync.board_diffs(self.wpcb)
+        self.assertTrue(any("Edge.Cuts" in d for d in diffs), diffs)
+
 if __name__ == "__main__":
     unittest.main()

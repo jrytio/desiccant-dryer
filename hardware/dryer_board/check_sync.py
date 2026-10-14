@@ -1,11 +1,12 @@
 # hardware/dryer_board/check_sync.py
 """Is the committed KiCad project what the model would generate? Compared semantically
-(netlists, footprints, pad nets, positions, rules, mains copper), not byte for byte, so a GUI
+(netlists, footprints, pad nets, positions, rules, rule-area and Edge.Cuts geometry, mains
+copper), not byte for byte, so a GUI
 re-save that changes only formatting still passes. SELV routing is never compared: the router
 is not deterministic, and DRC already judges it."""
 import json, os, shutil, tempfile
 import pcbnew
-from . import circuit, placement, project, schematic
+from . import board as board_mod, circuit, placement, project, schematic
 
 def _read(path):
     with open(path, encoding="utf-8") as f:
@@ -71,6 +72,73 @@ def _mains_diffs(b):
         diffs.append("mains track %s on the board but not in the model" % (key,))
     return diffs
 
+# KiCad rounds coordinates on load and save; geometry within this is the same.
+TOL_MM = 0.01
+
+def _pts(poly_set):
+    """The first outline of a SHAPE_POLY_SET as (x, y) mm tuples."""
+    o = poly_set.Outline(0)
+    return [(o.CPoint(i).x / 1e6, o.CPoint(i).y / 1e6) for i in range(o.PointCount())]
+
+def _same(a, b):
+    """Two outlines with the same corners (in any order or direction), within TOL_MM."""
+    return len(a) == len(b) and all(abs(p[0] - q[0]) <= TOL_MM and abs(p[1] - q[1]) <= TOL_MM
+                                    for p, q in zip(sorted(a), sorted(b)))
+
+def _fmt(pts):
+    return "[%s]" % ", ".join("(%.2f, %.2f)" % p for p in pts)
+
+def _pair(want, have, same):
+    """Match model items to board items one to one. Returns (matched pairs, unmatched model
+    items, unmatched board items)."""
+    have = list(have)
+    pairs, missing = [], []
+    for w in want:
+        h = next((h for h in have if same(w, h)), None)
+        if h is None:
+            missing.append(w)
+        else:
+            have.remove(h); pairs.append((w, h))
+    return pairs, missing, have
+
+_FLAGS = ("fills", "tracks", "vias", "pads")
+
+def _area_diffs(b):
+    """Each rule area board.build lays, by name, outline and what it forbids."""
+    want = [(name, [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], flags)
+            for name, r, flags in board_mod.rule_areas()]
+    have = [(z.GetZoneName(), _pts(z.Outline()),
+             (z.GetDoNotAllowZoneFills(), z.GetDoNotAllowTracks(), z.GetDoNotAllowVias(), z.GetDoNotAllowPads()))
+            for z in b.Zones() if z.GetIsRuleArea()]
+    pairs, missing, extra = _pair(want, have, lambda w, h: w[0] == h[0] and _same(w[1], h[1]))
+    diffs = []
+    for name, pts, _f in missing:
+        diffs.append("rule area %s %s missing from the board" % (name, _fmt(pts)))
+    for name, pts, _f in extra:
+        diffs.append("rule area %s %s on the board but not in the model" % (name, _fmt(pts)))
+    for (name, pts, wf), (_n, _p, hf) in pairs:
+        for flag, w, h in zip(_FLAGS, wf, hf):
+            if w != h:
+                diffs.append("rule area %s %s: no %s is %s, model %s" % (name, _fmt(pts), flag, h, w))
+    return diffs
+
+def _edge_diffs(b):
+    """The board rectangle and the slot segments on Edge.Cuts."""
+    have = []
+    for s in b.GetDrawings():
+        if s.GetLayer() != pcbnew.Edge_Cuts or s.GetClass() != "PCB_SHAPE":
+            continue
+        if s.GetShape() == pcbnew.SHAPE_T_RECT:
+            (x1, y1), (x2, y2) = [(p.x / 1e6, p.y / 1e6) for p in (s.GetStart(), s.GetEnd())]
+            have.append([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+        elif s.GetShape() == pcbnew.SHAPE_T_POLY:
+            have.append(_pts(s.GetPolyShape()))
+        else:
+            have.append([(p.x / 1e6, p.y / 1e6) for p in (s.GetStart(), s.GetEnd())])
+    _pairs, missing, extra = _pair(board_mod.edge_outlines(), have, _same)
+    return (["Edge.Cuts outline %s missing from the board" % _fmt(p) for p in missing] +
+            ["Edge.Cuts shape %s on the board but not in the model" % _fmt(p) for p in extra])
+
 def board_diffs(pcb_path):
     diffs = []
     if not os.path.exists(pcb_path):
@@ -96,12 +164,7 @@ def board_diffs(pcb_path):
                 diffs.append("%s pad %s on %s, model %s" % (part.ref, pad.GetNumber(), got, want))
     for ref in have:
         diffs.append("%s on the board but not in the model" % ref)
-    # The rule areas board.build creates, by name.
-    want_names = sorted(["antenna_keepout", "mains_nopour", "u1_keepout"] + ["relay_pads"] * len(placement.RELAY_AREAS))
-    names = sorted(z.GetZoneName() for z in b.Zones() if z.GetIsRuleArea())
-    if names != want_names:
-        diffs.append("rule areas %s, model %s" % (names, want_names))
-    return diffs + _mains_diffs(b)
+    return diffs + _area_diffs(b) + _edge_diffs(b) + _mains_diffs(b)
 
 def all_diffs(project_dir):
     return schematic_diffs(project_dir) + board_diffs(os.path.join(project_dir, circuit.PROJECT + ".kicad_pcb"))

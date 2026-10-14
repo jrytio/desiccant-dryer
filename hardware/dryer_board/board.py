@@ -38,6 +38,23 @@ def _rule_area(b, name, rect, fills=True, tracks=False, vias=False, pads=False):
     z.SetDoNotAllowPads(pads); z.SetDoNotAllowFootprints(False)
     _zone_outline(z, *rect); b.Add(z)
 
+def rule_areas():
+    """The rule areas build lays: (name, (x1, y1, x2, y2), (no fills, no tracks, no vias, no pads))."""
+    out = [("antenna_keepout", placement.ANTENNA_KEEPOUT, (True, True, True, True)),
+           ("mains_nopour", placement.MAINS_ZONE, (True, False, False, False))]
+    out += [("relay_pads", r, (False, False, False, False)) for r in placement.RELAY_AREAS]
+    out.append(("u1_keepout", placement.U1_KEEPOUT, (False, True, True, False)))
+    return out
+
+def edge_outlines():
+    """The Edge.Cuts shapes build draws, each as its corner points: the board rectangle, then
+    one rectangle per slot segment."""
+    def corners(x1, y1, x2, y2):
+        return [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
+    x1, x2 = placement.SLOT_X
+    return [corners(0, 0, placement.BOARD_W, placement.BOARD_H)] + \
+           [corners(x1, y1, x2, y2) for y1, y2 in placement.SLOT_SEGMENTS]
+
 def _pour(b, layer, net, rect):
     z = pcbnew.ZONE(b); z.SetLayer(layer); z.SetNet(net); z.SetZoneName("gnd_" + ("F" if layer == pcbnew.F_Cu else "B"))
     z.SetLocalClearance(mm(0.3)); z.SetMinThickness(mm(0.25)); z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
@@ -146,16 +163,13 @@ def build(pcb_path, fresh=False):
     # loaded from an existing file.
     pcbnew.KIID.SeedGenerator(UUID_SEED + 1)
     # outline and slot
-    _rect(b, pcbnew.Edge_Cuts, 0, 0, placement.BOARD_W, placement.BOARD_H)
-    x1, x2 = placement.SLOT_X
-    for y1, y2 in placement.SLOT_SEGMENTS:
-        _poly(b, pcbnew.Edge_Cuts, [(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+    board_outline, *slots = edge_outlines()
+    _rect(b, pcbnew.Edge_Cuts, *board_outline[0], *board_outline[2])
+    for pts in slots:
+        _poly(b, pcbnew.Edge_Cuts, pts)
     # rule areas and pours
-    _rule_area(b, "antenna_keepout", placement.ANTENNA_KEEPOUT, fills=True, tracks=True, vias=True, pads=True)
-    _rule_area(b, "mains_nopour", placement.MAINS_ZONE, fills=True)
-    for r in placement.RELAY_AREAS:
-        _rule_area(b, "relay_pads", r, fills=False)
-    _rule_area(b, "u1_keepout", placement.U1_KEEPOUT, fills=False, tracks=True, vias=True)
+    for name, rect, (fills, tracks, vias, pads) in rule_areas():
+        _rule_area(b, name, rect, fills=fills, tracks=tracks, vias=vias, pads=pads)
     gnd = _net(b, "GND")
     _pour(b, pcbnew.F_Cu, gnd, placement.SELV_POUR)
     _pour(b, pcbnew.B_Cu, gnd, placement.SELV_POUR)
