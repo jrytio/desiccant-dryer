@@ -18,7 +18,9 @@ jobs:
     name: kicad check and export
     runs-on: ubuntu-latest
     container:
-      image: kicad/kicad:10.0
+      # Pinned to the patch release: TP2's position in placement.py works round a DRC false
+      # positive seen in 10.0.6, and another 10.0.x could move it.
+      image: kicad/kicad:10.0.6
       options: --user root
     steps:
       - uses: actions/checkout@v7
@@ -49,4 +51,4 @@ jobs:
       - name: Create the release with the fab files
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "PCB $GITHUB_REF_NAME" --notes "Fab files for board $GITHUB_REF_NAME (gerbers, JLCPCB BOM and CPL, schematic)." out/*.zip out/*.csv out/*.pdf
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "PCB $GITHUB_REF_NAME" --notes "Fab files for board $GITHUB_REF_NAME (gerbers, JLCPCB BOM and CPL, schematic)." out/*.zip out/*-bom.csv out/*-cpl.csv out/*.pdf

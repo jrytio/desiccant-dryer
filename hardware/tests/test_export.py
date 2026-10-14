@@ -45,4 +45,11 @@ class Export(unittest.TestCase):
             bom.update(d.strip() for d in r[1].split(","))
         cpl = set(r[0] for r in _rows(self.paths["cpl"])[1:])
         self.assertFalse([d for d in bom if "?" in d or "-" in d])
-        self.assertEqual(bom, cpl | set("TP%d" % i for i in range(1, 10)))
+        self.assertEqual(bom, cpl)
+
+    def test_every_bom_line_has_an_lcsc_number_but_u1(self):
+        for r in _rows(self.paths["bom"])[1:]:
+            if r[1] == "U1":
+                self.assertEqual(r[3], "", r)   # hand-fitted (hardware/README.md)
+            else:
+                self.assertTrue(r[3], r)

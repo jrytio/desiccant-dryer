@@ -6080,7 +6080,7 @@
 				)
 			)
 		)
-		(property "Value" "K7805-1000R3"
+		(property "Value" "TSR 1-2450"
 			(at 2.5 3.25 0)
 			(layer "F.Fab")
 			(uuid "5a2f6517-089d-486f-9f18-a4490045b129")

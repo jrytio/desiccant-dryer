@@ -121,11 +121,12 @@ PARTS: List[Part] = [
     _led("D12", "green", "GND", "LED_24V_R"),
 
     # 5 V: fixed module in the TSR-1 / 78xx footprint
-    Part("U1", "K7805-1000R3", "Converter_DCDC:TSR_1-2450", "Converter_DCDC:Converter_DCDC_TRACO_TSR-1_THT",
+    Part("U1", "TSR 1-2450", "Converter_DCDC:TSR_1-2450", "Converter_DCDC:Converter_DCDC_TRACO_TSR-1_THT",
          {"1": "+24V", "2": "GND", "3": "+5V"}, hand_fit=True,
-         description="fixed 5 V 1 A switching module, 78xx pinout (1 Vin, 2 GND, 3 Vout); hand-fitted: MornSun is not "
-                     "stocked by LCSC/JLCPCB or Mouser (2026-10-14); Mouser 495-TSR-1-2450 (TRACO TSR 1-2450, the part this "
-                     "footprint is drawn for, same pinout) fits the same holes"),
+         description="fixed 5 V 1 A switching module, 78xx pinout (1 Vin, 2 GND, 3 Vout); TRACO TSR 1-2450, the part "
+                     "this footprint is drawn for, hand-fitted from Mouser 495-TSR-1-2450 (not at LCSC/JLCPCB); "
+                     "MornSun K7805-1000R3 (same pinout) is the alternative, not stocked by LCSC/JLCPCB or Mouser "
+                     "(2026-10-14)"),
     _c("C2", "10u 50V", "+24V", "GND", desc="module input, per datasheet"),
     _c("C3", "22u 10V", "+5V", "GND", desc="module output, per datasheet"),
     Part("C4", "100u 16V", "Device:C_Polarized", "Capacitor_SMD:CP_Elec_6.3x7.7", {"1": "+5V", "2": "GND"}, "C231174",

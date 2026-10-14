@@ -311,7 +311,7 @@ for every part are in [datasheets/](datasheets/README.md).
 | R8, R9, R11, R12, R14, R15, R16 | 7 | 10k | `R_0805_2012Metric` | C17414 | basic |
 | R18 | 1 | 5.1k | `R_0805_2012Metric` | C27834 | basic |
 | SW1 | 1 | SW-USB | `SW_Slide_SPDT_SOFNG_SS-12D00_P2.50mm` | C22355741 | extended |
-| U1 | 1 | K7805-1000R3 | `Converter_DCDC_TRACO_TSR-1_THT` | — | hand-fit |
+| U1 | 1 | TSR 1-2450 | `Converter_DCDC_TRACO_TSR-1_THT` | — | hand-fit |
 
 Notes on the table:
 

@@ -202,8 +202,8 @@ file names.
    ```
 
 4. The `hardware` workflow runs on the tag and creates a GitHub release
-   with the gerber zip, the JLCPCB BOM and CPL (and KiCad's own position
-   CSV), and the schematic PDF attached. Order from those files, not from a local export, so what was
+   with the gerber zip, the JLCPCB BOM and CPL, and the schematic PDF
+   attached. Order from those files, not from a local export, so what was
    sent to the fab is recoverable.
 
 ## Notes

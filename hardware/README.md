@@ -33,4 +33,4 @@ Needs KiCad 10 (`brew install --cask kicad`) and Docker for `route`. No Java.
 
 ## CI
 
-`.github/workflows/hardware.yml` runs `test`, `check` and `export --no-docs` in the `kicad/kicad:10.0` image (amd64 only; on Apple silicon use `docker run --platform linux/amd64 -u $(id -u):$(id -g) -e HOME=/tmp`). It never routes. `hardware/out/` is uploaded as an artifact and the review copies in `docs/hardware/` are not touched, so they change only when someone runs `export` locally. A `pcb-*` tag attaches the gerber zip, BOM, CPL and schematic PDF to a GitHub release.
+`.github/workflows/hardware.yml` runs `test`, `check` and `export --no-docs` in the `kicad/kicad:10.0.6` image (pinned to the patch release the TP2 placement was checked against; amd64 only; on Apple silicon use `docker run --platform linux/amd64 -u $(id -u):$(id -g) -e HOME=/tmp`). It never routes. `hardware/out/` is uploaded as an artifact and the review copies in `docs/hardware/` are not touched, so they change only when someone runs `export` locally. A `pcb-*` tag attaches the gerber zip, BOM, CPL and schematic PDF to a GitHub release.
