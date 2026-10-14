@@ -27,7 +27,7 @@ def _symbol_instance(part, cx, cy):
     if part.hand_fit:
         props.append(_prop("Hand fit", "yes", cx, cy, hide=True))
     pins = " ".join('(pin %s (uuid %s))' % (_q(n), _q(uuid_for(part.ref + "/pin/" + n))) for n in sorted(libs.symbol_pins(part.symbol)))
-    in_bom = "no" if part.ref.startswith("#") else "yes"
+    in_bom = "no" if part.ref.startswith(("#", "H")) else "yes"
     return ('(symbol (lib_id %s) (at %.2f %.2f 0) (unit 1) (exclude_from_sim no) (in_bom %s) (on_board yes) (dnp no) (uuid %s) %s %s '
             '(instances (project %s (path %s (reference %s) (unit 1)))))'
             % (_q(part.symbol), cx, cy, in_bom, _q(uuid_for(part.ref)), " ".join(props), pins,

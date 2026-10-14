@@ -67,6 +67,14 @@ def cmd_check(_args):
     return 0 if ok else 1
 COMMANDS["check"] = cmd_check
 
+def cmd_export(_args):
+    from . import export
+    docs = os.path.join(kicad_env.REPO, "docs", "hardware")
+    for k, v in sorted(export.export_all(kicad_env.PROJECT_DIR, kicad_env.OUT_DIR, docs).items()):
+        print("%-14s %s" % (k, v))
+    return 0
+COMMANDS["export"] = cmd_export
+
 def main(argv):
     if len(argv) < 2 or argv[1] not in COMMANDS:
         print("usage: python -m dryer_board <%s>" % "|".join(sorted(COMMANDS)))
