@@ -96,7 +96,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | ID | Failure | Pri | Kind | Verify | Gap |
 |---|---|---|---|---|---|
 | A-01 | Relay contact welds closed; heater stays on with the coil de-energised. Hardware failure of the contact itself, found by exercising the relay live; the matching "no software check catches this" gap is B-02 | 🔴 P0 | HW | live |  |
-| A-02 | PN2222A driver shorts collector-emitter; relay held on permanently | 🔴 P0 | HW | bench |  |
+| A-02 | PN2222A (protoboard; MMBT2222A on the PCB) driver shorts collector-emitter; relay held on permanently | 🔴 P0 | HW | bench |  |
 | A-03 | A heater GPIO (12 or 13) stays high — firmware hang, pin latch-up or solder bridge — leaving outputs in their last state. The watchdog must reboot and `on_boot` (priority 700) force both heaters off; pass if the relay de-energises within one watchdog period. H-19 tests the watchdog itself | 🔴 P0 | FW | bench |  |
 | A-04 | P2N2222A fitted instead of PN2222A (mirrored pinout); stage misbehaves or B-E junction breaks down | 🔴 P0 | WIRE | inspect |  |
 | A-05 | Both heater relays on at once (interlock defeated by hardware fault or firmware bug); 2 A through fuse and double heat load | 🔴 P0 | FW | bench |  |
@@ -112,12 +112,12 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | A-15 | Creepage between mains and logic rows on the protoboard (5.6 mm pad-to-pad, less on plated pads) arcs over in humidity or dust. PCB rev A: a 2 mm routed slot along the mains boundary and DRC rules hold mains copper 6 mm from SELV copper (3.5 mm inside the relay pad areas, where the relay's own COM-to-coil pad gap is 3.51 mm); what is left to inspect is solder splashes and contamination | 🔴 P0 | WIRE | inspect |  |
 | A-16 | Mains wire pulls out of a screw terminal (stranded not ferruled, under-torqued) and touches logic or chassis | 🔴 P0 | WIRE | inspect |  |
 | A-17 | Mains conductor of wrong insulation or temperature rating chafes on pack at 90 to 133 °C | 🔴 P0 | WIRE | inspect |  |
-| A-18 | Relay coil flyback diode missing or reversed; PN2222A destroyed, possible stuck-on failure later | 🟠 P1 | WIRE | bench |  |
+| A-18 | Relay coil flyback diode missing or reversed; PN2222A (protoboard; MMBT2222A on the PCB) destroyed, possible stuck-on failure later | 🟠 P1 | WIRE | bench |  |
 | A-19 | Relay contact fails open or high-resistance; heater never heats, or contact heats itself | 🟠 P1 | HW | live |  |
 | A-20 | Relay contact arcs and pits from switching the 1 A inductive-ish load every regen; life ends with a weld | 🟠 P1 | HW | live |  |
 | A-21 | Relay coil open; heater cannot be commanded on | 🟡 P2 | HW | bench |  |
 | A-22 | Heater element open circuit; no heat | 🟡 P2 | HW | live |  |
-| A-23 | PN2222A base resistor or 1 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
+| A-23 | PN2222A (protoboard; MMBT2222A on the PCB) base resistor or 1 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
 | A-24 | Relay harness (JST-XH 4-way) unplugged or one conductor open; both heaters dead, or one dead | 🟡 P2 | WIRE | bench |  |
 | A-25 | Relay chatter from marginal 5 V coil supply (buck sag under two coils plus WiFi peak) | 🟠 P1 | HW | bench |  |
 | A-26 | Heater partially failed (higher resistance); heats too slowly, trips the no-rise fault or never reaches regen temperature | 🔵 P3 | HW | virtual |  |

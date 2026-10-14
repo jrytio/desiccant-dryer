@@ -196,14 +196,15 @@ check the cuts with a meter and keep the µSD slot empty
 
   Pass: it flashes without the BOOT button, the log appears on the same
   port, and the board joins WiFi as `desiccant-dryer-hw-test-c6`.
-- [ ] **8.2 Seat it and power the main board** (JP-USB fitted, no USB
-  cable). Pass: the panel shows the normal screen with no torn or shifted
+- [ ] **8.2 Seat it and power the main board** (JP-USB fitted, or SW-USB
+  ON on the PCB; no USB cable). Pass: the panel shows the normal screen with no torn or shifted
   areas (40 MHz SPI through the C6's GPIO matrix is untested); the SHT45
   and all three DS18B20s read; no relay clicks, no valve pulls in and the
   fan stays off at power-up.
 - [ ] **8.3 Sections 3 to 5 of this page**, on the C6 test build. Pass: as
   written there, except that no LED lights with heater A.
-- [ ] **8.4 One USB flash attempt while seated.** Pull JP-USB first, plug
+- [ ] **8.4 One USB flash attempt while seated.** Pull JP-USB first (or
+  set SW-USB OFF on the PCB), plug
   in USB-C and run the 8.1 command again. Record whether it flashes: the
   fan's gate pulldown holds the GPIO8 boot strap low, which the datasheet
   calls an invalid combination with download mode. Either result is

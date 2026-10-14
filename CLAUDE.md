@@ -251,7 +251,10 @@ service 180 min) are untested guesses meant to get first cycles logging.
   review the renders, print `docs/hardware/top.svg` 1:1 against the real
   parts, run JLCPCB's DFM check, confirm stock. Unverified: the IEC 62368-1
   creepage desk review, the CJ2310 at 3.3 V gate drive, the K78 module's
-  body height, NO/NC on the fitted relays (docs/hardware.md).
+  body height, NO/NC on the fitted relays (docs/hardware.md), board
+  thermal (U1 at about 0.4 A, the SS34s at about 0.2 W, in a closed
+  enclosure: unmeasured), the USB-C overhang (3 mm past the bottom edge;
+  room for a plug with the board on standoffs: unchecked).
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows
   "(waiting)" if RH is also high. Decide whether `max_service_min` should

@@ -311,7 +311,21 @@ as built.
   wiring it is given, so a bad route would otherwise survive every rerun.
 - **"Tracks on unchanged nets survive" now describes `generate` only.**
   `generate` (update mode) keeps existing tracks; `route` replaces every
-  SELV track.
+  SELV track. `generate` drops only tracks whose net left the model, not
+  tracks on nets whose connectivity changed; DRC (unconnected items,
+  shorts) is the backstop, and a connectivity change is followed by
+  `route`.
+- **Freerouting narrows tracks where it squeezes** (its neck-down): on
+  the committed board 18 P24/P5 tracks are 0.6 mm and 3 are 0.48 mm (0.1
+  to 0.15 mm stubs into U1 pads 1 and 3 at the `u1_keepout` edge) instead
+  of 0.8 mm, and 34 default tracks are 0.225 mm instead of 0.3 mm. All are above the 0.2 mm board minimum,
+  which DRC enforces; R17 sits 0.5 mm lower than first placed because at
+  y 36 the router necked a GND track to 0.18 mm.
+- **`u1_keepout`**: a rule area over U1's body (courtyard x 40.4 to 52.7,
+  y 24.1 to 29.5, both layers) forbids tracks and vias, since the TRACO
+  TSR-1 datasheet says not to route under the converter. It stops 0.5 mm
+  short of the pad row's centre line: down to y 30 the router could not
+  reach pads 1 and 3. A routed-board test checks no copper lies in it.
 - **`check` also compares the committed mains copper with
   `placement.MAINS_TRACKS`** (segments, layer, 1.5 mm width, locked),
   since the generator owns it. SELV tracks are never compared.
@@ -324,6 +338,14 @@ as built.
   L_IN 1.19 mm from H2 before it existed); and the **NC-pad exclusion** on
   both mains-to-SELV rules, so the netless NC pad is not treated as SELV
   and mains tracks may pass it at the mains in-class clearance.
+- **"mains L to L"**: L_IN, L_FUSED, L_SW_A and L_SW_B keep 1.6 mm from
+  each other (the netclass's 1.0 mm still covers L to N); a bridge between
+  two of them bypasses the fuse or a relay. The closest L-side pair on the
+  board is 1.80 mm. Because KiCad relaxes a whole segment to the 3.5 mm
+  `relay_pads` rule if any part of it touches the area, the mains tracks
+  are split at the area edges.
+- **CI pins `kicad/kicad:10.0.6`**, not `10.0`: the TP2 position works
+  round a DRC false positive seen in 10.0.6.
 - **CJ2310 MOSFET, not SI2308**: in the JLCPCB catalogue; 60 V,
   V<sub>GS(th)</sub> 2 V max, R<sub>DS(on)</sub> 125 mΩ max at 4.5 V. Its
   datasheet draws the 3 V output curve on top of the 4 V and 5 V curves at

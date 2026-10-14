@@ -239,10 +239,20 @@ so no plug fits another header, except that a smaller plug of the same
 pitch does enter a larger header: the 6-pin J_LOADS plug fits the 8-pin
 J_MAINS header, so the silkscreen labels and the loom's own labelling are
 the defence between them, and a different pitch for J_LOADS is a rev B
-option. JLCPCB fabricates and assembles it, SMD and
-through-hole, all on the top side. The hand work is seating the ESP,
+option. That mis-plug is self-limiting: with the 6-pin plug in J_MAINS the
+board receives no mains at all, because the 8-pin mains plug fits no other
+header and the 24 V supply is itself fed from J_MAINS pins 7 and 8.
+JLCPCB fabricates and assembles it, SMD and through-hole, all on the top
+side. The hand work is seating the ESP,
 soldering the 5 V module U1 (not stocked at LCSC, see the BOM) and fitting
 the T 3.15 A fuse in F1's holder. Nothing in this section has been built yet.
+Not yet checked, besides the items marked unverified below:
+
+- Board thermal: U1 at about 0.4 A and the SS34s (D11, D14) at about
+  0.2 W each, in a closed enclosure. Unmeasured.
+- The USB-C overhang: the Thing Plus's USB-C face sits 3 mm past the
+  board's bottom edge. Whether a plug fits with the board on its
+  standoffs is unchecked.
 
 The design is generated from `hardware/dryer_board/` (commands, CI and
 ordering in [hardware/README.md](../hardware/README.md); design in
@@ -447,10 +457,23 @@ DRC enforces these rules (`hardware/dryer_board/project.py`, `RULES`):
 | Relay NC pad (K1/K2 pad 4, live, netless) to any non-mains item | 6 mm |
 | Mains copper to a mounting hole | 6 mm hole clearance |
 | Mains track width / to board edge | 1.5 mm / 1 mm |
-| Between mains nets (netclass) | 1.0 mm |
+| Between the L-side mains nets (L_IN, L_FUSED, L_SW_A, L_SW_B) | 1.6 mm |
+| Between mains nets (netclass; L to N) | 1.0 mm |
 
 The two mains-to-SELV rules exclude the NC pads on the SELV side, since
 those pads are mains: mains tracks pass them at the in-class clearance.
+KiCad applies the 3.5 mm relaxation to a whole track segment if any part
+of it touches a `relay_pads` area, so the mains tracks are split at the
+area edges and only the pieces at the relay pads are relaxed.
+
+Measured on the committed board: the closest L-side pair is 1.80 mm
+(the L_IN spine to K2's NO pad), the L_FUSED stub to J_MAINS pin 7 is
+2.00 mm from K1's NO pad, and L to N is 1.55 mm (the N track past
+J_MAINS pins 3, 5 and 7). The relay COM pads are 5.0 mm from the SELV GND
+pour; the COM pads are inside the relay areas, where the 3.5 mm rule
+allows it.
+Outside the relay areas the closest mains-to-SELV pair is 6.3 mm (F1's
+L_IN pad to K1's coil pad).
 
 The smallest mains-to-SELV gap on the board is the relay's own: COM pad
 to coil pad. On the stock footprint (COM pad Ø3.0 mm, coil pads Ø2.5 mm,

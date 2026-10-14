@@ -11,6 +11,10 @@ Generated from `dryer_board/` (see `docs/superpowers/specs/2026-10-14-pcb-design
 
 Needs KiCad 10 (`brew install --cask kicad`) and Docker for `route`. No Java.
 
+Do not use the KiCad GUI's "Update PCB from Schematic" on this board: the footprints carry no schematic
+path, so KiCad would treat every part as new or orphaned. The generator is the update path: change
+`dryer_board/`, then `generate` (and `route` if the SELV connectivity changed).
+
 ## Ordering (JLCPCB)
 
 `scripts/hardware.sh export` writes `hardware/out/dryer-controller-rev<N>-gerbers.zip`, `-bom.csv` and `-cpl.csv`.

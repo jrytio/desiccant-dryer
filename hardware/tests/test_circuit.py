@@ -112,6 +112,13 @@ class Circuit(unittest.TestCase):
             for ref, _ in nets[n]:
                 self.assertIn(ref, ("J_MAINS", "F1", "K1", "K2"), "%s touches mains net %s" % (ref, n))
 
+    def test_check_flags_mains_pin_on_a_selv_net(self):
+        k = circuit.by_ref("K1")
+        bad = circuit.Part(k.ref, k.value, k.symbol, k.footprint, dict(k.pins, **{"3": "HEATER_A"}))
+        parts = [bad if p.ref == "K1" else p for p in circuit.PARTS]
+        with mock.patch.object(circuit, "PARTS", parts):
+            self.assertTrue(any("K1 pin 3 is on HEATER_A" in e for e in circuit.check()), circuit.check())
+
     def test_every_part_has_catalogue_status(self):
         for p in circuit.PARTS:
             if p.symbol.startswith("Mechanical:") or p.symbol.startswith("power:") or p.symbol == "Connector:TestPoint":

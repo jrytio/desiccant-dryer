@@ -32,9 +32,8 @@ class Part:
     hand_fit: bool = False
     description: str = ""
 
-# Catalogue entries (LCSC number, maker and part number, JLCPCB class), looked up 2026-10-14
-# on jlcpcb.com/partdetail/<C-number>; every one offers JLCPCB assembly. The report for
-# the parts task lists the page each came from.
+# Catalogue entries (LCSC number, maker and part number, JLCPCB class), looked up 2026-10-14;
+# every one offers JLCPCB assembly. Part pages: https://jlcpcb.com/partdetail/<C-number>
 RESISTORS = {  # 0805, 1 %, 125 mW thick film
     "100": ("C17408", "UNI-ROYAL 0805W8F1000T5E"), "1k": ("C17513", "UNI-ROYAL 0805W8F1001T5E"),
     "2.2k": ("C17520", "UNI-ROYAL 0805W8F2201T5E"), "5.1k": ("C27834", "UNI-ROYAL 0805W8F5101T5E"),
@@ -261,4 +260,13 @@ def check():
         for ref, _ in n.get(net, []):
             if ref not in ("J_MAINS", "F1", "K1", "K2"):
                 errs.append("mains net %s reaches %s" % (net, ref))
+    # The reverse: every connected pin on the mains parts' mains side is on a mains net, so
+    # it gets the MAINS netclass and the 6 mm rules. (K1/K2 pads 2 and 5 are the SELV coil;
+    # pad 4, NC, is checked above.)
+    mains_pins = [("J_MAINS", pin) for pin in by_ref("J_MAINS").pins] + [("F1", pin) for pin in by_ref("F1").pins]
+    mains_pins += [(k, pad) for k in ("K1", "K2") for pad in ("1", "3")]
+    for ref, pin in mains_pins:
+        net = by_ref(ref).pins.get(pin, NC)
+        if net != NC and net not in MAINS_NETS:
+            errs.append("%s pin %s is on %s, which is not a mains net" % (ref, pin, net))
     return errs
