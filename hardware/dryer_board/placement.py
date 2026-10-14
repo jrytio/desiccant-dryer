@@ -95,6 +95,12 @@ MAINS_TRACKS = [
     ("N", "F.Cu", [(99.5, 46.76), (103.6, 46.76)]),
 ]
 
+# Footprints whose reference would print over a label: J_MAINS's over its pin labels, R18/C5/C6
+# over the J_DISP legend, the LEDs' (D8-D10, D12, D13) over "VLV A", "VLV B", "FAN", "24V",
+# "5V". board.py hides them on the silkscreen; the names stay on F.Fab and in the assembly
+# drawings. "FAN" sits above D10 like "VLV A"/"VLV B" (below it, R15's reference covered it).
+HIDDEN_REFS = ("J_MAINS", "R18", "C5", "C6", "D8", "D9", "D10", "D12", "D13")
+
 # (text, x, y, size, rotation, layer, justify)
 SILK = [
     ("ESP32 desiccant dryer controller  rev ${REVISION}  AGPL-3.0  github.com/jrytio/desiccant-dryer", 53, 1.4, 0.9, 0, "F.SilkS", "center"),
@@ -108,15 +114,15 @@ SILK = [
     ("VA+  VA-  VB+  VB-  F+  F-", 50.7, 84.0, 0.8, 0, "F.SilkS", "center"),
     ("24V", 45, 53.3, 0.8, 0, "F.SilkS", "center"), ("5V", 45, 33.8, 0.8, 0, "F.SilkS", "center"),
     ("HTR A", 57.5, 23.5, 0.8, 0, "F.SilkS", "center"), ("HTR B", 67.5, 64.7, 0.8, 0, "F.SilkS", "center"),
-    ("VLV A", 42.5, 58.8, 0.8, 0, "F.SilkS", "center"), ("VLV B", 52, 58.8, 0.8, 0, "F.SilkS", "center"), ("FAN", 61.5, 63.0, 0.8, 0, "F.SilkS", "center"),
+    ("VLV A", 42.5, 58.8, 0.8, 0, "F.SilkS", "center"), ("VLV B", 52, 58.8, 0.8, 0, "F.SilkS", "center"), ("FAN", 61.0, 58.8, 0.8, 0, "F.SilkS", "center"),
     ("1", 10.27, 66.5, 0.8, 0, "F.SilkS", "center"), ("12", 10.27, 33.3, 0.8, 0, "F.SilkS", "center"),
     ("1", 30.59, 76.7, 0.8, 0, "F.SilkS", "center"), ("16", 30.59, 33.3, 0.8, 0, "F.SilkS", "center"),
     ("USB end", 20, 83, 0.8, 0, "B.SilkS", "center"),
 ]
 # Mains header pins, left of the pads, one per position (pin 1 at y 62, pitch 5.08 upward).
-# Vertical, in the 2.4 mm channel between the relay and header courtyards: horizontal labels
-# would run under the relay bodies.
-SILK += [(name, 95.8, 62 - i * 5.08, 0.8, 90, "F.SilkS", "center")
+# Vertical, centred at x 95.5 in the 2.1 mm between the relay outline (x 94.46) and J_MAINS's
+# pin-1 triangle (x 96.53): horizontal labels would run under the relay bodies.
+SILK += [(name, 95.5, 62 - i * 5.08, 0.8, 90, "F.SilkS", "center")
          for i, name in enumerate(["L IN", "N IN", "HTR A", "N", "HTR B", "N", "PSU L", "PSU N"])]
 # Socket functions on the back (readable with the board upside down), mirrored by board.py.
 _P12 = {4: "HTR A", 5: "HTR B", 6: "VLV A", 7: "VLV B", 8: "FAN", 3: "USB 5V"}

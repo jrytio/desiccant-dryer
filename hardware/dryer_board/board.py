@@ -95,6 +95,7 @@ def _reconcile_footprints(b):
             fp = pcbnew.FootprintLoad(libs.footprint_path(part.footprint), libs.split(part.footprint)[1])
             fp.SetFPIDAsString(part.footprint); fp.SetReference(part.ref); b.Add(fp)
         fp.SetValue(part.value)
+        fp.Reference().SetVisible(part.ref not in placement.HIDDEN_REFS)
         x, y, rot = placement.PLACE[part.ref]
         fp.SetOrientationDegrees(0); fp.SetPosition(MM(x, y)); fp.SetOrientationDegrees(rot)
         for pad in fp.Pads():
