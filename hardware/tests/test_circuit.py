@@ -1,5 +1,6 @@
 # hardware/tests/test_circuit.py
 import unittest
+from unittest import mock
 from dryer_board import circuit, pinmap
 
 class Circuit(unittest.TestCase):
@@ -43,6 +44,52 @@ class Circuit(unittest.TestCase):
         self.assertEqual(j12.pins["3"], "VBUS")
         self.assertEqual(j16.pins["2"], "+3V3")
         self.assertEqual(j16.pins["4"], "GND")
+
+    def _pin(self, ref, pad):
+        return circuit.by_ref(ref).pins[pad]
+
+    def test_relay_channel_chains(self):
+        for htr, base, coil, r, q, k, d in (("HTR_A", "BASE_A", "COIL_A", "R1", "Q1", "K1", "D1"),
+                                           ("HTR_B", "BASE_B", "COIL_B", "R4", "Q2", "K2", "D2")):
+            self.assertEqual(self._pin(r, "1"), htr)
+            self.assertEqual(self._pin(r, "2"), base)
+            self.assertEqual(self._pin(q, "1"), base)
+            self.assertEqual(self._pin(q, "2"), "GND")
+            self.assertEqual(self._pin(q, "3"), coil)
+            self.assertEqual(self._pin(k, "5"), coil)
+            self.assertEqual(self._pin(d, "2"), coil)
+
+    def test_mosfet_channel_chains(self):
+        for vlv, gate, sw, r, q, d, jp in (("VLV_A", "GATE_A", "SW_VA", "R7", "Q3", "D5", "2"),
+                                           ("VLV_B", "GATE_B", "SW_VB", "R10", "Q4", "D6", "4"),
+                                           ("FAN", "GATE_C", "SW_FAN", "R13", "Q5", "D7", "6")):
+            self.assertEqual(self._pin(r, "1"), vlv)
+            self.assertEqual(self._pin(r, "2"), gate)
+            self.assertEqual(self._pin(q, "1"), gate)
+            self.assertEqual(self._pin(q, "2"), "GND")
+            self.assertEqual(self._pin(q, "3"), sw)
+            self.assertEqual(self._pin("J_LOADS", jp), sw)
+            self.assertEqual(self._pin(d, "2"), sw)
+
+    def test_supply_chains(self):
+        self.assertEqual([self._pin("U1", p) for p in "123"], ["+24V", "GND", "+5V"])
+        self.assertEqual(self._pin("J_24V", "1"), "+24V_RAW")
+        self.assertEqual(self._pin("F2", "1"), "+24V_RAW")
+        self.assertEqual(self._pin("F2", "2"), "+24V_F")
+        self.assertEqual(self._pin("D11", "2"), "+24V_F")
+        self.assertEqual(self._pin("D11", "1"), "+24V")
+        self.assertEqual(self._pin("D14", "2"), "+5V")
+        self.assertEqual(self._pin("D14", "1"), "V5_D")
+        self.assertEqual(self._pin("SW1", "2"), "V5_D")
+        self.assertEqual(self._pin("SW1", "1"), "VBUS")
+        self.assertEqual(self._pin("J_ESP12", "3"), "VBUS")
+
+    def test_check_flags_net_on_unowned_socket_position(self):
+        j = circuit.by_ref("J_ESP16")
+        bad = circuit.Part(j.ref, j.value, j.symbol, j.footprint, dict(j.pins, **{"6": "GND"}))
+        parts = [bad if p.ref == "J_ESP16" else p for p in circuit.PARTS]
+        with mock.patch.object(circuit, "PARTS", parts):
+            self.assertTrue(any("J_ESP16 position 6" in e for e in circuit.check()))
 
     def test_polarity(self):
         for p in circuit.PARTS:

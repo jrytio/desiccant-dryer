@@ -199,6 +199,12 @@ def check():
         ref = "J_ESP16" if hdr == 16 else "J_ESP12"
         if by_ref(ref).pins[str(pos)] != NC:
             errs.append("%s position %d is reserved (%s)" % (ref, pos, pinmap.RESERVED[(hdr, pos)]))
+    for hdr, ref in ((16, "J_ESP16"), (12, "J_ESP12")):
+        want = _socket_pins(hdr)
+        got = by_ref(ref).pins
+        for pos in sorted(want, key=int):
+            if got.get(pos) != want[pos]:
+                errs.append("%s position %s is %s, pinmap says %s" % (ref, pos, got.get(pos), want[pos]))
     for k in ("K1", "K2"):
         if by_ref(k).pins["4"] != NC:
             errs.append("%s NC contact must stay unconnected" % k)
