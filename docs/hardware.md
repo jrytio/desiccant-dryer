@@ -1,6 +1,12 @@
 # Hardware
 
-## Bill of materials
+## Bill of materials (protoboard build)
+
+The driver, buck and Schottky rows below (PN2222A, IRLZ44N, 1N4007, MP1584,
+the USB-pin Schottky and JP-USB) describe the protoboard build. The PCB's
+own parts are in the [Printed circuit board (rev A)](#printed-circuit-board-rev-a)
+BOM. The off-board items (MCU, sensors, display, relays, valves, fan,
+supply, heaters and thermal fuses) apply to both.
 
 | Item | Part | Notes |
 |---|---|---|
@@ -107,7 +113,7 @@ Before the board goes in a socket:
 5. **Flash it before seating it**, over USB-C, from the published manifest
    (docs/releasing.md). Seated, the fan's gate pulldown holds the chip's
    GPIO8 boot strap low, and download mode with GPIO8 low is not a valid
-   boot mode for the C6. The JP-USB rule is the same as for the S2: never
+   boot mode for the C6. The JP-USB rule (SW-USB on the PCB) is the same as for the S2: never
    a USB cable and the buck's 5 V together.
 
 The same header positions, with each board's GPIO:

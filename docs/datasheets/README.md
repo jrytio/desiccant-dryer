@@ -1,7 +1,8 @@
 # Component datasheets
 
 Reference copies of the manufacturer documents for the parts in the
-[hardware BOM](../hardware.md#bill-of-materials), so the driver-stage numbers
+hardware BOMs ([protoboard](../hardware.md#bill-of-materials-protoboard-build),
+[PCB](../hardware.md#printed-circuit-board-rev-a)), so the driver-stage numbers
 and the protoboard layout can be checked against datasheets without leaving
 the repo, and so a later re-check sees the same revision. All files were
 retrieved on 2026-09-15 from the source in the table, except the SEFUSE

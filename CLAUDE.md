@@ -38,10 +38,13 @@ based on measured outlet humidity and measured pack temperatures instead.
   `docs/superpowers/specs/2026-10-12-esp32-c6-board-support-design.md`
   and the steps are docs/hardware-bringup.md section 8.
 - **Heaters are 120 VAC (~117 W, 123 Ω each)**, switched by Songle SRD-05VDC
-  relays driven by PN2222A low-side stages (TO-92 E-B-C; a P2N2222A is C-B-E).
-  Mains stays off the ESP board.
+  relays driven by low-side NPN stages: PN2222A on the protoboard (TO-92
+  E-B-C; a P2N2222A is C-B-E), MMBT2222A (SOT-23) on PCB rev A (see the
+  "Printed circuit board (rev A)" section of docs/hardware.md). Mains stays
+  off the ESP board.
 - **Valves are two SMC VDW22 2-port NC solenoids (24 VDC, 3 W)**, one per pack,
-  driven by IRLZ44N low-side MOSFETs. Both closed = safe/idle state.
+  driven by low-side MOSFETs: IRLZ44N on the protoboard, CJ2310 (SOT-23,
+  60 V) on PCB rev A. Both closed = safe/idle state.
 - **Case fan is 24 V on/off** (not PWM), thermostat-controlled from a DS18B20.
 - **Outlet humidity sensor is an SHT45** on the Qwiic connector. A DHT11 was
   rejected: its 20–80 % RH range is blind to the 0–10 % region the control
