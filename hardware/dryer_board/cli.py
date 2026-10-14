@@ -19,8 +19,9 @@ def cmd_env(_args):
 COMMANDS = {"test": cmd_test, "env": cmd_env}
 
 def cmd_generate(_args):
-    from . import schematic
+    from . import project, schematic
     os.makedirs(kicad_env.PROJECT_DIR, exist_ok=True)
+    project.write(kicad_env.PROJECT_DIR)
     schematic.write_lib_tables(kicad_env.PROJECT_DIR)
     print("wrote", schematic.write(kicad_env.PROJECT_DIR))
     return 0
