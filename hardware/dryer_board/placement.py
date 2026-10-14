@@ -52,28 +52,27 @@ PLACE = {
 
 # Mains copper, laid by board.add_mains_copper (locked; Freerouting never routes mains).
 # (net, layer, polyline). Width is the MAINS netclass's 1.5 mm. Hand-placed because the
-# custom rules in project.RULES are not visible to the router, and the mains side is tight:
-# - every mains track keeps 6 mm from each relay's netless NC pad 4 (90.2, 16) and (90.2, 54)
-#   (the "mains to selv" rule sees it as non-mains), i.e. 8.25 mm centre to centre;
-# - 3.5 mm from the coil pads and the SELV coil corridors at y 16.05/28.05/54.05/66.05;
-# - 6 mm from SELV copper left of the slot outside the relay areas (x >= 76.25);
-# - 1 mm between mains nets, 1 mm to the board edge and the mounting holes.
-# The NC exclusions leave no vertical passage between a coil pad and its NC pad, so L_IN,
-# L_SW_B and K2's feed all run down the right of J_MAINS (columns x 103.2 and 105.8 on B.Cu,
-# 103.2 and 108.05 on F.Cu); pins 2 and 3 are reachable only from the right or, for pin 3,
-# on the diagonal that grazes K2's NC exclusion (8.30 mm against 8.25).
+# custom rules in project.RULES are not visible to the router. Distances held:
+# - 3.5 mm from the relay coil pads and the SELV coil corridors at y 16.05/28.05/54.05/66.05
+#   (5.5 mm centre to a coil pad), 6 mm from SELV left of the slot (x >= 76.25 outside the
+#   relay areas);
+# - 6 mm from the M3 holes (H2 at (106, 4): nothing mains within 8.35 mm of its centre);
+# - 1 mm between mains nets (the NC pads are mains), at least 1.5 mm from L to N copper.
+# The spine at x 85 runs between the coil pads (x <= 81.7 + 1.75) and the NC/NO pads: L_IN
+# on F.Cu, L_FUSED on B.Cu. N links all four N pins on the right of J_MAINS; the switched
+# lines reach pins 3 and 5 from the left.
 MAINS_TRACKS = [
     ("L_IN", "F.Cu", [(82, 7), (77, 7)]),
-    ("L_IN", "F.Cu", [(77, 7), (77, 3), (100, 3), (105, 8), (108.05, 8), (108.05, 62), (99.5, 62)]),
+    ("L_IN", "F.Cu", [(82, 7), (85, 10), (85, 62), (99.5, 62)]),
     ("L_FUSED", "F.Cu", [(92, 7), (97, 7)]),
-    ("L_FUSED", "B.Cu", [(97, 7), (98.8, 8.8), (98.8, 20.0), (95.6, 23.2), (95.6, 31.52), (105.8, 31.52),
-                         (105.8, 72), (84, 72), (84, 61), (83, 60), (76, 60)]),
-    ("L_FUSED", "B.Cu", [(76, 22), (83.5, 22), (86, 24.5), (94.3, 24.5), (95.6, 23.2)]),
-    ("L_SW_A", "B.Cu", [(90.15, 28.05), (90.15, 42.19), (96, 48.04), (99.5, 51.84)]),
-    ("L_SW_B", "B.Cu", [(90.15, 66.05), (101.6, 66.05), (103.2, 64.45), (103.2, 41.68), (99.5, 41.68)]),
-    ("N", "F.Cu", [(99.5, 26.44), (95.6, 26.44), (95.6, 46.76), (99.5, 46.76)]),
-    ("N", "F.Cu", [(95.6, 36.6), (99.5, 36.6)]),
-    ("N", "F.Cu", [(99.5, 46.76), (103.2, 46.76), (103.2, 56.92), (99.5, 56.92)]),
+    ("L_FUSED", "B.Cu", [(92, 7), (85, 14), (85, 60), (76, 60)]),
+    ("L_FUSED", "B.Cu", [(76, 22), (85, 22)]),
+    ("L_FUSED", "B.Cu", [(85, 31.52), (99.5, 31.52)]),
+    ("L_SW_A", "F.Cu", [(90.15, 28.05), (93.5, 31.4), (93.5, 48.5), (96.84, 51.84), (99.5, 51.84)]),
+    ("L_SW_B", "B.Cu", [(90.15, 66.05), (95, 61.2), (95, 41.68), (99.5, 41.68)]),
+    ("N", "F.Cu", [(99.5, 26.44), (103.6, 26.44), (103.6, 56.92), (99.5, 56.92)]),
+    ("N", "F.Cu", [(99.5, 36.6), (103.6, 36.6)]),
+    ("N", "F.Cu", [(99.5, 46.76), (103.6, 46.76)]),
 ]
 
 # (text, x, y, size, rotation, layer, justify)

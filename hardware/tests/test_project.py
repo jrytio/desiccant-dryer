@@ -25,8 +25,36 @@ def _two_track_board(path, gap_mm):
     pcbnew.SaveBoard(path, b)
 
 
-def _relay_board(path, gap_mm):
-    """K1 (netless pads, as on the real board) plus a 0.3 mm GND track gap_mm right of pad 4."""
+def _hole_board(path, gap_mm):
+    """An M3 mounting hole and a 1.5 mm L_IN track whose edge is gap_mm from the hole's edge."""
+    b = pcbnew.BOARD()
+    edge = pcbnew.PCB_SHAPE(b)
+    edge.SetShape(pcbnew.SHAPE_T_RECT)
+    edge.SetStart(pcbnew.VECTOR2I_MM(0, 0))
+    edge.SetEnd(pcbnew.VECTOR2I_MM(60, 40))
+    edge.SetLayer(pcbnew.Edge_Cuts)
+    edge.SetWidth(pcbnew.FromMM(0.1))
+    b.Add(edge)
+    lib_id = circuit.by_ref("H2").footprint
+    fp = pcbnew.FootprintLoad(libs.footprint_path(lib_id), libs.split(lib_id)[1])
+    fp.SetReference("H2")
+    fp.SetPosition(pcbnew.VECTOR2I_MM(10, 10))
+    b.Add(fp)
+    net = pcbnew.NETINFO_ITEM(b, "L_IN")
+    b.Add(net)
+    y = 10 + 1.6 + gap_mm + 0.75
+    t = pcbnew.PCB_TRACK(b)
+    t.SetStart(pcbnew.VECTOR2I_MM(5, y))
+    t.SetEnd(pcbnew.VECTOR2I_MM(50, y))
+    t.SetWidth(pcbnew.FromMM(1.5))
+    t.SetLayer(pcbnew.F_Cu)
+    t.SetNet(net)
+    b.Add(t)
+    pcbnew.SaveBoard(path, b)
+
+
+def _relay_board(path, gap_mm, net_name="GND", width=0.3):
+    """K1 (netless pads, as on the real board) plus a track on net_name gap_mm right of pad 4."""
     b = pcbnew.BOARD()
     edge = pcbnew.PCB_SHAPE(b)
     edge.SetShape(pcbnew.SHAPE_T_RECT)
@@ -42,17 +70,21 @@ def _relay_board(path, gap_mm):
     b.Add(fp)
     pad4 = [p for p in fp.Pads() if p.GetNumber() == "4"][0]
     bb = pad4.GetBoundingBox()
-    x = bb.GetRight() + pcbnew.FromMM(gap_mm + 0.15)
-    net = pcbnew.NETINFO_ITEM(b, "GND")
+    x = bb.GetRight() + pcbnew.FromMM(gap_mm + width / 2)
+    net = pcbnew.NETINFO_ITEM(b, net_name)
     b.Add(net)
     t = pcbnew.PCB_TRACK(b)
     t.SetStart(pcbnew.VECTOR2I(x, bb.GetCenter().y - pcbnew.FromMM(1)))
     t.SetEnd(pcbnew.VECTOR2I(x, bb.GetCenter().y + pcbnew.FromMM(1)))
-    t.SetWidth(pcbnew.FromMM(0.3))
+    t.SetWidth(pcbnew.FromMM(width))
     t.SetLayer(pcbnew.F_Cu)
     t.SetNet(net)
     b.Add(t)
     pcbnew.SaveBoard(path, b)
+
+
+def _mains_by_relay_board(path, gap_mm):
+    _relay_board(path, gap_mm, "L_SW_A", 1.5)
 
 
 class Project(unittest.TestCase):
@@ -84,6 +116,19 @@ class Project(unittest.TestCase):
 
     def test_green_track_clear_of_relay_nc_pad_passes(self):
         text = self._drc(7.0, _relay_board)
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_mains_track_may_pass_the_nc_pad_at_mains_clearance(self):
+        # The NC pad is at mains potential: the mains-to-SELV rules must not apply to it.
+        text = self._drc(2.0, _mains_by_relay_board)
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_red_mains_track_near_mounting_hole_fails(self):
+        text = self._drc(2.0, _hole_board)
+        self.assertIn("rule 'mains to mounting holes'", text, text)
+
+    def test_green_mains_track_clear_of_mounting_hole_passes(self):
+        text = self._drc(7.0, _hole_board)
         self.assertIn("** Found 0 DRC violations **", text, text)
 
     def test_project_json(self):

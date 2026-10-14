@@ -9,6 +9,10 @@ from . import circuit
 # whenever the coil is off: it is live mains that the netclass rules cannot see. The last
 # rule names it directly; it comes after the relay_pads relaxation so that cannot override it.
 # memberOfFootprint('K*') does not match in KiCad 10.0.6, so both relays are named.
+# The NC pad is netless, so the two "mains to selv" rules would also see it as SELV on the B
+# side; it is at mains potential, so they exclude it and mains copper passes it at the MAINS
+# in-class clearance. An M3 head or washer bears on the area round each mounting hole, so
+# mains copper keeps 6 mm from every non-plated hole (spec, "Stackup and fab").
 RULES = """(version 1)
 (rule "mains track width"
   (condition "A.NetClass == 'MAINS'")
@@ -17,14 +21,17 @@ RULES = """(version 1)
   (condition "A.NetClass == 'MAINS'")
   (constraint edge_clearance (min 1mm)))
 (rule "mains to selv"
-  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS'")
+  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
   (constraint clearance (min 6mm)))
 (rule "mains to selv at relay pads"
-  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads')")
+  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads') && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
   (constraint clearance (min 3.5mm)))
 (rule "relay NC contact is live"
   (condition "(A.memberOfFootprint('K1') || A.memberOfFootprint('K2')) && A.Pad_Number == '4' && B.NetClass != 'MAINS'")
   (constraint clearance (min 6mm)))
+(rule "mains to mounting holes"
+  (condition "A.NetClass == 'MAINS' && B.Pad_Type == 'NPTH, mechanical'")
+  (constraint hole_clearance (min 6mm)))
 """
 
 
