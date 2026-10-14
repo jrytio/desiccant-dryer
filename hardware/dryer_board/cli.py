@@ -67,9 +67,10 @@ def cmd_check(_args):
     return 0 if ok else 1
 COMMANDS["check"] = cmd_check
 
-def cmd_export(_args):
+def cmd_export(args):
     from . import export
-    docs = os.path.join(kicad_env.REPO, "docs", "hardware")
+    # --no-docs: leave the committed review files in docs/hardware/ alone (CI uses it).
+    docs = None if "--no-docs" in args else os.path.join(kicad_env.REPO, "docs", "hardware")
     for k, v in sorted(export.export_all(kicad_env.PROJECT_DIR, kicad_env.OUT_DIR, docs).items()):
         print("%-14s %s" % (k, v))
     return 0

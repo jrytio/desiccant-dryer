@@ -29,7 +29,8 @@ passing `red` case means the gap closed and the case must be marked
 
 `tests/test_pinmap.py` holds `esphome/packages/board-*.yaml` against
 `hardware/dryer_board/pinmap.py` (the PCB's header-position wiring); it runs in
-the `lint-config` job in `.github/workflows/build.yml`, not in the hardware suite.
+the `lint-config` job in `.github/workflows/build.yml`, not in the hardware suite;
+it also runs in `.github/workflows/hardware.yml`.
 It is plain python3 with no PyYAML: `python3 tests/test_pinmap.py`.
 
 Add a case by copying an existing file, changing `id`, `covers`, `status`
