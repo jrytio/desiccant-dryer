@@ -183,6 +183,29 @@ should be protected accordingly.
    update entity within 6 h (or immediately after a manual entity refresh),
    installs it, and reports the new number in `Firmware Version`.
 
+## PCB revisions
+
+The board under `hardware/` has its own revision letter, separate from the
+firmware's semver. It feeds the silkscreen, the title block and the fab
+file names.
+
+1. In the PR, bump `REVISION` in `hardware/dryer_board/circuit.py` (A, B,
+   ...) along with the change.
+2. `scripts/hardware.sh generate`, then `scripts/hardware.sh route`,
+   then `scripts/hardware.sh check` (must pass), then
+   `scripts/hardware.sh export` (refreshes `docs/hardware/`). Commit the
+   KiCad project and the review files.
+3. After the PR merges, tag `origin/main` and push the tag:
+
+   ```bash
+   git fetch origin && git tag pcb-revB origin/main && git push origin pcb-revB
+   ```
+
+4. The `hardware` workflow runs on the tag and creates a GitHub release
+   with the gerber zip, the JLCPCB BOM and CPL (and KiCad's own position
+   CSV), and the schematic PDF attached. Order from those files, not from a local export, so what was
+   sent to the fab is recoverable.
+
 ## Notes
 
 - The production selector sets `min_version: 2026.9.0`

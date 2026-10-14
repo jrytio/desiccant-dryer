@@ -103,7 +103,21 @@ jumper (open by default); unused. The 12-pin header carries GPIO8 and GPIO4
 where a standard Feather has "9" and "5" — GPIO9/GPIO5 are A3/A5 on the
 16-pin header only. Pin map verified against SparkFun's Eagle schematic
 (docs/pinout-verification.md); wiring picture in docs/breadboard.svg,
-protoboard placement proposal in docs/board-layout.svg.
+the previous protoboard build in docs/board-layout.svg.
+
+`hardware/` is the controller PCB (rev A, one 110 × 85 mm two-layer
+board, JLCPCB-assembled; docs/hardware.md "Printed circuit board" and
+`hardware/README.md`). `hardware/dryer_board/` is a Python package run
+under KiCad 10's bundled Python by `scripts/hardware.sh`
+(`test`, `generate`, `route`, `check`, `export`): `circuit.py` is the
+parts and nets table and `REVISION`, `pinmap.py` header position to
+function, `placement.py` the board geometry and the hand-placed mains
+copper, `project.py` the netclasses and DRC rules. It writes the committed
+KiCad project in `hardware/dryer-controller/`, which opens normally in
+the GUI. `generate` keeps existing tracks; `route` runs Freerouting in
+Docker on the low-voltage nets only. CI (`.github/workflows/hardware.yml`)
+checks the committed files against the generator, runs ERC, DRC and the
+exports, and never routes. Review renders live in `docs/hardware/`.
 
 ## Control logic (see docs/control-logic.md for the full state machine)
 
@@ -146,6 +160,17 @@ service 180 min) are untested guesses meant to get first cycles logging.
   packages contain no GPIO numbers. The T-J12 and T-J12C lint cases pin
   each board's five output pins; change a pin only together with its case
   and docs/pinout-verification.md.
+- `hardware/dryer_board/pinmap.py` and the two board packages agree by
+  header position; `tests/test_pinmap.py` enforces it (in `build.yml`'s
+  lint job and in `hardware.yml`). A pin change touches both together.
+- The mains nets are `L_IN`, `L_FUSED`, `L_SW_A`, `L_SW_B` and `N`, and
+  nothing but J_MAINS, F1, K1 and K2 may touch them (`circuit.check()`).
+  Mains copper is fixed geometry in `placement.MAINS_TRACKS`, laid locked by
+  the generator; it is never autorouted.
+- The DRC rules in `hardware/dryer_board/project.py` (`RULES`: mains to
+  SELV 6 mm, 3.5 mm only inside `relay_pads`, the relay NC pads 6 mm, mains
+  to mounting holes 6 mm, and the NC-pad exclusion on the mains-to-SELV
+  rules) are never weakened to make a check pass; move the copper instead.
 
 ## Working conventions
 
@@ -206,6 +231,11 @@ service 180 min) are untested guesses meant to get first cycles logging.
   unverified as such.
 - Keep the C++ in lambdas small; prefer ESPHome components/automations when
   they exist.
+- No Java on the Mac: Freerouting runs in Docker
+  (`ghcr.io/freerouting/freerouting:2.5.0`). `scripts/hardware.sh route`
+  re-routes the SELV nets from scratch each run; commit the routed board
+  only after `scripts/hardware.sh check` passes, and run
+  `scripts/hardware.sh export` to refresh `docs/hardware/`.
 
 ## Open items
 
@@ -214,8 +244,11 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Confirm real breakthrough curve and regen time; retune defaults.
 - Decide whether a proper dew-point transmitter (4–20 mA / Modbus) is needed
   once real data is in.
-- PCB design is a separate effort; the breadboard wiring is in docs/hardware.md
-  and docs/breadboard.svg.
+- PCB rev A is designed but not ordered or built. Before a first article:
+  review the renders, print `docs/hardware/top.svg` 1:1 against the real
+  parts, run JLCPCB's DFM check, confirm stock. Unverified: the IEC 62368-1
+  creepage desk review, the CJ2310 at 3.3 V gate drive, the K78 module's
+  body height, NO/NC on the fitted relays (docs/hardware.md).
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows
   "(waiting)" if RH is also high. Decide whether `max_service_min` should

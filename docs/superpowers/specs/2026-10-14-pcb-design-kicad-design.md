@@ -272,3 +272,94 @@ applies unchanged from its section 1.
   2.54 mm pitch, In-GND-Out); the generator asserts the pin pitch and the
   plan compares the body outlines.
 - Board thermal: the 5 V module at about 0.4 A, the SS34 at about 0.2 W.
+
+## As built (2026-10-14)
+
+The sections above are the approved design and are left as approved. Rev A
+as generated differs from them as follows; each line gives the reason.
+`docs/hardware.md` ("Printed circuit board (rev A)") describes the board
+as built.
+
+- **Outline 110 × 85 mm**, not about 100 × 80: fixed in the implementation
+  plan's placement table, which needed the room for the mains strip, the
+  relay areas and the 6 mm clearances; the spec left the size to the
+  generator.
+- **Mains zone is x ≥ 72.5 mm behind a 2 mm slot (x 70.5 to 72.5) with
+  four gaps**, one per relay coil track, rather than a slot broken only
+  under each relay body.
+- **Both relays sit wholly inside the mains zone, their coil pads SELV
+  islands**, instead of straddling the boundary with the coil pins
+  outside. The Songle pattern puts COM outboard of the coil column, so no
+  straight boundary separates COM from the coil pins. The coil nets stay
+  SELV and reach the islands through the slot gaps under the 3.5 mm
+  `relay_pads` rule.
+- **The COM-to-coil pad gap is 3.51 mm (3.61 mm to the +5V coil pad), not
+  about 3.8 mm**: measured on the committed board, with the stock
+  footprint's Ø3.0 mm COM pad and Ø2.5 mm coil pads. It is the relay's own
+  geometry and still exceeds the 3.2 mm reinforced creepage of the desk
+  review (unverified, see docs/hardware.md).
+- **Mains copper is hand-placed, not autorouted**: 1.5 mm tracks, fixed
+  geometry in `placement.MAINS_TRACKS`, laid locked by the generator. The
+  first routed board had 31 unconnected pads because KiCad's DSN export
+  turns every rule area into a full keep-out (walling off the mains and
+  coil pads) and Freerouting cannot see the custom rules. Five short mains
+  nets are better defined as fixed geometry.
+- **Freerouting routes only the low-voltage nets, from scratch on every
+  `route`**, on a copy of the board with the mains side blocked (except a
+  corridor to each coil pad) and the GND pours removed; the SES is imported
+  onto a bare board and the mains copper laid again. Freerouting keeps any
+  wiring it is given, so a bad route would otherwise survive every rerun.
+- **"Tracks on unchanged nets survive" now describes `generate` only.**
+  `generate` (update mode) keeps existing tracks; `route` replaces every
+  SELV track.
+- **`check` also compares the committed mains copper with
+  `placement.MAINS_TRACKS`** (segments, layer, 1.5 mm width, locked),
+  since the generator owns it. SELV tracks are never compared.
+- **Three DRC rules beyond the spec's two** (`project.RULES`):
+  "relay NC contact is live" (K1/K2 pad 4, netless but at mains potential
+  whenever the coil is off, 6 mm from every non-mains item, after the
+  3.5 mm relaxation so it cannot be overridden); "mains to mounting
+  holes" (6 mm hole clearance to every NPTH hole, so the spec's "each at
+  least 6 mm from mains copper" is checked, not assumed; a review found
+  L_IN 1.19 mm from H2 before it existed); and the **NC-pad exclusion** on
+  both mains-to-SELV rules, so the netless NC pad is not treated as SELV
+  and mains tracks may pass it at the mains in-class clearance.
+- **CJ2310 MOSFET, not SI2308**: in the JLCPCB catalogue; 60 V,
+  V<sub>GS(th)</sub> 2 V max, R<sub>DS(on)</sub> 125 mΩ max at 4.5 V. Its
+  datasheet draws the 3 V output curve on top of the 4 V and 5 V curves at
+  low V<sub>DS</sub>, so 3.3 V drive at 125 mA is comfortable (not
+  measured).
+- **Flybacks are MDD M7** (the S1M rating: 1 A, 1000 V, SMA); the BOM value
+  field still reads "S1M".
+- **U1 is hand-fitted, a TRACO TSR 1-2450 from Mouser**: MornSun's
+  K7805-1000R3 is not stocked at LCSC/JLCPCB or Mouser. The TSR 1-2450 is
+  the part the stock footprint is drawn for, same pinout. It stays in the
+  BOM with no LCSC number; deselect it at JLCPCB.
+- **F1 is an XFCN PTF-76-B covered holder with 15 mm pin pitch** (UL
+  250 VAC 20 A, VDE 6.3 A), on a local footprint, at (77.3, 7) so its body
+  clears the slot and its L_IN pad keeps 6 mm from the SELV pour. A
+  22.3 to 22.6 mm holder cannot sit there: with pad 1 6 mm from SELV, pad 2
+  lands within 6 mm of mounting hole H2.
+- **SW1 is a SOFNG SS-12D00 on a 2.5 mm pitch** (not 2.54), on a local
+  footprint.
+- **The four pluggable headers are DORABO parts on local footprints**
+  copied from the stock Phoenix ones and drilled to the DORABO drawings
+  (Ø1.7 mm for the 5.08 mm headers, Ø1.4 mm for the 3.5 mm one, 0.3 mm
+  annular ring); the stock drills were too small for their pins.
+- **TP2 sits at x 37.4**, off the 3.5 mm grid, to avoid a KiCad 10 DRC
+  false positive (GND fill reported touching TP2 with 0 mm clearance while
+  the saved fill keeps 0.3 mm).
+- **`export.py` instead of a `.kicad_jobset`**: the exports run as
+  kicad-cli calls from Python, which also post-processes the BOM (KiCad's
+  trailing "?" on references such as J_24V stripped, plain comma lists)
+  and writes JLCPCB's CPL from KiCad's position file.
+- **`export --no-docs`** in CI: the renders are not pixel-stable, so CI
+  uploads them as an artifact and never rewrites the committed review
+  files in `docs/hardware/`; a local `export` refreshes them.
+- **Silkscreen**: a "MAINS 120 VAC / keep 6 mm from SELV" legend and a
+  line along the slot rather than a hatched band; socket positions
+  numbered at the ends on the front, with the function at each used
+  position on the back.
+- **No GND stitching vias** are placed by the generator; the pours connect
+  through pads and the vias the router places (DRC reports nothing
+  unconnected).

@@ -1,6 +1,6 @@
 # Hardware: the controller PCB
 
-Generated from `dryer_board/` (see `docs/superpowers/specs/2026-10-14-pcb-design-kicad-design.md`).
+Generated from `dryer_board/` (see `docs/superpowers/specs/2026-10-14-pcb-design-kicad-design.md`, and its "As built" section for where the board differs from it). BOM, header pinouts, LEDs, clearances and the USB-pin budget are in `docs/hardware.md` ("Printed circuit board (rev A)"); revisions and the `pcb-*` release tag in `docs/releasing.md`.
 
     scripts/hardware.sh env       # where KiCad was found
     scripts/hardware.sh test      # unit tests (KiCad's Python)
