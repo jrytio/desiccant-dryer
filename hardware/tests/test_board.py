@@ -83,7 +83,36 @@ class Board(unittest.TestCase):
         t.SetNet(gnd)
         self.b.Add(t)
         pcbnew.SaveBoard(self.pcb, self.b)
+        def routed(b):
+            return [x for x in b.GetTracks() if x.GetNetname() not in circuit.MAINS_NETS]
         b2 = board.build(self.pcb, fresh=False)
-        self.assertEqual(len([x for x in b2.GetTracks()]), 1)
+        self.assertEqual(len(routed(b2)), 1)
         b3 = board.build(self.pcb, fresh=True)
-        self.assertEqual(len([x for x in b3.GetTracks()]), 0)
+        self.assertEqual(len(routed(b3)), 0)
+
+    def test_mains_copper_is_laid_and_locked(self):
+        mains = [t for t in self.b.GetTracks() if t.GetNetname() in circuit.MAINS_NETS]
+        self.assertEqual(len(mains), sum(len(pts) - 1 for _n, _l, pts in placement.MAINS_TRACKS))
+        for t in mains:
+            self.assertTrue(t.IsLocked(), t.GetNetname())
+            self.assertEqual(t.GetWidth(), pcbnew.FromMM(1.5), t.GetNetname())
+
+
+class DanglingVias(unittest.TestCase):
+    def _track(self, b, net, layer, x1, x2):
+        t = pcbnew.PCB_TRACK(b)
+        t.SetStart(pcbnew.VECTOR2I_MM(x1, 10)); t.SetEnd(pcbnew.VECTOR2I_MM(x2, 10))
+        t.SetWidth(pcbnew.FromMM(0.3)); t.SetLayer(layer); t.SetNet(net); b.Add(t)
+
+    def test_only_vias_joined_on_both_layers_survive(self):
+        b = pcbnew.BOARD()
+        net = pcbnew.NETINFO_ITEM(b, "A"); b.Add(net)
+        for x in (10, 20, 30):
+            v = pcbnew.PCB_VIA(b); v.SetPosition(pcbnew.VECTOR2I_MM(x, 10)); v.SetNet(net)
+            v.SetWidth(pcbnew.FromMM(0.6)); v.SetDrill(pcbnew.FromMM(0.3)); b.Add(v)
+        self._track(b, net, pcbnew.F_Cu, 5, 10)    # via at 10: F.Cu only
+        self._track(b, net, pcbnew.F_Cu, 15, 20)   # via at 20: both layers
+        self._track(b, net, pcbnew.B_Cu, 20, 25)
+        self.assertEqual(board.remove_dangling_vias(b), 2)
+        left = [v.GetPosition() for v in b.GetTracks() if v.GetClass() == "PCB_VIA"]
+        self.assertEqual(left, [pcbnew.VECTOR2I_MM(20, 10)])

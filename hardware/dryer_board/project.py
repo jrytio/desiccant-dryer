@@ -52,7 +52,10 @@ def project_dict():
         "board": {"design_settings": {
             "rules": {"min_clearance": 0.2, "min_track_width": 0.2, "min_copper_edge_clearance": 0.5,
                       "min_via_diameter": 0.6, "min_via_annular_width": 0.15, "min_through_hole_diameter": 0.3,
-                      "min_hole_clearance": 0.25, "min_hole_to_hole": 0.5, "min_silk_clearance": 0.0},
+                      "min_hole_clearance": 0.25, "min_hole_to_hole": 0.5, "min_silk_clearance": 0.0,
+                      # One spoke is a sound joint for these low-current SMD pads; the
+                      # default of 2 flags pads the pour reaches from one side only.
+                      "min_resolved_spokes": 1},
             # Silk-over-pad and silk-overlap are cosmetic and the fab clips silk on pads;
             # ignoring them keeps "DRC clean" about copper, clearance and connectivity.
             "rule_severities": {"track_dangling": "warning", "via_dangling": "warning",

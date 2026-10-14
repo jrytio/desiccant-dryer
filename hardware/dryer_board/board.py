@@ -105,6 +105,23 @@ def _drop_orphan_tracks(b):
         if t.GetNetname() not in names:
             b.Delete(t)
 
+def add_mains_copper(b):
+    """Lay the mains tracks from placement.MAINS_TRACKS, locked, replacing any mains copper
+    already on the board. The router never routes mains (route.py says why). Seeded, so the
+    mains tracks get the same UUIDs whether build or route lays them."""
+    pcbnew.KIID.SeedGenerator(UUID_SEED + 2)
+    for t in list(b.GetTracks()):
+        if t.GetNetname() in circuit.MAINS_NETS:
+            b.Delete(t)
+    width = mm(circuit.NETCLASSES["MAINS"][0])
+    layers = {"F.Cu": pcbnew.F_Cu, "B.Cu": pcbnew.B_Cu}
+    for net, layer, pts in placement.MAINS_TRACKS:
+        n = _net(b, net)
+        for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+            t = pcbnew.PCB_TRACK(b); t.SetStart(MM(x1, y1)); t.SetEnd(MM(x2, y2))
+            t.SetWidth(width); t.SetLayer(layers[layer]); t.SetNet(n); t.SetLocked(True)
+            b.Add(t)
+
 # Seed for KiCad's UUID generator, so the same inputs write the same file (footprints are
 # sorted by UUID in the saved board).
 UUID_SEED = 0x64727972
@@ -124,6 +141,7 @@ def build(pcb_path, fresh=False):
             b.Delete(t)
     else:
         _drop_orphan_tracks(b)
+    add_mains_copper(b)
     # Reseed so the regenerated items get the same UUIDs whether or not footprints were
     # loaded from an existing file.
     pcbnew.KIID.SeedGenerator(UUID_SEED + 1)
@@ -152,6 +170,32 @@ def build(pcb_path, fresh=False):
     # SaveBoard writes a default .kicad_pro beside the board; put the canonical one back.
     project.write(os.path.dirname(pcb_path))
     return b
+
+def _touches(via, layer, b):
+    """True if a track end, a pad or a filled zone of the via's net reaches it on this layer."""
+    pos, r, net = via.GetPosition(), via.GetWidth(layer) // 2, via.GetNetCode()
+    for t in b.GetTracks():
+        if t.GetClass() == "PCB_TRACK" and t.GetNetCode() == net and t.GetLayer() == layer:
+            if (t.GetStart() - pos).EuclideanNorm() <= r or (t.GetEnd() - pos).EuclideanNorm() <= r:
+                return True
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            if pad.GetNetCode() == net and pad.IsOnLayer(layer) and pad.HitTest(pos):
+                return True
+    for z in b.Zones():
+        if not z.GetIsRuleArea() and z.GetNetCode() == net and z.IsOnLayer(layer) \
+                and z.GetFilledPolysList(layer).Contains(pos):
+            return True
+    return False
+
+def remove_dangling_vias(b):
+    """Delete vias that are not connected on both of their layers (router leftovers from
+    abandoned partial routes). Returns how many went."""
+    gone = 0
+    for v in list(b.GetTracks()):
+        if v.GetClass() == "PCB_VIA" and not (_touches(v, pcbnew.F_Cu, b) and _touches(v, pcbnew.B_Cu, b)):
+            b.Delete(v); gone += 1
+    return gone
 
 def export_dsn(b, dsn_path):
     if not pcbnew.ExportSpecctraDSN(b, dsn_path):

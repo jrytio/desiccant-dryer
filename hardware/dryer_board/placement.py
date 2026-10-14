@@ -50,6 +50,32 @@ PLACE = {
     "J_LOADS": (38, 78, 0),
 }
 
+# Mains copper, laid by board.add_mains_copper (locked; Freerouting never routes mains).
+# (net, layer, polyline). Width is the MAINS netclass's 1.5 mm. Hand-placed because the
+# custom rules in project.RULES are not visible to the router, and the mains side is tight:
+# - every mains track keeps 6 mm from each relay's netless NC pad 4 (90.2, 16) and (90.2, 54)
+#   (the "mains to selv" rule sees it as non-mains), i.e. 8.25 mm centre to centre;
+# - 3.5 mm from the coil pads and the SELV coil corridors at y 16.05/28.05/54.05/66.05;
+# - 6 mm from SELV copper left of the slot outside the relay areas (x >= 76.25);
+# - 1 mm between mains nets, 1 mm to the board edge and the mounting holes.
+# The NC exclusions leave no vertical passage between a coil pad and its NC pad, so L_IN,
+# L_SW_B and K2's feed all run down the right of J_MAINS (columns x 103.2 and 105.8 on B.Cu,
+# 103.2 and 108.05 on F.Cu); pins 2 and 3 are reachable only from the right or, for pin 3,
+# on the diagonal that grazes K2's NC exclusion (8.30 mm against 8.25).
+MAINS_TRACKS = [
+    ("L_IN", "F.Cu", [(82, 7), (77, 7)]),
+    ("L_IN", "F.Cu", [(77, 7), (77, 3), (100, 3), (105, 8), (108.05, 8), (108.05, 62), (99.5, 62)]),
+    ("L_FUSED", "F.Cu", [(92, 7), (97, 7)]),
+    ("L_FUSED", "B.Cu", [(97, 7), (98.8, 8.8), (98.8, 20.0), (95.6, 23.2), (95.6, 31.52), (105.8, 31.52),
+                         (105.8, 72), (84, 72), (84, 61), (83, 60), (76, 60)]),
+    ("L_FUSED", "B.Cu", [(76, 22), (83.5, 22), (86, 24.5), (94.3, 24.5), (95.6, 23.2)]),
+    ("L_SW_A", "B.Cu", [(90.15, 28.05), (90.15, 42.19), (96, 48.04), (99.5, 51.84)]),
+    ("L_SW_B", "B.Cu", [(90.15, 66.05), (101.6, 66.05), (103.2, 64.45), (103.2, 41.68), (99.5, 41.68)]),
+    ("N", "F.Cu", [(99.5, 26.44), (95.6, 26.44), (95.6, 46.76), (99.5, 46.76)]),
+    ("N", "F.Cu", [(95.6, 36.6), (99.5, 36.6)]),
+    ("N", "F.Cu", [(99.5, 46.76), (103.2, 46.76), (103.2, 56.92), (99.5, 56.92)]),
+]
+
 # (text, x, y, size, rotation, layer, justify)
 SILK = [
     ("ESP32 desiccant dryer controller  rev ${REVISION}  AGPL-3.0  github.com/jrytio/desiccant-dryer", 53, 1.4, 0.9, 0, "F.SilkS", "center"),

@@ -39,6 +39,31 @@ def cmd_route(args):
     return 0
 COMMANDS["route"] = cmd_route
 
+def cmd_check(_args):
+    """ERC on the committed schematic, DRC on the committed board; exit 1 on any violation,
+    unconnected pad or ERC error, with both reports printed."""
+    import subprocess
+    from . import board as board_mod, circuit
+    sch = os.path.join(kicad_env.PROJECT_DIR, circuit.PROJECT + ".kicad_sch")
+    pcb = os.path.join(kicad_env.PROJECT_DIR, circuit.PROJECT + ".kicad_pcb")
+    ok = True
+    erc_rpt = sch + ".erc.rpt"
+    if os.path.exists(erc_rpt):
+        os.remove(erc_rpt)
+    erc = subprocess.run([kicad_env.kicad_cli(), "sch", "erc", "--severity-all", "--exit-code-violations",
+                          "-o", erc_rpt, sch], capture_output=True, text=True)
+    if not os.path.exists(erc_rpt):
+        print("ERC did not run (exit %d)\n%s%s" % (erc.returncode, erc.stdout, erc.stderr))
+        return 1
+    with open(erc_rpt, encoding="utf-8") as f:
+        print(f.read())
+    ok &= erc.returncode == 0
+    text = board_mod.drc_report(pcb)
+    print(text)
+    ok &= "** Found 0 DRC violations **" in text and "** Found 0 unconnected pads **" in text
+    return 0 if ok else 1
+COMMANDS["check"] = cmd_check
+
 def main(argv):
     if len(argv) < 2 or argv[1] not in COMMANDS:
         print("usage: python -m dryer_board <%s>" % "|".join(sorted(COMMANDS)))
