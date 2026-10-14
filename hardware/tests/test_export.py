@@ -38,3 +38,11 @@ class Export(unittest.TestCase):
         relay = [r for r in rows if "K1" in r[1]][0]
         self.assertEqual(relay[3], "C35449")
         self.assertFalse(any("H1" in r[1] for r in rows[1:]))
+
+    def test_bom_matches_cpl(self):
+        bom = set()
+        for r in _rows(self.paths["bom"])[1:]:
+            bom.update(d.strip() for d in r[1].split(","))
+        cpl = set(r[0] for r in _rows(self.paths["cpl"])[1:])
+        self.assertFalse([d for d in bom if "?" in d or "-" in d])
+        self.assertEqual(bom, cpl | set("TP%d" % i for i in range(1, 10)))

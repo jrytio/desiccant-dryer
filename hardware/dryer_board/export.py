@@ -24,6 +24,17 @@ def jlc_cpl(kicad_csv, out_csv):
             w.writerow([row["Ref"], row["PosX"], row["PosY"], "Top" if row["Side"] == "top" else "Bottom", row["Rot"]])
 
 
+def clean_bom(path):
+    """KiCad appends "?" to a reference that does not end in a digit (J_24V is "unannotated"
+    to it). The descriptive references are deliberate, so strip the "?" from the Designator column."""
+    with open(path, newline="") as f:
+        rows = list(csv.reader(f))
+    for row in rows[1:]:
+        row[1] = ",".join(d.strip().rstrip("?") for d in row[1].split(","))
+    with open(path, "w", newline="") as f:
+        csv.writer(f, quoting=csv.QUOTE_ALL, lineterminator="\n").writerows(rows)
+
+
 def export_all(project_dir, out_dir, docs_dir=None):
     sch = os.path.join(project_dir, circuit.PROJECT + ".kicad_sch")
     pcb = os.path.join(project_dir, circuit.PROJECT + ".kicad_pcb")
@@ -52,7 +63,8 @@ def export_all(project_dir, out_dir, docs_dir=None):
     paths["bom"] = os.path.join(out_dir, stem + "-bom.csv")
     kicad_env.run_cli("sch", "export", "bom", "--fields", "Value,Reference,Footprint,LCSC",
                       "--labels", "Comment,Designator,Footprint,LCSC Part #", "--group-by", "Value,Footprint,LCSC",
-                      "--exclude-dnp", "-o", paths["bom"], sch)
+                      "--exclude-dnp", "--ref-range-delimiter", "", "-o", paths["bom"], sch)
+    clean_bom(paths["bom"])
     paths["schematic_pdf"] = os.path.join(out_dir, stem + "-schematic.pdf")
     kicad_env.run_cli("sch", "export", "pdf", "-o", paths["schematic_pdf"], sch)
     paths["top_svg"] = os.path.join(out_dir, stem + "-top.svg")
