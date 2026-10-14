@@ -1,7 +1,7 @@
 # hardware/dryer_board/schematic.py
 """Write the schematic as a net-label grid: every symbol in its own cell, a global label on
 every pin. KiCad 8 file format (version 20231120), which KiCad 10 reads."""
-import os, re, uuid
+import os, re, shutil, tempfile, uuid
 from . import circuit, libs, sexp, kicad_env
 
 NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "https://github.com/jrytio/desiccant-dryer/hardware")
@@ -96,10 +96,15 @@ def write_lib_tables(project_dir):
             f.write("{}\n")
 
 def netlist_from_kicad(sch_path):
-    out_path = sch_path + ".net"
-    kicad_env.run_cli("sch", "export", "netlist", "--format", "kicadsexpr", "-o", out_path, sch_path)
-    with open(out_path, encoding="utf-8") as f:
-        tree = sexp.parse(f.read())
+    # In a temporary directory, so reading a committed sheet leaves its project directory clean.
+    tmp = tempfile.mkdtemp()
+    try:
+        out_path = os.path.join(tmp, "netlist.net")
+        kicad_env.run_cli("sch", "export", "netlist", "--format", "kicadsexpr", "-o", out_path, sch_path)
+        with open(out_path, encoding="utf-8") as f:
+            tree = sexp.parse(f.read())
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
     nets = {}
     for net in sexp.find_all(sexp.find(tree, "nets"), "net"):
         name = sexp.find(net, "name")[1]

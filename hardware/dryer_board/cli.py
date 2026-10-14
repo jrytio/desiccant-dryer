@@ -43,10 +43,13 @@ def cmd_check(_args):
     """ERC on the committed schematic, DRC on the committed board; exit 1 on any violation,
     unconnected pad or ERC error, with both reports printed."""
     import subprocess
-    from . import board as board_mod, circuit
+    from . import board as board_mod, check_sync, circuit
     sch = os.path.join(kicad_env.PROJECT_DIR, circuit.PROJECT + ".kicad_sch")
     pcb = os.path.join(kicad_env.PROJECT_DIR, circuit.PROJECT + ".kicad_pcb")
-    ok = True
+    diffs = check_sync.all_diffs(kicad_env.PROJECT_DIR)
+    for d in diffs:
+        print("OUT OF SYNC:", d)
+    ok = not diffs
     erc_rpt = sch + ".erc.rpt"
     if os.path.exists(erc_rpt):
         os.remove(erc_rpt)
