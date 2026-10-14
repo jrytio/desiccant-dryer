@@ -13,4 +13,7 @@ if [[ -z "$PY" ]]; then
 fi
 [[ -n "$PY" ]] || { echo "no Python with pcbnew found; install KiCad or set KICAD_PYTHON" >&2; exit 1; }
 export PYTHONPATH="hardware${PYTHONPATH:+:$PYTHONPATH}"
-exec "$PY" -m dryer_board "$@" 2> >(grep -v 'assert ""traits"" failed' >&2)
+# Two KiCad-internal stderr lines are dropped: the wx traits assert, and the "Adding duplicate
+# image handler" debug lines pcbnew.LoadBoard prints the first time it runs after other pcbnew
+# calls in the same process (wx image handlers registered twice inside KiCad; not ours to fix).
+exec "$PY" -m dryer_board "$@" 2> >(grep -v -e 'assert ""traits"" failed' -e 'duplicate image handler' >&2)
