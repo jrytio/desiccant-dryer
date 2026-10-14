@@ -1,0 +1,48 @@
+import unittest
+from dryer_board import libs, circuit, sexp
+
+
+class Libs(unittest.TestCase):
+    def test_plain_symbol(self):
+        pins = libs.symbol_pins("Device:R")
+        self.assertEqual(set(pins), {"1", "2"})
+        self.assertEqual(pins["1"][:3], (0.0, 3.81, 270))
+
+    def test_extends_is_flattened(self):
+        sym = libs.load_symbol("Transistor_BJT:MMBT2222A")
+        self.assertEqual(sym[1], "Transistor_BJT:MMBT2222A")
+        self.assertIsNone(sexp.find(sym, "extends"))
+        pins = libs.symbol_pins("Transistor_BJT:MMBT2222A")
+        self.assertEqual({n: p[3] for n, p in pins.items()}, {"1": "input", "2": "passive", "3": "passive"})
+        units = [u[1] for u in sexp.find_all(sym, "symbol")]
+        self.assertTrue(all(u.startswith("MMBT2222A_") for u in units), units)
+        self.assertEqual(sexp.find(sym, "property")[1], "Reference")
+        values = [p[2] for p in sexp.find_all(sym, "property") if p[1] == "Value"]
+        self.assertEqual(values, ["MMBT2222A"])
+
+    def test_every_part_symbol_and_footprint(self):
+        for p in circuit.PARTS:
+            pins = libs.symbol_pins(p.symbol)
+            self.assertTrue(set(p.pins) <= set(pins), "%s: pins %s not in symbol %s" % (p.ref, set(p.pins) - set(pins), p.symbol))
+            if p.footprint:
+                pads = libs.footprint_pads(p.footprint)
+                self.assertTrue(set(p.pins) <= pads, "%s: pads %s not in footprint %s" % (p.ref, set(p.pins) - pads, p.footprint))
+
+    def test_relay_pad_geometry_matches_songle(self):
+        """docs/hardware.md: COM (0,0), coil (2.0, +-6.0), NO/NC (14.2, +-6.0); KiCad's SANYOU pattern is within 0.1 mm."""
+        pos = libs.footprint_pad_positions("Relay_THT:Relay_SPDT_SANYOU_SRD_Series_Form_C")
+        self.assertAlmostEqual(pos["1"][0], 0.0, delta=0.1)
+        self.assertAlmostEqual(pos["1"][1], 0.0, delta=0.1)
+        for pad in ("2", "5"):
+            self.assertAlmostEqual(pos[pad][0], 2.0, delta=0.1)
+            self.assertAlmostEqual(abs(pos[pad][1]), 6.0, delta=0.1)
+        for pad in ("3", "4"):
+            self.assertAlmostEqual(pos[pad][0], 14.2, delta=0.1)
+            self.assertAlmostEqual(abs(pos[pad][1]), 6.0, delta=0.1)
+        self.assertGreater(pos["3"][1], 0)   # NO at +y (KiCad y-down); NC at -y
+        self.assertLess(pos["4"][1], 0)
+
+    def test_regulator_footprint_pitch(self):
+        pos = libs.footprint_pad_positions("Converter_DCDC:Converter_DCDC_TRACO_TSR-1_THT")
+        self.assertAlmostEqual(pos["2"][0] - pos["1"][0], 2.54, delta=0.01)
+        self.assertAlmostEqual(pos["3"][0] - pos["2"][0], 2.54, delta=0.01)
