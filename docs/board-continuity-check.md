@@ -15,6 +15,186 @@ In-circuit readings run a little low because other parts sit in parallel.
 Beep mode: a steady resistance with no beep is normal where resistors sit
 in the path.
 
+## PCB rev A
+
+First-article check for the printed circuit board in
+[hardware.md](hardware.md#printed-circuit-board-rev-a). Run it on the first
+assembled board, and again on any board whose relay, fuse holder or 5 V
+module was changed. Nothing in this section has been run yet: every
+"expect" value is derived from `hardware/dryer_board/circuit.py` and the
+hardware.md budget, not measured. The protoboard sections below
+(Socket map to step 7) are for the protoboard build only; the socket map
+and the socket-position numbering hold for both.
+
+**Before you start:** ESP pulled out of its sockets, 24 V supply off, mains
+unplugged, **F1 holder empty, SW-USB set OFF.** Probe socket positions with a
+stiff wire or a spare header pin. Pin numbers are the ones in
+hardware.md "Header pinouts" (J_MAINS 1 to 8, J_LOADS 1 to 6, J_24V 1 = 24V+,
+2 = 0V). The test points: TP1 GND, TP2 3V3, TP3 5 V, TP4 24 V, TP5 to TP9
+the HTR_A, HTR_B, VLV_A, VLV_B and FAN drive lines. K1 and K2 pads are
+numbered as on the relay (1 COM, 2 and 5 coil, 3 NO, 4 NC).
+
+If any mains reading (items 1, 2, 3 or 8) is wrong, stop: do not apply
+mains or connect a heater until it is understood.
+
+### Item 1: Shorts
+
+Beep mode, then the Ω range where noted. **Nothing here should beep.**
+The bulk capacitors may chirp while they charge, then the reading climbs;
+a steady beep is a short.
+
+| | From → To | Mode | Expect |
+|---|---|---|---|
+| [ ] | J_24V pin 1 (24V+) → J_24V pin 2 (GND) | beep | open |
+| [ ] | TP3 (5 V) → TP1 (GND) | beep | open |
+| [ ] | TP2 (3V3) → TP1 (GND) | beep | open |
+| [ ] | TP4 (24 V) → TP1 (GND) | beep | open |
+| [ ] | Each J_MAINS pin 1 to 8 → TP1, then → TP3, then → TP4 | Ω, top range | OL on all 24 readings (not merely no beep) |
+| [ ] | Slot, SELV side TP1 → mains side J_MAINS pin 2 (N) | MΩ range | OL |
+| [ ] | Slot, SELV side TP3 → mains side J_MAINS pin 7 (L fused) | MΩ range | OL |
+| [ ] | K1 pad 2 and pad 5 (coil) → K1 pad 1 and pad 3 (contacts), each pair; same for K2 | MΩ range | OL (the coil is the only link across the slot, through its own pads) |
+| [ ] | Look along the slot against a light | visual | the routed slot is open through the board in all five segments, with the four gaps only where the coil tracks cross |
+
+### Item 2: Relay identity
+
+Coil unpowered. This proves NO and NC are where the design says on the
+parts actually fitted; hardware.md "Relay contacts: NO and NC" explains why
+it must be checked. Pad 4 has no copper, so probe the relay's own pin.
+
+| | From → To | Mode | Expect |
+|---|---|---|---|
+| [ ] | K1 pad 1 (COM) → J_MAINS pin 3 (HTR A) | Ω, top range | **open** |
+| [ ] | K1 pad 1 (COM) → K1 pad 4 (NC), probe the pin | beep | **closed** |
+| [ ] | K2 pad 1 (COM) → J_MAINS pin 5 (HTR B) | Ω, top range | **open** |
+| [ ] | K2 pad 1 (COM) → K2 pad 4 (NC), probe the pin | beep | **closed** |
+
+A closed COM-to-heater reading means NO and NC are swapped on the part
+fitted: **stop, do not connect a heater.** Do not use that relay.
+
+### Item 3: Fuse path
+
+| | From → To | Mode | Expect |
+|---|---|---|---|
+| [ ] | J_MAINS pin 1 (L in) → pin 7 (PSU L), F1 holder empty | beep | open |
+| [ ] | Same, with the T 3.15 A fuse fitted and the cover closed | beep | closed |
+| [ ] | J_MAINS pin 7 → K1 pad 1, and → K2 pad 1 | beep | closed (fuse in or out) |
+| [ ] | J_MAINS pin 2, 4, 6, 8 (N) to each other | beep | closed (N is straight through, unfused) |
+| [ ] | J_MAINS pin 2 → pins 1, 3, 5, 7 | Ω, top range | OL |
+
+Remove the fuse again before items 4 to 8 unless a step says otherwise.
+
+### Item 4: Plug keying
+
+| | Check | Expect |
+|---|---|---|
+| [ ] | Each pluggable plug (24 V 2-pin, loads 6-pin, mains 8-pin, sensors 9-pin) is offered to its own header | seats fully |
+| [ ] | The 8-pin mains plug is offered to the 6-pin J_LOADS header, to the 2-pin J_24V and to the 9-pin J_SENS | does not enter |
+| [ ] | The 6-pin loads plug is offered to J_MAINS | does not enter |
+
+### Item 5: Drivers
+
+Resistance mode, from the socket positions (the ESP is out). In-circuit
+readings run a little low. Transistor pins: Q1 and Q2 are 1 B, 2 E, 3 C; Q3
+to Q5 are 1 G, 2 S, 3 D. Probe the resistor junction pad where the
+transistor pin is too small to hold.
+
+| | From → To | Mode | Expect |
+|---|---|---|---|
+| [ ] | 12-pin 4 (heater A) → Q1 base (R1/R2 junction) | Ω | ~1 kΩ |
+| [ ] | Q1 base → GND | Ω | ~1 kΩ (R2) |
+| [ ] | 12-pin 5 (heater B) → Q2 base (R4/R5 junction) | Ω | ~1 kΩ |
+| [ ] | Q2 base → GND | Ω | ~1 kΩ (R5) |
+| [ ] | Q1 pin 3 (collector) → K1 pad 5; Q2 pin 3 → K2 pad 5 | beep | ~0 Ω |
+| [ ] | TP3 (5 V) → K1 pad 5, and → K2 pad 5, red on TP3 | Ω | coil resistance in parallel with the LED branch; about 70 Ω (SRD-05VDC datasheet nominal, not measured) |
+| [ ] | 12-pin 6 (valve A) → Q3 gate | Ω | ~100 Ω (R7) |
+| [ ] | 12-pin 7 (valve B) → Q4 gate | Ω | ~100 Ω (R10) |
+| [ ] | 12-pin 8 (fan) → Q5 gate | Ω | ~100 Ω (R13) |
+| [ ] | Q3, Q4, Q5 gate → GND, each | Ω | ~10 kΩ (R8, R11, R14) |
+| [ ] | Q3 drain → J_LOADS pin 2 (SW_VA) | beep | ~0 Ω |
+| [ ] | Q4 drain → J_LOADS pin 4 (SW_VB) | beep | ~0 Ω |
+| [ ] | Q5 drain → J_LOADS pin 6 (SW_FAN) | beep | ~0 Ω |
+| [ ] | J_LOADS pins 1, 3, 5 (24 V +) → TP4 | beep | ~0 Ω |
+| [ ] | TP5, TP6, TP7, TP8, TP9 → 12-pin 4, 5, 6, 7, 8 in that order | beep | ~0 Ω |
+
+### Item 6: Power path
+
+**Slider and diodes first, with the 24 V supply still off.** Diode mode,
+red probe on the anode. The SS34 reads about 0.2 to 0.4 V forward in diode
+mode (a meter's test current is small, so a typical reading is expected,
+not specified); reversed, OL. The 5 V and 24 V buses have other parts in
+parallel, so a reversed reading above a few hundred ohms is fine but a
+beep is not.
+
+| | From → To | Mode | Expect |
+|---|---|---|---|
+| [ ] | J_24V pin 1 → D11 anode (D11's pad on the F2 side) | beep | ~0 Ω (F2 is a PPTC, closed when cold) |
+| [ ] | D11 forward: red on J_24V pin 1, black on TP4 | diode | forward only, about 0.2 to 0.4 V; reversed OL |
+| [ ] | D14 forward: red on TP3, black on SW1 pin 2 | diode | forward only, about 0.2 to 0.4 V; reversed OL |
+| [ ] | SW1 slider each way: SW1 pin 2 (common) → pin 1, and pin 2 → pin 3 | beep | in one slider position pin 2 to pin 1 is closed and pin 2 to pin 3 is open; the other position swaps them. The position with 2 to 1 closed must be the one marked ON on the silkscreen; if the marking is the wrong way round, stop and report it |
+| [ ] | Slider OFF: 12-pin 3 → TP3 and → TP1 | Ω, top range | OL on both |
+| [ ] | Slider ON: 12-pin 3 → SW1 pin 2 | beep | closed (pin 3 of SW1 is unconnected) |
+
+Return the slider to OFF. **Then power up** (the ESP still out, SW-USB OFF,
+DC supply with a current limit if you have one, 24 V on). DC volts, black
+on TP1:
+
+| | Probe | Expect | Source of the expectation |
+|---|---|---|---|
+| [ ] | TP4 | ≈ 23.6 V (the supply minus the SS34's forward drop) | derived, 24 V supply; not measured |
+| [ ] | TP3 | 4.9 to 5.1 V | hardware.md "USB-pin drop budget": module worst case 4.87 V low end, 5.13 V high end; 4.87 to 4.9 V is inside the datasheet but fails here and the module is replaced |
+| [ ] | TP2 | 0 V (no 3.3 V without the ESP) | derived |
+| [ ] | 12-pin 3, SW-USB OFF | 0 V | the switch is open |
+| [ ] | D12 and D13 | both lit (green) | item 7 |
+| [ ] | The 5 V module is not hot after a minute | touch | only warm |
+
+Then set **SW-USB ON** and measure 12-pin 3 against TP1: **TP3 minus the
+SS34 drop at that current, 0.2 to 0.4 V below TP3** (hardware.md budget).
+With the ESP out the only load is the meter, so the true drop is at the
+low end or below it; a reading closer to TP3 than 0.2 V is not a fault,
+but more than 0.4 V below TP3 is. Set **SW-USB back OFF**, then turn the 24 V
+off. The first reading with an ESP in the sockets belongs in
+docs/hardware-bringup.md, not here.
+
+### Item 7: LED table
+
+24 V on, ESP out, SW-USB OFF. These are the lit-state expectations; the
+driven states (an output on) belong to the bring-up steps with the ESP in,
+and the LEDs there show only that the driver stage conducts.
+
+| | LED | Net it watches | Colour | Lit means | Expect now (ESP out) |
+|---|---|---|---|---|---|
+| [ ] | D12 | +24V (R16 10 kΩ to GND) | green | 24 V present after F2 and D11 | lit |
+| [ ] | D13 | +5V (R17 2.2 kΩ to GND) | green | 5 V module output present | lit |
+| [ ] | D3 | COIL_A, Q1 collector | red | Heater A relay driven | dark |
+| [ ] | D4 | COIL_B, Q2 collector | red | Heater B relay driven | dark |
+| [ ] | D8 | SW_VA, Q3 drain | yellow | Valve A driven | dark |
+| [ ] | D9 | SW_VB, Q4 drain | yellow | Valve B driven | dark |
+| [ ] | D10 | SW_FAN, Q5 drain | yellow | Fan driven | dark |
+
+With the ESP out **none of the five output LEDs (D3, D4, D8, D9, D10) may
+light.** Any of them lit means a gate or base is floating high or a
+transistor is in backwards: power down and look at that stage.
+
+### Item 8: Mains isolation
+
+Mains unplugged, 24 V off, ohmmeter on its top range (the highest
+resistance range the meter has, or its MΩ range). Probe **TP1 and TP3**
+as the SELV side. Every row is two readings (to TP1, to TP3). **Expect OL
+on every one.** F1 in place or out makes no difference to the result; do
+both for the F1 pads.
+
+| | Mains-side point | → TP1 and → TP3 | Expect |
+|---|---|---|---|
+| [ ] | J_MAINS pin 1 (L in), 2 (N), 3 (HTR A), 4, 5 (HTR B), 6, 7 (PSU L), 8 | Ω, top range | OL |
+| [ ] | F1 clip 1 (L_IN side) and F1 clip 2 (L_FUSED side) | Ω, top range | OL |
+| [ ] | K1 pad 1, pad 3, pad 4 | Ω, top range | OL |
+| [ ] | K2 pad 1, pad 3, pad 4 | Ω, top range | OL |
+
+If every row reads OL, the board is cleared for the mains-side work in
+docs/hardware-bringup.md; the formal sign-off (earthing, creepage) is
+`docs/inspection-checklist.md`. Record the reading of any row that is not
+OL, with its two probe points, before changing anything.
+
 ## Socket map
 
 Both rows counted from the USB end. **Bold** = wired on this board.

@@ -27,6 +27,8 @@ this page says `desiccant-dryer-hw-test.yaml`, and has steps of its own in
 
 ## 1. Flash the test build (USB, once)
 
+On a PCB build, run the PCB section of docs/board-continuity-check.md first; from here on the steps are the same.
+
 1. First pull JP-USB (protoboard) or the wire from the board's USB pin to
    the breadboard 5 V rail (breadboard). That pin is the same net as the
    USB-C connector's VBUS, with no diode, so leaving it in ties the buck to
