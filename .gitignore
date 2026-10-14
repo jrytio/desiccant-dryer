@@ -9,3 +9,4 @@ esphome/.esphome/
 .superpowers/
 esphome/.gitignore
 __pycache__/
+hardware/out/
