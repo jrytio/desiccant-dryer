@@ -5,6 +5,10 @@ sparser schema is silently ignored by kicad-cli, which is how a rule can fail to
 import json, os
 from . import circuit
 
+# The relay NC pad (4) carries no net, so no copper ever reaches it, but COM connects to it
+# whenever the coil is off: it is live mains that the netclass rules cannot see. The last
+# rule names it directly; it comes after the relay_pads relaxation so that cannot override it.
+# memberOfFootprint('K*') does not match in KiCad 10.0.6, so both relays are named.
 RULES = """(version 1)
 (rule "mains track width"
   (condition "A.NetClass == 'MAINS'")
@@ -18,6 +22,9 @@ RULES = """(version 1)
 (rule "mains to selv at relay pads"
   (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads')")
   (constraint clearance (min 3.5mm)))
+(rule "relay NC contact is live"
+  (condition "(A.memberOfFootprint('K1') || A.memberOfFootprint('K2')) && A.Pad_Number == '4' && B.NetClass != 'MAINS'")
+  (constraint clearance (min 6mm)))
 """
 
 

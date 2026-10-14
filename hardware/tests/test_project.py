@@ -1,6 +1,6 @@
 import os, json, tempfile, unittest
 import pcbnew
-from dryer_board import project, circuit, kicad_env
+from dryer_board import project, circuit, kicad_env, libs
 
 
 def _two_track_board(path, gap_mm):
@@ -25,14 +25,44 @@ def _two_track_board(path, gap_mm):
     pcbnew.SaveBoard(path, b)
 
 
+def _relay_board(path, gap_mm):
+    """K1 (netless pads, as on the real board) plus a 0.3 mm GND track gap_mm right of pad 4."""
+    b = pcbnew.BOARD()
+    edge = pcbnew.PCB_SHAPE(b)
+    edge.SetShape(pcbnew.SHAPE_T_RECT)
+    edge.SetStart(pcbnew.VECTOR2I_MM(0, 0))
+    edge.SetEnd(pcbnew.VECTOR2I_MM(60, 50))
+    edge.SetLayer(pcbnew.Edge_Cuts)
+    edge.SetWidth(pcbnew.FromMM(0.1))
+    b.Add(edge)
+    lib_id = circuit.by_ref("K1").footprint
+    fp = pcbnew.FootprintLoad(libs.footprint_path(lib_id), libs.split(lib_id)[1])
+    fp.SetReference("K1")
+    fp.SetPosition(pcbnew.VECTOR2I_MM(10, 25))
+    b.Add(fp)
+    pad4 = [p for p in fp.Pads() if p.GetNumber() == "4"][0]
+    bb = pad4.GetBoundingBox()
+    x = bb.GetRight() + pcbnew.FromMM(gap_mm + 0.15)
+    net = pcbnew.NETINFO_ITEM(b, "GND")
+    b.Add(net)
+    t = pcbnew.PCB_TRACK(b)
+    t.SetStart(pcbnew.VECTOR2I(x, bb.GetCenter().y - pcbnew.FromMM(1)))
+    t.SetEnd(pcbnew.VECTOR2I(x, bb.GetCenter().y + pcbnew.FromMM(1)))
+    t.SetWidth(pcbnew.FromMM(0.3))
+    t.SetLayer(pcbnew.F_Cu)
+    t.SetNet(net)
+    b.Add(t)
+    pcbnew.SaveBoard(path, b)
+
+
 class Project(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.mkdtemp()
         project.write(self.dir)
 
-    def _drc(self, gap):
+    def _drc(self, gap, make=_two_track_board):
         pcb = os.path.join(self.dir, circuit.PROJECT + ".kicad_pcb")
-        _two_track_board(pcb, gap)
+        make(pcb, gap)
         # SaveBoard writes a default .kicad_pro beside the board; put ours back.
         project.write(self.dir)
         rpt = os.path.join(self.dir, "drc.rpt")
@@ -46,6 +76,14 @@ class Project(unittest.TestCase):
 
     def test_green_board_passes(self):
         text = self._drc(8.0)
+        self.assertIn("** Found 0 DRC violations **", text, text)
+
+    def test_red_track_near_relay_nc_pad_fails(self):
+        text = self._drc(2.0, _relay_board)
+        self.assertIn("rule 'relay NC contact is live'", text, text)
+
+    def test_green_track_clear_of_relay_nc_pad_passes(self):
+        text = self._drc(7.0, _relay_board)
         self.assertIn("** Found 0 DRC violations **", text, text)
 
     def test_project_json(self):

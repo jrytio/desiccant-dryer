@@ -56,6 +56,14 @@ class Board(unittest.TestCase):
         bad = [l for l in text.splitlines() if l.startswith("[") and not l.startswith("[unconnected_items]")]
         self.assertEqual(bad, [], "\n".join(bad) + "\n\n" + text)
 
+    def test_drc_report_raises_when_drc_cannot_run(self):
+        missing = os.path.join(self.dir, "missing.kicad_pcb")
+        # A stale report must not be returned in place of a failed run.
+        with open(missing + ".drc.rpt", "w", encoding="utf-8") as f:
+            f.write("** Found 0 DRC violations **\n")
+        with self.assertRaises(RuntimeError):
+            board.drc_report(missing)
+
     def test_dsn_carries_netclasses_and_keepouts(self):
         dsn = os.path.join(self.dir, "t.dsn")
         board.export_dsn(self.b, dsn)

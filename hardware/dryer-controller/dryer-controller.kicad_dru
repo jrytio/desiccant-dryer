@@ -11,3 +11,6 @@
 (rule "mains to selv at relay pads"
   (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads')")
   (constraint clearance (min 3.5mm)))
+(rule "relay NC contact is live"
+  (condition "(A.memberOfFootprint('K1') || A.memberOfFootprint('K2')) && A.Pad_Number == '4' && B.NetClass != 'MAINS'")
+  (constraint clearance (min 6mm)))

@@ -160,9 +160,14 @@ def export_dsn(b, dsn_path):
 
 def drc_report(pcb_path):
     """Run DRC and return the report text. kicad-cli exits 5 on violations, so this does
-    not go through run_cli."""
+    not go through run_cli; any other nonzero exit, or no report, is a failed run."""
     rpt = pcb_path + ".drc.rpt"
-    subprocess.run([kicad_env.kicad_cli(), "pcb", "drc", "--severity-all", "--refill-zones", "-o", rpt, pcb_path],
-                   capture_output=True, text=True)
+    if os.path.exists(rpt):
+        os.remove(rpt)
+    r = subprocess.run([kicad_env.kicad_cli(), "pcb", "drc", "--severity-all", "--refill-zones", "-o", rpt, pcb_path],
+                       capture_output=True, text=True)
+    if r.returncode not in (0, 5) or not os.path.exists(rpt):
+        raise RuntimeError("kicad-cli pcb drc failed (exit %d)\nstdout:\n%s\nstderr:\n%s"
+                           % (r.returncode, r.stdout, r.stderr))
     with open(rpt, encoding="utf-8") as f:
         return f.read()
