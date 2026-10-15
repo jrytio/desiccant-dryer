@@ -27,8 +27,9 @@ def _gap(a, b, cap=40.0):
 
 def pour_to_mains_shortfalls(b, bd):
     """Every (filled polygon of a GND pour, mains track or pad) pair on a layer that sits closer
-    than the rules allow in the saved fill: 6 mm, or 3.5 mm where the mains item's copper touches a
-    relay area (never for the NC pads) (the relay_pads rule tests the mains item, A). Returns [(gap, floor, description)]."""
+    than the rules allow in the saved fill: 6 mm, or 3.5 mm where the mains item's copper touches
+    a relay area (the relay_pads rule tests the mains item, A). The relay NC pads, netless but
+    live, are always 6 mm. Returns [(gap, floor, description)]."""
     areas = route.relay_area_polys(bd)
     items = [t for t in b.GetTracks() if t.GetNetname() in bd.MAINS_NETS]
     items += [p for fp in b.GetFootprints() for p in fp.Pads() if p.GetNetname() in bd.MAINS_NETS]

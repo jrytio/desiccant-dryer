@@ -173,7 +173,7 @@ PLACE = {
 #   single board had 1.55; regaining it would put F1's pad 1 at the slot's 1 mm limit): the N
 #   links beside the plug pins. 1.8 mm between the L-side nets (test_margins.py: 1.800, RULES holds them
 #   to 1.6 mm): L_IN passes K2's NO pad at 1.8, L_SW_B passes K1's NO pad at 2.1 on B.Cu;
-# - 1 mm to the board edge: the N links at x 43.15 are 1.1 mm from it;
+# - 1 mm to the board edge: the N links at x 43.15 are 1.05 mm from it (copper edge; test_margins.py prints 1.050);
 # - the relay_pads relaxation (3.5 mm) applies to a whole segment if any of it touches a relay
 #   area (insideArea tests the item, not the overlapping part), so every segment that would cross
 #   an area edge is split there: the x 21 spines at y 18.2 and 39.8/40.7 (the pieces outside

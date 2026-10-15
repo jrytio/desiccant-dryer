@@ -1,8 +1,11 @@
 # hardware/tests/test_margins.py
 """Minimum copper distances on the committed mains board, measured with pcbnew's shape
 collision at 1 um and printed so a bare pass is visible: mains to SELV outside the relay areas
-(>= 6.0), mains copper to each hole edge (>= 6.0), L-side mains nets to each other (>= 1.6).
-The relay NC pads (K1/K2 pad 4, netless but live) count as mains at the full 6.0 everywhere.
+(>= 6.0), mains copper to each hole edge (>= 6.0), L-side mains nets to each other (>= 1.6),
+mains copper to the board edge and slot (>= 1.0). The GND pour fill is covered by
+test_saved_pour_fill_keeps_the_mains_rules in test_routed_board.py, not here. The relay NC pads (K1/K2 pad 4, netless but live) count as mains at the full 6.0 everywhere, and as L-side nets (with the relay off the NC
+contact sits at L while L_SW_x is pulled to N through the heater, so NC to any L-side net is an
+L-to-L gap).
 Layers are compared only where both items have copper, and "inside a relay area" is the real
 copper outline against the area, as DRC judges it."""
 import os, unittest
@@ -33,13 +36,17 @@ class Margins(unittest.TestCase):
         cls.mains = [i for i in items if i.GetNetname() in bd.MAINS_NETS] + cls.nc
         cls.selv = [i for i in items if i.GetNetname() and i.GetNetname() not in bd.MAINS_NETS]
         cls.holes = [(fp.GetReference(), p) for fp in cls.b.GetFootprints() if fp.GetReference().startswith("H") for p in fp.Pads()]
+        cls.nc_ids = {id(p) for p in cls.nc}
+        cls.label = {id(p): p.GetNetname() for p in cls.mains}
+        for p in cls.nc:
+            cls.label[id(p)] = "%s NC" % p.GetParentFootprint().GetReference()
         cls.areas = route.relay_area_polys(bd)
 
     def test_mains_to_selv_outside_relay_areas(self):
         found = []
         for m in self.mains:
             for l in LAYERS:
-                if not m.IsOnLayer(l) or (m not in self.nc and route.in_relay_area(m, l, self.areas)):
+                if not m.IsOnLayer(l) or (id(m) not in self.nc_ids and route.in_relay_area(m, l, self.areas)):
                     continue
                 for s in self.selv:
                     if s.IsOnLayer(l):
@@ -58,9 +65,27 @@ class Margins(unittest.TestCase):
             self.assertGreaterEqual(worst, 6.0)
 
     def test_l_side_nets_apart(self):
-        l_side = [i for i in self.mains if i.GetNetname() not in ("N", "")]
-        found = [(g, a.GetNetname(), c.GetNetname()) for a in l_side for c in l_side
-                 if a.GetNetname() < c.GetNetname() for g in _layer_gaps(a, c)]
+        l_side = [i for i in self.mains if i.GetNetname() != "N"]
+        found = []
+        for n, a in enumerate(l_side):
+            for c in l_side[n + 1:]:
+                nc_pair = id(a) in self.nc_ids and id(c) in self.nc_ids
+                if a.GetNetname() == c.GetNetname() and not nc_pair:
+                    continue
+                found += [(g, self.label[id(a)], self.label[id(c)]) for g in _layer_gaps(a, c)]
         worst = min(found)
         print("L-side mains nets apart: %.3f mm (%s vs %s)" % worst)
         self.assertGreaterEqual(worst[0], 1.6)
+
+    def test_mains_to_board_edge(self):
+        edges = [d for d in self.b.GetDrawings() if d.GetLayer() == pcbnew.Edge_Cuts]
+        found = []
+        for m in self.mains:
+            for l in LAYERS:
+                if m.IsOnLayer(l):
+                    for e in edges:
+                        found.append((_gap(m.GetEffectiveShape(l), e.GetEffectiveShape()),
+                                      m.GetNetname() or "NC", m.GetClass()))
+        worst = min(found)
+        print("mains to board edge and slot: %.3f mm (%s %s)" % worst)
+        self.assertGreaterEqual(worst[0], 1.0)
