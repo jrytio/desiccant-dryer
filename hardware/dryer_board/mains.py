@@ -1,8 +1,9 @@
 # hardware/dryer_board/mains.py
 """The mains board: the fuse, the two relays and their drivers, the 120 VAC plug, and the
-keyed 4-way link from the controller board (controller.py). It is the rev A single board's
-mains strip, plus the relay driver stages, on its own 64 x 85 mm board; the mains copper is
-the same geometry moved 48 mm left and 6 mm down. Parts and nets first, then placement (mm, origin at the
+keyed 4-way link from the controller board (controller.py), on a 45 x 70 mm board (the mains
+space in the enclosure). The mains copper keeps the rev A single board's arrangement (a spine
+between the relay coils and contacts, L_IN and L_FUSED on opposite layers, N linked beside
+the plug) and the distances it held. Parts and nets first, then placement (mm, origin at the
 board's top-left corner, y down, rotation counter-clockwise on screen), then the DRC rules."""
 from typing import List
 from . import parts
@@ -98,95 +99,124 @@ def check():
     return errs
 
 # ---------------------------------------------------------------------------------------
-# Placement. The SELV strip (x < 22.5) holds the link header and the two driver stages; the
-# mains zone (x >= 24.5) behind the 2 mm slot holds the relays and J_MAINS as the rev A single
-# board had them, moved 48 mm left and 6 mm down (x_new = x_old - 48, y_new = y_old + 6; J_MAINS
-# and the N copper 2 mm further right on the 2 mm wider board), so the clearances measured in
-# docs/hardware.md "Mains layout and clearance" are unchanged. The 6 mm drop and the 2 mm of
-# width make room for F1 on its 22.5 mm pitch: its L_FUSED pad must keep 6 mm hole clearance
-# from H2 while its L_IN pad keeps 6 mm from the SELV pour.
+# Placement. 45 x 70 mm, the mains space in the enclosure. SELV strip x 0-7 (link header and
+# both driver stages, two narrow columns, GND pour), slot x 7-9 with four gaps for the coil
+# tracks, mains zone x 9-45: relays with COM at x 12 and contacts at x 26.2, F1 across the top
+# of the zone, J_MAINS pads at x 39.5 with the plug entering from the right edge and N linked
+# at x 43.15 on the plug side.
+#
+# What fixes each position (courtyards measured from the KiCad 10.0.6 footprints):
+# - J_MAINS at x 39.5: the N links run 1.1 mm right of the pads (x 43.15, 1.5 wide) and keep
+#   1.1 mm from the board edge, so the pads cannot go further right; its courtyard (x 36.95 to
+#   50.05, 43.7 tall) runs from y 13.86 to 57.58, between F1 and H4's courtyard (from y 61.4).
+# - F1 at (12.4, 14): its courtyard (x 10.46 to 36.84) must end left of J_MAINS's, which puts
+#   pad 1 at x 12.4 (2 mm from the slot), and that courtyard reaches H2's (x 36.4 up, to
+#   y 8.6), so F1's top courtyard edge sits at y 8.65 (y 14). Pad 2 is then 7.8 mm from H2's
+#   hole edge.
+# - K1 at y 29: K1's top coil pad (SELV) keeps 6 mm from F1's pad 1 (6.27 measured); F1 is
+#   not in a relay area. K2 at y 51.5: L_IN reaches J_MAINS pin 1 at y 53.5 between K2's NC
+#   and NO pads, as on rev A (y COM + 2, 1.8 mm from NO).
+# - The SELV strip: H1 and H3's courtyards leave y 8.6 to 61.4. Nothing SELV comes within
+#   6 mm of F1's pad 1 (x 10.4 up, y 12.4 to 15.6): the column beside it (x 2) carries driver
+#   A's flyback diode and transistor, the second column (x 5.4) starts at y 20.8.
 
-BOARD_W, BOARD_H = 64.0, 85.0
-HOLES = {"H1": (4, 4), "H2": (60, 4), "H3": (4, 81), "H4": (60, 81)}
+BOARD_W, BOARD_H = 45.0, 70.0
+HOLES = {"H1": (4, 4), "H2": (41, 4), "H3": (4, 66), "H4": (41, 66)}
 
-SLOT_X = (22.5, 24.5)
-SLOT_SEGMENTS = [(3, 20), (24, 32), (36, 58), (62, 70), (74, 82)]
-MAINS_ZONE = (24.5, 0.0, 64.0, 85.0)
-RELAY_AREAS = [(18.0, 18.0, 38.0, 38.0), (18.0, 56.0, 38.0, 76.0)]
-GND_POUR = (2.0, 2.0, 21.5, 83.0)
+SLOT_X = (7.0, 9.0)
+# coil pads at y 23.05 / 35.05 (K1) and 45.55 / 57.55 (K2): gaps 21-25, 33-37, 43.5-47.5, 55.5-59.5
+SLOT_SEGMENTS = [(3, 21), (25, 33), (37, 43.5), (47.5, 55.5), (59.5, 67)]
+MAINS_ZONE = (9.0, 0.0, 45.0, 70.0)
+# COM +-10 mm in y, from the strip to just past the spine at x 21 (rev A: COM +-10 both ways)
+RELAY_AREAS = [(2.0, 19.0, 22.0, 39.0), (2.0, 41.5, 22.0, 61.5)]
+# The pour starts at y 21: its corner at (6.5, 21) is 6.7 mm from F1's pad 1 corner
+# (10.4, 15.6) (6.0 at y 20.5). It has to hold that by its outline: board.build fills it
+# before the project's DRC rules exist, so the saved fill would not pull back the 6 mm by itself.
+GND_POUR = (2.0, 21.0, 6.5, 68.0)
 
 PLACE = {
-    "H1": (4, 4, 0), "H2": (60, 4, 0), "H3": (4, 81, 0), "H4": (60, 81, 0),
+    "H1": (4, 4, 0), "H2": (41, 4, 0), "H3": (4, 66, 0), "H4": (41, 66, 0),
     # link header on the left edge, pin 1 at the top (rotation 270 runs the XH's pins down the
-    # board), between the two driver stages
-    "J_CTRL": (6, 42, 270),
+    # board), between the two driver stages; x 3.95 keeps its courtyard (x 0.01 to 6.84) on the board
+    "J_CTRL": (3.95, 30.7, 270),
+    # relay driver A above it: diode, transistor, pulldown, LED down the edge column, the LED
+    # resistor in the second column
+    "D1": (2, 12.4, 90), "Q1": (2, 18.2, 90), "R2": (2, 22.2, 90), "D3": (2, 25.9, 90), "R3": (5.4, 22.5, 90),
+    # relay driver B below it
+    "R5": (2, 43.5, 90), "Q2": (2, 47.6, 90), "D2": (2, 54, 90), "D4": (2, 59.6, 90), "R6": (5.4, 45, 90),
     # mains zone
-    "K1": (28, 28, 0), "K2": (28, 66, 0),
-    "F1": (29.8, 13, 0),
-    "J_MAINS": (53.5, 68, 90),
-    # relay driver A (beside relay A)
-    "R2": (14, 23.5, 0), "Q1": (19, 22, 0), "D1": (19, 27.5, 90), "R3": (14, 26.5, 0), "D3": (14, 29.5, 0),
-    # relay driver B
-    "R5": (16, 57, 0), "D2": (15, 62, 90), "Q2": (19.5, 61, 0), "R6": (19.5, 65.5, 0), "D4": (19.5, 68.5, 0),
+    "K1": (12, 29, 0), "K2": (12, 51.5, 0),
+    "F1": (12.4, 14, 0),
+    "J_MAINS": (39.5, 53.5, 90),
 }
 
 # Mains copper, laid by board.add_mains_copper (locked; Freerouting never routes mains).
 # (net, layer, polyline). Width is the MAINS netclass's 1.5 mm. Hand-placed because the
-# custom rules in RULES are not visible to the router. Distances held:
-# - 3.5 mm from the relay coil pads and the SELV coil corridors at y 22.05/34.05/60.05/72.05
-#   (5.5 mm centre to a coil pad);
-# - 6 mm, copper edge to copper edge, from SELV copper outside the relay areas. The SELV pour
-#   ends at x 21.5 (GND_POUR), so mains copper edges stay at x >= 27.5: a 1.5 mm track's
-#   centre at x >= 28.25, F1's 4 mm wide pad 1 centre at x >= 29.5 (it sits at 29.8);
-# - 6 mm hole clearance from the M4 holes (H2 at (60, 4): F1's pad 2 at (52.3, 13) is the
-#   closest mains copper, about 7.9 mm from the hole's edge);
-# - 1 mm between mains nets (the NC pads are mains), at least 1.5 mm from L to N copper and
-#   1.8 mm between the L-side nets (RULES holds them to 1.6 mm). The L_FUSED stub to J_MAINS
-#   pin 7 runs at y 38.3, 2.0 mm clear of K1's NO pad (L_SW_A), and jogs up onto the pad;
+# custom rules in RULES are not visible to the router. Distances held (measured on the
+# generated board, copper edge to copper edge):
+# - 3.5 mm from the relay coil pads and the SELV coil corridors at y 23.05/35.05/45.55/57.55
+#   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5);
+# - 6 mm from SELV copper outside the relay areas. F1's pad 1 (L_IN) is the mains copper
+#   nearest the strip outside an area: 6.7 mm to the pour's corner, 6.27 mm to K1's top coil
+#   pad. The spine's short pieces between the areas are 6.5 mm from the coil pads;
+# - 6 mm hole clearance from the M4 holes (H2 at (41, 4): F1's pad 2 at (34.9, 14) is the
+#   closest mains copper, 7.8 mm from the hole's edge);
+# - 1 mm between mains nets (the NC pads are mains), at least 1.1 mm from L to N copper
+#   (the N links beside the plug pins) and 1.8 mm between the L-side nets (RULES holds them
+#   to 1.6 mm): L_IN passes K2's NO pad at 1.8, L_SW_B passes K1's NO pad at 2.1 on B.Cu;
+# - 1 mm to the board edge: the N links at x 43.15 are 1.1 mm from it;
 # - the relay_pads relaxation (3.5 mm) applies to a whole segment if any of it touches a relay
 #   area (insideArea tests the item, not the overlapping part), so every segment that would cross
-#   an area edge is split there: the x 37 spines at y 17/39/55 (the middle piece's 0.75 mm end
-#   caps stay outside both areas, y 18-38 and 56-76), the L_FUSED diagonal at (39, 18), and the
-#   L_IN feed and the L_FUSED stub at x 39, so no mains segment outside an area is relaxed.
-# The spine at x 37 runs between the coil pads (x <= 33.7 + 1.75) and the NC/NO pads: L_IN
-# on F.Cu, L_FUSED on B.Cu. N links all four N pins on the right of J_MAINS; the switched
-# lines reach pins 3 and 5 from the left. F1 has its pins at x 29.8 and 52.3 on y 13, where the
-# L_IN stub starts and the L_FUSED diagonal comes down to the spine; the diagonal passes K1's
-# netless NC pad at 2.9 mm, which is mains to mains (the in-class 1 mm applies).
+#   an area edge is split there: the x 21 spines at y 18.2 and 39.8/40.7 (the pieces outside
+#   end 0.75 mm, a cap, short of the areas, y 19-39 and 41.5-61.5), the L_IN feed to J_MAINS
+#   at x 23.5, so no mains segment outside an area is relaxed.
+# The spine at x 21 runs between the coil pads (x <= 13.95 + 1.25) and the NC/NO pads: L_IN
+# on F.Cu, L_FUSED on B.Cu. F1 has its pins at x 12.4 and 34.9 on y 14; L_IN leaves pad 1 to
+# the right and drops onto the spine, L_FUSED leaves pad 2 to the left on the other layer, and
+# a second L_FUSED run drops from pad 2 to J_MAINS pin 7. N links the four N pins on the right
+# of J_MAINS; the switched lines reach pins 3 and 5 from the left, L_SW_A on F.Cu, L_SW_B on
+# B.Cu up the x 30.5 lane between the relay contacts and the plug.
 MAINS_TRACKS = [
-    ("L_IN", "F.Cu", [(34, 13), (29.8, 13)]),
-    ("L_IN", "F.Cu", [(34, 13), (37, 16), (37, 17), (37, 39), (37, 55), (37, 68), (39, 68), (53.5, 68)]),
-    ("L_FUSED", "B.Cu", [(52.3, 13), (39, 18), (37, 20), (37, 39), (37, 55), (37, 66), (28, 66)]),
-    ("L_FUSED", "B.Cu", [(28, 28), (37, 28)]),
-    ("L_FUSED", "B.Cu", [(37, 38.3), (39, 38.3), (52.72, 38.3), (53.5, 37.52)]),
-    ("L_SW_A", "F.Cu", [(42.15, 34.05), (45.5, 37.4), (45.5, 54.5), (48.84, 57.84), (53.5, 57.84)]),
-    ("L_SW_B", "B.Cu", [(42.15, 72.05), (47, 67.2), (47, 47.68), (53.5, 47.68)]),
-    ("N", "F.Cu", [(53.5, 32.44), (57.6, 32.44), (57.6, 62.92), (53.5, 62.92)]),
-    ("N", "F.Cu", [(53.5, 42.6), (57.6, 42.6)]),
-    ("N", "F.Cu", [(53.5, 52.76), (57.6, 52.76)]),
+    ("L_IN", "F.Cu", [(12.4, 14), (18, 14), (21, 17), (21, 18.2), (21, 39.8), (21, 40.7), (21, 53.5), (23.5, 53.5), (39.5, 53.5)]),
+    ("L_FUSED", "B.Cu", [(34.9, 14), (24, 14), (21, 17), (21, 18.2), (21, 39.8), (21, 40.7), (21, 51.5), (12, 51.5)]),
+    ("L_FUSED", "B.Cu", [(12, 29), (21, 29)]),
+    ("L_FUSED", "B.Cu", [(34.9, 14), (34.9, 23.02), (39.5, 23.02)]),
+    ("L_SW_A", "F.Cu", [(26.15, 35.05), (34.44, 43.34), (39.5, 43.34)]),
+    ("L_SW_B", "B.Cu", [(26.15, 57.55), (30.5, 53.2), (30.5, 33.18), (39.5, 33.18)]),
+    ("N", "F.Cu", [(39.5, 17.94), (43.15, 17.94), (43.15, 48.42), (39.5, 48.42)]),
+    ("N", "F.Cu", [(39.5, 28.1), (43.15, 28.1)]),
+    ("N", "F.Cu", [(39.5, 38.26), (43.15, 38.26)]),
 ]
 
 # References that would print over a label (J_MAINS's and J_CTRL's over their pin labels) or
-# off the board (the holes'); board.py hides them on the silkscreen, they stay on F.Fab.
-HIDDEN_REFS = ("J_MAINS", "J_CTRL", "H1", "H2", "H3", "H4")
+# off the board (the holes', and the edge column's D1, Q1, D2, Q2, whose references fall left of
+# the edge); board.py hides them on the silkscreen, they stay on F.Fab.
+HIDDEN_REFS = ("J_MAINS", "J_CTRL", "H1", "H2", "H3", "H4", "D1", "Q1", "D2", "Q2")
 
 # (text, x, y, size, rotation, layer, justify)
 SILK = [
-    ("dryer mains board  rev ${REVISION}  AGPL-3.0  github.com/jrytio/desiccant-dryer", 30, 1.4, 0.8, 0, "F.SilkS", "center"),
-    ("MAINS 120 VAC", 44, 78, 2.0, 0, "F.SilkS", "center"),
-    ("keep 6 mm from SELV", 44, 81, 1.0, 0, "F.SilkS", "center"),
-    ("HTR A", 9.5, 29.5, 0.8, 0, "F.SilkS", "center"), ("HTR B", 19.5, 70.7, 0.8, 0, "F.SilkS", "center"),
-    ("CONTROLLER", 6, 37.8, 0.8, 0, "F.SilkS", "center"),
+    # The title in two lines: at the 0.8 mm minimum text height one line is 45 mm long.
+    ("dryer mains board  rev ${REVISION}  AGPL-3.0", 22.5, 1.1, 0.8, 0, "F.SilkS", "center"),
+    ("github.com/jrytio/desiccant-dryer", 22.5, 3.0, 0.8, 0, "F.SilkS", "center"),
+    ("MAINS 120 VAC", 25, 66, 2.0, 0, "F.SilkS", "center"),
+    ("keep 6 mm from SELV", 25, 68.5, 1.0, 0, "F.SilkS", "center"),
+    ("HTR A", 3.75, 25.9, 0.8, 90, "F.SilkS", "center"), ("HTR B", 3.75, 59.6, 0.8, 90, "F.SilkS", "center"),
+    # On the back, mirrored by board.py: on the front J_CTRL's body covers the whole strip
+    # width beside its pads.
+    ("CONTROLLER", 6.0, 34.45, 0.8, 90, "B.SilkS", "center"),
 ]
-# Link pins, right of the header, one per position (pin 1 at y 42, pitch 2.5 downward).
-SILK += [(name, 9.3, 42 + i * 2.5, 0.8, 0, "F.SilkS", "left") for i, name in enumerate(["5V", "GND", "HTR A", "HTR B"])]
-# Mains header pins, left of the pads, one per position (pin 1 at y 68, pitch 5.08 upward).
-# Vertical, centred at x 49.5 in the gap between the relay outline (x 46.55) and J_MAINS's
-# pin-1 triangle (x 50.53): horizontal labels would run under the relay bodies.
-SILK += [(name, 49.5, 68 - i * 5.08, 0.8, 90, "F.SilkS", "center")
+# Link pins, pin 1 first, as one column reading down the header beside its pads (pin 1 at
+# y 30.7, pitch 2.5 downward), on the back: on the front the header body covers the strip
+# (right of it is the slot), and "HTR B" at the 0.8 mm minimum is wider than the room beside
+# the pads, so the names cannot sit one per pin.
+SILK += [("5V  GND  HTR A  HTR B", 1.05, 34.45, 0.8, 90, "B.SilkS", "center")]
+# Mains header pins, left of the pads, one per position (pin 1 at y 53.5, pitch 5.08 upward).
+# Vertical, centred at x 33.5 in the gap between the relay outline (x 30.55) and J_MAINS's
+# pin-1 triangle (x 36.5): horizontal labels would run under the relay bodies.
+SILK += [(name, 33.5, 53.5 - i * 5.08, 0.8, 90, "F.SilkS", "center")
          for i, name in enumerate(["L IN", "N IN", "HTR A", "N", "HTR B", "N", "PSU L", "PSU N"])]
 # A line along the slot, mains side.
-SILK_LINES = [(25.5, 3, 25.5, 82)]
+SILK_LINES = [(10, 3, 10, 67)]
 
 def rule_areas():
     """The rule areas board.build lays: (name, (x1, y1, x2, y2), (no fills, no tracks, no vias, no pads))."""

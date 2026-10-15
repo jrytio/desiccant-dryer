@@ -157,92 +157,106 @@ def check():
     return errs
 
 # ---------------------------------------------------------------------------------------
-# Placement. 76 x 85 mm: the SELV side of the rev A single board, minus the relay drivers,
-# with the link header where they were. Height is set by the ESP (USB-C face 3 mm past the
-# bottom edge) and J_LOADS; width by SW1 and the M4 holes to its right.
+# Placement. 85 x 70 mm, the controller space in the enclosure. The Thing Plus lies along the
+# long edge with its USB-C face 3 mm past the left edge (x = -3) and its antenna at the right
+# end over a copper-free keep-out; the 12-pin row is above the 16-pin row (component side up,
+# USB left). SparkFun .brd: 12-pin pin 1 is 24.13 mm and 16-pin pin 1 is 13.97 mm from the USB
+# face, the rows are 20.32 mm apart, the board is 22.86 wide and 64.77 long. Socket rotation 90
+# runs the pins toward +x from pin 1.
 
-BOARD_W, BOARD_H = 76.0, 85.0
-HOLES = {"H1": (4, 4), "H2": (72, 4), "H3": (4, 81), "H4": (72, 81)}
+BOARD_W, BOARD_H = 85.0, 70.0
+HOLES = {"H1": (4, 4), "H2": (81, 4), "H3": (4, 66), "H4": (81, 66)}
 
-ANTENNA_KEEPOUT = (5.0, 16.0, 36.0, 34.5)
+_USB_X = -3.0
+_ROW12_Y = 10.0
+_ROW16_Y = _ROW12_Y + 20.32
+# Antenna: the WROOM antenna is the last 6.3 mm of the S2 (x 55.5 to 61.8). No copper on
+# either layer and no pads, so the keep-out starts past the last socket pins (x 49.07, pads to
+# 49.92: the rows end 12.70 mm before the antenna end), at 53.5 mm from the USB face as on
+# rev A. Where the C6's antenna sits on its board is not verified here.
+ANTENNA_KEEPOUT = (50.5, 6.0, 66.0, 34.0)
 # No tracks or vias under U1's body (TRACO TSR-1 datasheet: avoid routing under the
-# converter). U1's courtyard in x, from its top down to y 29.5, 0.5 mm short of the pad row's
-# centre line: with the area down to y 30 the router could not reach pads 1 and 3 (nine
-# connections left unrouted). Pads and pours stay allowed. route.py's router copy keeps it as
-# a keepout.
-U1_KEEPOUT = (40.4, 24.1, 52.7, 29.5)
-GND_POUR = (2.0, 2.0, 74.0, 83.0)
+# converter). U1's courtyard in x, from its top down to 0.5 mm short of the pad row's centre
+# line: with the area down to the pad row the router could not reach pads 1 and 3 (nine
+# connections left unrouted on rev A). Pads and pours stay allowed. route.py's router copy
+# keeps it as a keepout.
+U1_KEEPOUT = (20.4, 40.1, 32.7, 45.5)   # U1 at (24, 46): courtyard x 20.41..32.70
+GND_POUR = (2.0, 2.0, 83.0, 68.0)
 MAINS_TRACKS = []   # no mains copper on this board
 
-# ESP sockets: pin 1 at the USB end (y = 88 is the USB-C face, 3 mm past the edge).
-_USB_Y = 88.0
-_ESP_X = 9.0
-
 PLACE = {
-    "J_ESP12": (_ESP_X + 1.27, _USB_Y - 24.13, 180),
-    "J_ESP16": (_ESP_X + 21.59, _USB_Y - 13.97, 180),
-    "H1": (4, 4, 0), "H2": (72, 4, 0), "H3": (4, 81, 0), "H4": (72, 81, 0),
-    # top strip: sensors, display
-    # J_SENS 4 mm left of where the single board had it: H2's M4 courtyard reaches x 67.5
-    "J_SENS": (33, 8, 0),
-    "J_DISP": (38.3, 17, 90),
-    "R18": (40, 21.5, 0), "C5": (44, 21.5, 0), "C6": (48, 21.5, 0),
-    # 5 V block
-    "U1": (44, 30, 0), "C2": (38.5, 30, 90), "C3": (55, 30, 90), "C4": (62, 29, 0),
-    # R17 sits 0.5 mm below D13: at y 36 the router, kept out from under U1, necks a GND
-    # track to 0.18 mm (under the 0.2 mm minimum) to pass its pad.
-    "R17": (40, 36.5, 0), "D13": (45, 36, 0),
-    "D14": (52, 35.5, 0), "SW1": (62, 37, 0),
-    # test points. TP2 sits 0.1 mm left of the 3.5 mm grid: at x 37.5 the routed board trips a
-    # KiCad 10 DRC false positive (GND fill reported on TP2 and its via with 0 mm clearance, while
-    # the saved fill keeps 0.3 mm). 37.4 is the nearest position that routes clean; 37.3 and 37.6 put
-    # LCD_CS across the antenna keep-out bounding-box test, 37.7 trips the same DRC fault.
-    "TP1": (34, 39.3, 0), "TP2": (37.4, 39.3, 0), "TP3": (41, 39.3, 0), "TP4": (44.5, 39.3, 0),
-    "TP5": (48, 39.3, 0), "TP6": (51.5, 39.3, 0), "TP7": (55, 39.3, 0), "TP8": (34, 55, 0), "TP9": (34, 58.5, 0),
-    # 24 V input
-    "J_24V": (38, 47, 0), "F2": (52, 44, 0), "D11": (60, 44, 0), "C1": (54, 51, 0),
-    "R16": (40, 55.5, 0), "D12": (45, 55.5, 0),
-    # relay drive: the base series resistors and the link header on the right edge, pin 1 at the
-    # top (rotation 270 runs the XH's pins down the board; its latch faces inboard)
-    "R1": (62, 14.5, 0), "R4": (64, 48.5, 0),
-    "J_RLY": (71, 20, 270),
-    # MOSFET stages A, B, C in columns x = 38, 47.5, 57
-    "R7": (38, 58, 0), "R8": (38, 61, 0), "Q3": (38, 65, 0), "D5": (38, 70, 0), "D8": (42.5, 61, 0), "R9": (42.5, 65, 0),
-    "R10": (47.5, 58, 0), "R11": (47.5, 61, 0), "Q4": (47.5, 65, 0), "D6": (47.5, 70, 0), "D9": (52, 61, 0), "R12": (52, 65, 0),
-    "R13": (57, 58, 0), "R14": (57, 61, 0), "Q5": (57, 65, 0), "D7": (57, 70, 0), "D10": (61.5, 61, 0), "R15": (61.5, 65, 0),
-    "J_LOADS": (38, 78, 0),
+    "J_ESP12": (_USB_X + 24.13, _ROW12_Y, 90),
+    "J_ESP16": (_USB_X + 13.97, _ROW16_Y, 90),
+    "H1": (4, 4, 0), "H2": (81, 4, 0), "H3": (4, 66, 0), "H4": (81, 66, 0),
+    # link header, top right, beside the antenna keep-out; pin 1 at the top (rotation 270 runs
+    # the XH's pins down the board, its body toward the keep-out). x 72.5 leaves J_SENS's
+    # courtyard (from x 76.2) clear; the base series resistors sit below it.
+    "J_RLY": (72.5, 10, 270), "R1": (71, 23, 0), "R4": (71, 26, 0),
+    # right edge: sensor header vertical, pin 1 at the bottom of the run (rotation 90 runs the
+    # pins up the board), clear of H2's and H4's M4 courtyards (y 8.6 and 61.4)
+    "J_SENS": (81, 41, 90),
+    # sensor pull-up and decoupling beside the sensor header
+    "R18": (72, 29.5, 0), "C5": (72, 32.5, 0), "C6": (72, 35.5, 0),
+    # 5 V block (row at y 46), with the SW-USB and its legends to the right below the keep-out
+    "U1": (24, 46, 0), "C2": (18.5, 46, 90), "C3": (35, 46, 90), "C4": (41, 45, 0),
+    "R17": (21, 51.5, 0), "D13": (25.5, 51.5, 0), "D14": (32.5, 51.5, 0), "SW1": (62, 37.5, 0),
+    # 24 V input chain: plug bottom left above J_DISP, PPTC and Schottky in the gap to J_LOADS,
+    # the bulk capacitor on the left edge below the USB end, the LED above the plug
+    "J_24V": (12.7, 60.3, 0), "F2": (25.2, 59, 0), "D11": (32, 59, 0), "C1": (4.6, 46, 90),
+    "R16": (12, 51, 0), "D12": (16.5, 51, 0),
+    # test points in a row under the ESP
+    "TP1": (8, 36, 0), "TP2": (11.5, 36, 0), "TP3": (15, 36, 0), "TP4": (18.5, 36, 0),
+    "TP5": (22, 36, 0), "TP6": (25.5, 36, 0), "TP7": (29, 36, 0), "TP8": (32.5, 36, 0), "TP9": (36, 36, 0),
+    # MOSFET stages A, B, C in columns at x 50, 59.5, 69, above J_LOADS
+    "R7": (50, 45, 0), "R8": (50, 48, 0), "Q3": (50, 52, 0), "D5": (50, 57, 0), "D8": (54.5, 48, 0), "R9": (54.5, 52, 0),
+    "R10": (59.5, 45, 0), "R11": (59.5, 48, 0), "Q4": (59.5, 52, 0), "D6": (59.5, 57, 0), "D9": (64, 48, 0), "R12": (64, 52, 0),
+    "R13": (69, 45, 0), "R14": (69, 48, 0), "Q5": (69, 52, 0), "D7": (69, 57, 0), "D10": (73.5, 48, 0), "R15": (73.5, 51.5, 0),
+    # bottom edge: loads plug, and the display header along the edge (rotation 90 runs its
+    # pins toward +x); vertical headers, plugs from above
+    "J_LOADS": (42, 65.5, 0),
+    "J_DISP": (12, 66.5, 90),
 }
 
-# Footprints whose reference would print over a label: R18/C5/C6 over the J_DISP legend, the
+# Footprints whose reference would print over a label: R18/C5/C6 over the J_SENS legend, the
 # LEDs' (D8-D10, D12, D13) over "VLV A", "VLV B", "FAN", "24V", "5V". board.py hides them on
 # the silkscreen; the names stay on F.Fab and in the assembly drawings. "FAN" sits above D10
-# like "VLV A"/"VLV B" (below it, R15's reference covered it).
-HIDDEN_REFS = ("R18", "C5", "C6", "D8", "D9", "D10", "D12", "D13", "H1", "H2", "H3", "H4")
+# like "VLV A"/"VLV B", with R15 below it. The edge connectors' references (J_24V, J_LOADS,
+# J_SENS, J_RLY) would print over their pin legends, which name them.
+HIDDEN_REFS = ("R18", "C5", "C6", "D8", "D9", "D10", "D12", "D13", "H1", "H2", "H3", "H4",
+               "J_24V", "J_LOADS", "J_SENS", "J_RLY")
 
 # (text, x, y, size, rotation, layer, justify)
 SILK = [
-    ("ESP32 desiccant dryer controller  rev ${REVISION}  AGPL-3.0  github.com/jrytio/desiccant-dryer", 38, 1.4, 0.9, 0, "F.SilkS", "center"),
-    ("SW-USB: OFF before any USB-C cable", 57.0, 40.8, 0.8, 0, "F.SilkS", "center"),
-    ("ON", 62.0, 34.6, 0.8, 0, "F.SilkS", "center"), ("OFF", 67.0, 34.6, 0.8, 0, "F.SilkS", "center"),
-    ("GND 3V3 SCL SDA RES DC CS BLK", 46.5, 19.6, 0.8, 0, "F.SilkS", "center"),
-    ("3V3 DQ GND  3V3 DQ GND  3V3 DQ GND", 47, 12.6, 0.8, 0, "F.SilkS", "center"),
-    ("24V+  0V", 40.5, 52.3, 0.8, 0, "F.SilkS", "center"),
-    ("VA+  VA-  VB+  VB-  F+  F-", 50.7, 84.0, 0.8, 0, "F.SilkS", "center"),
-    ("24V", 45, 53.3, 0.8, 0, "F.SilkS", "center"), ("5V", 45, 33.8, 0.8, 0, "F.SilkS", "center"),
-    ("VLV A", 42.5, 58.8, 0.8, 0, "F.SilkS", "center"), ("VLV B", 52, 58.8, 0.8, 0, "F.SilkS", "center"), ("FAN", 61.0, 58.8, 0.8, 0, "F.SilkS", "center"),
-    ("MAINS BOARD", 70.5, 15.8, 0.8, 0, "F.SilkS", "center"),
-    ("1", 10.27, 66.5, 0.8, 0, "F.SilkS", "center"), ("12", 10.27, 33.3, 0.8, 0, "F.SilkS", "center"),
-    ("1", 30.59, 76.7, 0.8, 0, "F.SilkS", "center"), ("16", 30.59, 33.3, 0.8, 0, "F.SilkS", "center"),
-    ("USB end", 20, 83, 0.8, 0, "B.SilkS", "center"),
+    # The front has no free strip long enough for the title (the ESP covers the top, the
+    # connectors the bottom edge), so it runs along the bottom edge on the back.
+    ("ESP32 desiccant dryer controller  rev ${REVISION}  AGPL-3.0  github.com/jrytio/desiccant-dryer", 42.5, 69.0, 0.9, 0, "B.SilkS", "center"),
+    # SW-USB's sentence below it, ON and OFF at its ends (ON at pin 1): above it is its reference
+    ("SW-USB: OFF before any USB-C cable", 63.5, 40.8, 0.8, 0, "F.SilkS", "center"),
+    ("ON", 58.6, 37.5, 0.8, 0, "F.SilkS", "center"), ("OFF", 70.6, 37.5, 0.8, 0, "F.SilkS", "center"),
+    # J_DISP's legend below its pins: above them is J_24V's body
+    ("GND 3V3 SCL SDA RES DC CS BLK", 20.89, 68.9, 0.8, 0, "F.SilkS", "center"),
+    ("3V3 DQ GND  3V3 DQ GND  3V3 DQ GND", 75.0, 27, 0.8, 90, "F.SilkS", "center"),
+    # J_24V's legend above it: below it is J_DISP
+    ("24V+  0V", 15.24, 54.0, 0.8, 0, "F.SilkS", "center"),
+    # J_LOADS's legend above it: its body reaches the bottom edge
+    ("VA+  VA-  VB+  VB-  F+  F-", 54.7, 59.5, 0.8, 0, "F.SilkS", "center"),
+    ("24V", 16.5, 49.2, 0.8, 0, "F.SilkS", "center"), ("5V", 25.5, 49.7, 0.8, 0, "F.SilkS", "center"),
+    ("VLV A", 54.5, 46.2, 0.8, 0, "F.SilkS", "center"), ("VLV B", 64, 46.2, 0.8, 0, "F.SilkS", "center"), ("FAN", 73.5, 46.2, 0.8, 0, "F.SilkS", "center"),
+    ("MAINS BOARD", 70.5, 5.5, 0.8, 0, "F.SilkS", "center"),
+    # socket numerals over the end pins, outside the rows (the references sit at the rows' ends)
+    ("1", 21.13, 7.3, 0.8, 0, "F.SilkS", "center"), ("12", 49.07, 7.3, 0.8, 0, "F.SilkS", "center"),
+    ("1", 10.97, 33.0, 0.8, 0, "F.SilkS", "center"), ("16", 49.07, 33.0, 0.8, 0, "F.SilkS", "center"),
+    ("USB end", 1.5, 20.2, 0.8, 90, "B.SilkS", "center"),
 ]
-# Link pins, left of the header, one per position (pin 1 at y 20, pitch 2.5 downward), in the
-# protoboard harness's order.
-SILK += [(name, 66.8, 20 + i * 2.5, 0.8, 0, "F.SilkS", "right") for i, name in enumerate(["5V", "GND", "HTR A", "HTR B"])]
-# Socket functions on the back (readable with the board upside down), mirrored by board.py.
+# Link pins, left of the header's body, one per position (pin 1 at y 10, pitch 2.5 downward),
+# in the protoboard harness's order. Right of the pins is J_SENS, 2.7 mm away.
+SILK += [(name, 68.3, 10 + i * 2.5, 0.8, 0, "F.SilkS", "right") for i, name in enumerate(["5V", "GND", "HTR A", "HTR B"])]
+# Socket functions on the back (readable with the board upside down), mirrored by board.py:
+# the 12-pin row's above it, the 16-pin row's below it, each reading along its pin.
 _P12 = {4: "HTR A", 5: "HTR B", 6: "VLV A", 7: "VLV B", 8: "FAN", 3: "USB 5V"}
 _P16 = {2: "3V3", 4: "GND", 5: "BL", 8: "RST", 9: "DC", 10: "CS", 11: "SCK", 12: "MOSI", 13: "1-WIRE"}
-SILK += [(n, PLACE["J_ESP12"][0] + 3.5, PLACE["J_ESP12"][1] - (p - 1) * 2.54, 0.8, 0, "B.SilkS", "left") for p, n in _P12.items()]
-SILK += [(n, PLACE["J_ESP16"][0] - 3.5, PLACE["J_ESP16"][1] - (p - 1) * 2.54, 0.8, 0, "B.SilkS", "right") for p, n in _P16.items()]
+SILK += [(n, PLACE["J_ESP12"][0] + (p - 1) * 2.54, _ROW12_Y - 3.5, 0.8, 90, "B.SilkS", "center") for p, n in _P12.items()]
+SILK += [(n, PLACE["J_ESP16"][0] + (p - 1) * 2.54, _ROW16_Y + 3.5, 0.8, 90, "B.SilkS", "center") for p, n in _P16.items()]
 # (x1, y1, x2, y2) silkscreen line segments, F.SilkS
 SILK_LINES = []
 

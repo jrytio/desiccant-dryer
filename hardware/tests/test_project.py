@@ -89,7 +89,7 @@ def _mains_by_relay_board(path, gap_mm):
     _relay_board(path, gap_mm, "L_SW_A", 1.5)
 
 
-def _track_board(path, tracks, areas=(), size=(64, 85)):
+def _track_board(path, tracks, areas=(), size=(mains.BOARD_W, mains.BOARD_H)):
     """A bare board: tracks are (net, (x1, y1), (x2, y2), width), all on F.Cu; areas are
     relay_pads rule areas made the way board.build makes them."""
     b = pcbnew.BOARD()
@@ -117,12 +117,12 @@ def _track_board(path, tracks, areas=(), size=(64, 85)):
     pcbnew.SaveBoard(path, b)
 
 
-_SPINE_X = 37          # the mains spine, between the two relay areas (y 38 to 56)
-_BETWEEN_Y = 47
+_SPINE_X = 21          # the mains spine, between the two relay areas (y 39 to 41.5)
+_BETWEEN_Y = (mains.RELAY_AREAS[0][3] + mains.RELAY_AREAS[1][1]) / 2
 
 def _spine_board(y1, y2):
     """The mains spine from y1 to y2 between the two real relay areas, and a GND track
-    gap_mm (copper edge to edge) to its left at y 47, level with the gap between the areas."""
+    gap_mm (copper edge to edge) to its left, level with the gap between the areas."""
     def make(path, gap_mm):
         x = _SPINE_X - 0.75 - gap_mm - 0.15
         _track_board(path, [("L_FUSED", (_SPINE_X, y1), (_SPINE_X, y2), 1.5), ("GND", (x, _BETWEEN_Y - 2), (x, _BETWEEN_Y + 2), 0.3)],
@@ -205,7 +205,7 @@ class Project(unittest.TestCase):
 
     def test_mains_segment_touching_a_relay_area_is_relaxed_along_its_length(self):
         # Why mains.py splits the spines at the area edges: a segment that reaches into a
-        # relay area gets 3.5 mm everywhere, here 4 mm at y 47, well outside both areas.
+        # relay area gets 3.5 mm everywhere, here 4 mm level with the gap between the areas.
         a, b = mains.RELAY_AREAS
         text = self._drc(4.0, _spine_board(a[3] - 1, b[1] + 1))
         self.assertIn("** Found 0 DRC violations **", text, text)
