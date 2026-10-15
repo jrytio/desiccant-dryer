@@ -232,19 +232,35 @@ up with USB-C at the left, the 12-pin row is on top.
 ![Mains board rev A, top render](hardware/mains-render-top.png)
 
 Two two-layer boards replace the protoboards and keep their split at the
-mains boundary: a 76 × 85 mm **controller board** (`dryer-controller`)
-and a 64 × 85 mm **mains board** (`dryer-mains`), joined by the same keyed
+mains boundary: an 85 × 70 mm **controller board** (`dryer-controller`)
+and a 45 × 70 mm **mains board** (`dryer-mains`), the sizes of the two
+spaces in the enclosure, joined by the same keyed
 JST-XH 4-way link the protoboard harness used (5 V, GND, heater A, heater
 B; [The board-to-board link](#the-board-to-board-link)). The controller
 board takes the same socketed Thing Plus (S2 or C6) at the same header
 positions, so the firmware, the board packages and the pin map are
 unchanged. The mains board carries the fuse, the two relays with their
-driver stages and the 120 VAC plug; its mains zone is the strip at
-x ≥ 24.5 mm behind a 2 mm routed slot with four gaps, one per relay coil
-track: the mains strip of the single board this design started as, moved
-onto its own board at the 2026-10-15 review. Nothing mains exists on the
-controller board (`controller.check()` rejects a mains net). The mounting
-holes on both boards are 4.3 mm, for the M4 hardware on hand.
+driver stages and the 120 VAC plug; its mains zone is x ≥ 9 mm behind a
+2 mm routed slot (x 7 to 9) in five segments with four gaps, one per relay
+coil track. Nothing mains exists on the controller board
+(`controller.check()` rejects a mains net). The mounting holes on both
+boards are 4.3 mm, for the M4 hardware on hand, one in each corner 4 mm
+in from the edges: controller (4, 4), (81, 4), (4, 66), (81, 66), mains
+(4, 4), (41, 4), (4, 66), (41, 66). The 4 mm inset is an assumption until
+the reviewer gives the real pattern (unverified).
+
+On the controller board the Thing Plus lies along the top edge, 12-pin
+row above the 16-pin row, pin 1 at the USB end, with its USB-C face 3 mm
+past the left edge (x = −3); its antenna end is at the right, over a
+keep-out (x 50.5 to 66, y 6 to 34) with no copper on either layer. The top
+copper is also bare over roughly x 29 to 66, y 5 to 34, an island between
+tracks that the pour removed; that is not a keep-out. J_LOADS, J_24V and
+J_DISP are on the bottom edge (vertical headers, plugs from above),
+J_SENS is vertical on the right edge and J_RLY, the link, is at the top
+right beside the keep-out. On the mains board the plug J_MAINS is on the
+right edge, wires leaving to the right, with its housing overhanging the
+edge by 5.05 mm. Both overhangs, and that the plug bodies may overhang
+at all, are assumptions awaiting the reviewer (unverified).
 
 Every field connection is a pluggable header with its own pitch and pin
 count, so no plug fits another header, except that a smaller plug of the
@@ -266,7 +282,7 @@ unverified below:
 - Board thermal: U1 at about 0.4 A and the SS34s (D11, D14) at about
   0.2 W each, in a closed enclosure. Unmeasured.
 - The USB-C overhang: the Thing Plus's USB-C face sits 3 mm past the
-  controller board's bottom edge. Whether a plug fits with the board on its
+  controller board's left edge. Whether a plug fits with the board on its
   standoffs is unchecked.
 - The pin pitch of the fuse holders on hand: F1's footprint takes 21.5 to
   23.5 mm; the listing gives no pitch, and the BLX-A moulding the holders
@@ -528,17 +544,25 @@ heater.
 Both relays sit wholly inside the mains board's mains zone, with their coil
 pads as SELV islands: the Songle pattern puts COM outboard of the coil
 column, so no straight boundary separates COM from the coil pins. The coil
-tracks reach those islands through the four slot gaps. The mains copper is
+tracks reach those islands through the four slot gaps (COIL_A at y 22.75,
++5V at y 35.05, COIL_B at y 45.55, +5V at y 57.55). The mains copper is
 laid by hand, not by the autorouter: 1.5 mm tracks, fixed geometry in
 `mains.MAINS_TRACKS`, locked on the board. The first autorouted board
 left 31 pads unconnected, because KiCad's Specctra export turns every rule
 area into a full keep-out and Freerouting cannot see the custom clearance
-rules; Freerouting now routes only the low-voltage nets. The geometry is
-the single board's mains strip moved 48 mm left and 6 mm down, with
-J_MAINS 2 mm further right on the 2 mm wider board: the drop and the width
-are what F1's 22.5 mm pitch needs, so that its L_FUSED pad keeps 6 mm
-hole clearance from H2 (7.8 mm measured) while its L_IN pad keeps 6 mm
-from the SELV pour. Every M4 hole is at least 6 mm from mains copper.
+rules; Freerouting now routes only the low-voltage nets.
+
+The mains board's layout, in board millimetres (origin top left): the SELV
+strip is x 0 to 7, with J_CTRL at (3.95, 33) and the two relay driver
+stages in two columns beside it; the slot is x 7 to 9, in segments
+(3, 21), (25, 33), (37, 43.5), (47.5, 55.5), (59.5, 67); F1 is at
+(12.4, 14) on its 22.5 mm slotted footprint; K1's COM is at (12, 29) and
+K2's at (12, 51.5); J_MAINS is at (39.5, 53.5), rotated 90°. The mains
+GND pour is small (F.Cu about x 2 to 5.6, y 27.5 to 58.6; B.Cu about
+y 35 to 55) and GND is routed as tracks as well. Every position is fixed
+by a distance, explained in the comment block above `PLACE` in
+`mains.py`: F1's pad 2 against H2, J_MAINS's N links against the board
+edge, F1's pad 1 against the SELV copper beside it.
 
 DRC enforces these rules (`hardware/dryer_board/mains.py`, `RULES`):
 
@@ -558,14 +582,46 @@ KiCad applies the 3.5 mm relaxation to a whole track segment if any part
 of it touches a `relay_pads` area, so the mains tracks are split at the
 area edges and only the pieces at the relay pads are relaxed.
 
-Measured on the committed mains board: the closest L-side pair is 1.80 mm
-(L_IN to K2's NO pad), the L_FUSED stub to J_MAINS pin 7 is 2.00 mm from
-K1's NO pad, and L to N is 1.55 mm (the N track past J_MAINS pins 3, 5 and
-7). The L_FUSED diagonal from F1's pad 2 passes K1's netless NC pad at
-2.9 mm, mains to mains. The relay COM pads are 5.0 mm from the SELV GND
-pour; the COM pads are inside the relay areas, where the 3.5 mm rule
-allows it. Outside the relay areas the closest mains-to-SELV pair is
-6.2 mm (F1's L_IN pad to K1's coil pad).
+Measured on the committed mains board (`hardware/tests/test_margins.py`
+prints the figures that follow with its test run; DRC re-checks the rules
+on every generate and route):
+
+- Mains to SELV outside the relay areas: 6.071 mm, L_IN at F1's pad 1 to
+  the COIL_A track on B.Cu. The rule is 6.0 mm, so the margin is 0.07 mm.
+- Inside the relay areas: 3.511 mm minimum, a coil pad to the COM pad of
+  the same relay (rule 3.5 mm; detail below).
+- The saved GND fill is 5.488 mm from mains copper inside the relay areas
+  (floor 3.5 mm) and 13.75 mm outside them (floor 6.0 mm). The pour
+  outline is kept at y ≥ 21 as a conservative outline, and the fill that
+  is saved is what the test checks, after a refill that applies the
+  custom rules (`board.refill_with_rules`, then `kicad-cli pcb drc
+  --refill-zones --save-board` after every save).
+- Mains to a mounting hole's edge (rule 6.0 mm): H1 9.056 mm, H2 7.760 mm,
+  H3 12.910 mm, H4 9.200 mm.
+- Between the L-side mains nets (rule 1.6 mm): 1.800 mm, L_IN against
+  L_SW_B. The relay NC pads (netless, live when the coil is off) are
+  2.05 mm from L_SW_B.
+- L to N: 1.10 mm centre to centre of the N links beside the plug pins
+  (netclass rule 1.0 mm; the single board had 1.55 mm). Regaining the
+  margin would push F1's pad 1 to the slot's 1 mm limit. An L to N fault
+  blows F1.
+- Mains to the board edge: 1.050 mm, the N links at x 43.15 (rule 1.0 mm).
+  This is the tightest margin on the board.
+
+A known gap in the rules, parked rather than fixed: the DRC rules hold
+the netless relay NC pads to SELV at 6 mm, but to L-side mains copper
+only at the 1.0 mm MAINS netclass clearance (the "mains L to L" rule
+needs both sides in the MAINS class). `test_margins.py` holds them at
+1.6 mm, which is why the NC pad figure above is a test, not a DRC result.
+A rev B rule, NC to L-side 1.6 mm, is the fix.
+
+Freerouting narrowed some SELV tracks below their netclass width where
+space is tight. All are at least 0.2 mm, the board minimum, and DRC-clean.
+On the mains board P5 is down to 0.6 mm (netclass 0.8 mm), including its
+crossing of the COIL_A slot gap; on the controller the Default-class
+pieces go down to 0.225 mm, P24 to 0.4 mm and P5 to 0.48 mm. The currents
+are small (the relay coils about 70 mA, the valves and fan well under
+1 A). The mains tracks are 1.5 mm, locked, hand-placed and never routed.
 
 The smallest mains-to-SELV gap on the board is the relay's own: COM pad
 to coil pad. On the stock footprint (COM pad Ø3.0 mm, coil pads Ø2.5 mm,

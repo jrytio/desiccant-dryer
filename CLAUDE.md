@@ -110,8 +110,8 @@ where a standard Feather has "9" and "5" — GPIO9/GPIO5 are A3/A5 on the
 the previous protoboard build in docs/board-layout.svg.
 
 `hardware/` is the PCB design (rev A): two two-layer, JLCPCB-assembled
-boards, the 76 × 85 mm controller (`dryer-controller`: ESP sockets, 24 V,
-5 V, MOSFET stages, sensor and display headers) and the 64 × 85 mm mains
+boards, the 85 × 70 mm controller (`dryer-controller`: ESP sockets, 24 V,
+5 V, MOSFET stages, sensor and display headers) and the 45 × 70 mm mains
 board (`dryer-mains`: fuse, relays and their drivers, the 120 VAC plug),
 joined by a keyed JST-XH 4-way link (5 V, GND, heater A, heater B);
 docs/hardware.md "Printed circuit board" and `hardware/README.md`.
@@ -266,7 +266,7 @@ service 180 min) are untested guesses meant to get first cycles logging.
   Unverified: the IEC 62368-1 creepage desk review, the CJ2310 at 3.3 V
   gate drive, NO/NC on the fitted relays (docs/hardware.md), board thermal
   (U1 at about 0.4 A, the SS34s at about 0.2 W, in a closed enclosure:
-  unmeasured), the USB-C overhang (3 mm past the bottom edge; room for a
+  unmeasured), the USB-C overhang (3 mm past the left edge; room for a
   plug with the board on standoffs: unchecked).
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows

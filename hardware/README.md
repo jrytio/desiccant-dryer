@@ -2,8 +2,8 @@
 
 Two boards, generated from `dryer_board/` (see `docs/superpowers/specs/2026-10-14-pcb-design-kicad-design.md`, and its "As built" section for where the boards differ from it):
 
-- **`dryer-controller`** (76 × 85 mm): the socketed Thing Plus, 24 V in, the 5 V module, the USB-pin switch, the three MOSFET stages, the sensor and display headers, and J_RLY, the link to the mains board.
-- **`dryer-mains`** (64 × 85 mm): the fuse, the two relays with their driver stages, the 120 VAC plug, and J_CTRL, the other end of the link. The mains zone sits behind a 2 mm routed slot, as on the single board it came from.
+- **`dryer-controller`** (85 × 70 mm, the controller space in the enclosure): the socketed Thing Plus, 24 V in, the 5 V module, the USB-pin switch, the three MOSFET stages, the sensor and display headers, and J_RLY, the link to the mains board.
+- **`dryer-mains`** (45 × 70 mm, the mains space): the fuse, the two relays with their driver stages, the 120 VAC plug, and J_CTRL, the other end of the link. The mains zone sits behind a 2 mm routed slot with four gaps for the coil tracks. Both outlines are the reviewer's enclosure sizes; the corner mounting holes (4 mm in from each edge) and the plug overhangs (USB-C 3 mm past the controller's left edge, J_MAINS 5.05 mm past the mains board's right edge) are assumptions awaiting his confirmation (docs/superpowers/specs/2026-10-15-pcb-two-board-split-design.md).
 
 The link is a JST-XH 4-way, the protoboard harness's connector and pin order: **1 = 5 V, 2 = GND, 3 = heater A, 4 = heater B**, labelled beside both headers. Pin 1 is at the top of each header with the boards side by side (controller left, mains right). The cable is 1:1, XHP-4 housing to XHP-4 housing (a pre-made "XH 2.54" 4-pin female-female lead is the same thing: XH is 2.50 mm); keep it under 30 cm. The link's 2.5 mm pitch means no other plug on either board fits it. The SHT45 is not on either board: it plugs into the Thing Plus's own Qwiic connector with a Qwiic/STEMMA QT cable (docs/hardware.md "Header pinouts").
 

@@ -393,17 +393,23 @@ What changed, each with its reason; the sections above stay as approved.
 
 - **Two boards, not one.** The "Topology: one board" decision is reversed
   at the reviewer's request: the mains is on its own board. The split is
-  the protoboard's, at the mains boundary: the 76 × 85 mm **controller
+  the protoboard's, at the mains boundary: the 85 × 70 mm **controller
   board** (`dryer-controller`: ESP sockets, 24 V in, 5 V, SW-USB, the
   three MOSFET stages, sensor and display headers, test points) and the
-  64 × 85 mm **mains board** (`dryer-mains`: F1, K1, K2 with their driver
+  45 × 70 mm **mains board** (`dryer-mains`: F1, K1, K2 with their driver
   stages R2/R5, Q1/Q2, D1/D2, R3/R6, D3/D4, and J_MAINS). The 1 kΩ base
   series resistors R1/R4 stay on the controller, as on the protoboard's
   logic board, so a link fault puts at most 5 V through 1 kΩ on a GPIO.
-  The mains board is the single board's mains strip moved 48 mm left and
-  6 mm down (J_MAINS and the N copper 2 mm further right on a 2 mm wider
-  board), so every clearance measured before holds; the drop and the width
-  are what F1's new pitch needs (below).
+  The mains board began as the single board's mains strip moved 48 mm
+  left and 6 mm down; it was later re-laid at its enclosure size (next
+  bullet).
+- **Both boards re-laid at the reviewer's enclosure sizes** (2026-10-15):
+  `dryer-controller` 85 × 70 mm and `dryer-mains` 45 × 70 mm, replacing the
+  76 × 85 and 64 × 85 mm sizes first drawn. Design, decisions and the two
+  open questions for the reviewer (the corner-hole pattern, and whether
+  the plug bodies may overhang the edges) are in
+  `2026-10-15-pcb-two-board-split-design.md`; the layout and the measured
+  clearances are in `docs/hardware.md` "Mains layout and clearance".
 - **The link is the protoboard harness again:** JST B4B-XH-A 4-way
   (LCSC C144395) on both boards, J_RLY and J_CTRL, pin order 1 = 5 V,
   2 = GND, 3 = heater A, 4 = heater B, cable 1:1. Keyed and latched, and
