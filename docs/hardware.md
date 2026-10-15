@@ -616,8 +616,8 @@ DRC only (no test prints it):
 - Inside the relay areas: 3.511 mm minimum, a coil pad to the COM pad of
   the same relay, against the 3.5 mm rule (detail below).
 - L to N: 1.10 mm copper to copper, from J_MAINS's L_SW_A pad 3 to the N
-  link at x 43.15, held by the 1.0 mm MAINS netclass clearance (the N
-  track to L track gap is 2.05 mm; the single board had 1.55 mm).
+  link at x 43.15, held by the 1.0 mm MAINS netclass clearance (the
+  single board had 1.55 mm).
   Regaining the margin would push F1's pad 1 to the slot's 1 mm limit. An
   L to N fault blows F1.
 

@@ -85,7 +85,8 @@ tables and the comments in `hardware/dryer_board/mains.py`.
 - **J_MAINS at (39.5, 53.5), rotated 90°, pads at x 39.5**, not x 35; the
   N links run at x 43.15. The housing overhangs the right edge by 5.05 mm
   (bounded at 5.1 mm by `test_outlines`); open with the reviewer.
-- **J_CTRL at (3.95, 33), outside both relay areas**, with the driver parts
+- **J_CTRL at (3.95, 33), pins y 33 to 40.5, held to the plain 6 mm from
+  the COM pads (6.32 mm measured) rather than the relay-area 3.5 mm**, with the driver parts
   in two columns (x 2 and x 5.4), not one.
 - **Antenna keep-out from x 50.5** (to 66, y 6 to 34), not from 54.
 - **Relay areas** (2, 19) to (22, 39) and (2, 41.5) to (22, 61.5).
