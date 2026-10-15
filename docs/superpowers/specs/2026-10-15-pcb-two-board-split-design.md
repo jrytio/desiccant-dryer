@@ -87,7 +87,7 @@ tables and the comments in `hardware/dryer_board/mains.py`.
   (bounded at 5.1 mm by `test_outlines`); open with the reviewer.
 - **J_CTRL at (3.95, 33), pins y 33 to 40.5, 6.32 mm from the COM pads,
   measured and asserted by `test_margins.py`, not enforced by DRC, which holds every SELV item
-  inside the relay areas, strip copper included (4.39 mm minimum), to 3.5 mm**, with the driver parts
+  inside the relay areas, SELV copper near COM at 4.05 mm minimum, 4.39 mm for the strip, to 3.5 mm**, with the driver parts
   in two columns (x 2 and x 5.4), not one.
 - **Antenna keep-out from x 50.5** (to 66, y 6 to 34), not from 54: x 50.5 is 53.5 mm from the
   USB face (which is 3 mm past the left edge), the same distance as on rev A.
@@ -118,7 +118,7 @@ enclosure.
   allow the connector bodies to overhang the board edge (J_MAINS and the
   USB-C do).
 - Strip to COM: DRC's 3.5 mm relay-area rule covers any SELV item near a COM pad, so the
-  strip copper is held to 3.5 mm across the slot (4.39 mm as built), above the 3.2 mm
+  SELV copper near COM is held to 3.5 mm (4.05 mm minimum as built, 4.39 mm for the strip across the slot), above the 3.2 mm
   reinforced figure of the desk review. A question for the hardware reviewer.
 - L to N is 1.10 mm against the 1.6 mm creepage figure for the same working voltage. Rev A's
   reasoning: an L to N failure blows F1, an L to L failure across a relay contact runs a

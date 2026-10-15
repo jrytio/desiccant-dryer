@@ -163,7 +163,7 @@ PLACE = {
 # - 3.5 mm from the relay coil pads and the SELV coil corridors at y 23.05/35.05/45.55/57.55
 #   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5). The rule tests the mains item
 #   and COM is always inside an area, so it also holds the SELV strip's copper to 3.5 mm from
-#   the COM pads: that copper is 4.39 mm away across the slot (test_margins.py);
+#   the COM pads: the minimum is 4.05 mm (COIL_B feed track) and the strip itself 4.39 mm across the slot (test_margins.py);
 # - 6 mm from SELV copper outside the relay areas. F1's pad 1 (L_IN) is the mains copper
 #   nearest the strip outside an area: 6.07 mm to the COIL_A track,
 #   6.12 mm to +5V, 6.27 mm to K1's top coil pad (test_margins.py prints 6.071 mm as the

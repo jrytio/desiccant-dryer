@@ -61,29 +61,35 @@ class Margins(unittest.TestCase):
         com = [(fp.GetReference(), p) for fp in self.b.GetFootprints() if fp.GetReference() in ("K1", "K2")
                for p in fp.Pads() if p.GetNumber() == "1"]
         self.assertEqual(len(com), 2)
-        # Strip copper: the part of each SELV item left of the slot (x < 7). A coil track is
-        # one segment from the strip to its relay pad, so it is clipped at the slot's left edge;
-        # the relays' own coil pads and the island ends of the coil tracks (4.05 to 4.15 mm
-        # from COM, in the docs) are SELV islands in the mains zone, not the strip.
+        # Headline: every SELV track and pad except the relays' own coil pads (SELV islands
+        # 3.51 mm from COM by design, measured in the docs), unclipped, per copper layer.
+        others = [s for s in self.selv
+                  if not (s.GetClass() == "PAD" and s.GetParentFootprint().GetReference() in ("K1", "K2"))]
+        worst = min((g, s.GetNetname(), ref + " COM") for ref, c in com for s in others
+                    for g in _layer_gaps(s, c))
+        print("\nSELV copper to relay COM: %.3f mm (%s to %s)" % worst)
+        self.assertGreaterEqual(worst[0], 3.5)
+        # Strip only: each SELV item clipped at the slot's left edge (x < 7), since a coil
+        # track is one segment from the strip to its relay pad.
         edge = pcbnew.FromMM(bd.SLOT_X[0])
+        box = pcbnew.SHAPE_POLY_SET()
+        box.NewOutline()
+        for x, y in ((-10 ** 8, -10 ** 8), (edge, -10 ** 8), (edge, 10 ** 9), (-10 ** 8, 10 ** 9)):
+            box.Append(x, y)
         found = []
         for ref, c in com:
-            for s in self.selv:
+            for s in others:
                 for l in LAYERS:
                     if not (s.IsOnLayer(l) and c.IsOnLayer(l)):
                         continue
                     poly = pcbnew.SHAPE_POLY_SET()
                     s.TransformShapeToPolygon(poly, l, 0, pcbnew.FromMM(0.005), pcbnew.ERROR_OUTSIDE)
-                    box = pcbnew.SHAPE_POLY_SET()
-                    box.NewOutline()
-                    for x, y in ((-10 ** 8, -10 ** 8), (edge, -10 ** 8), (edge, 10 ** 9), (-10 ** 8, 10 ** 9)):
-                        box.Append(x, y)
                     poly.BooleanIntersection(box)
                     if poly.OutlineCount():
                         found.append((_gap(poly, c.GetEffectiveShape(l)), s.GetNetname(), ref + " COM"))
-        worst = min(found)
-        print("\nSELV copper to relay COM: %.3f mm (%s to %s)" % worst)
-        self.assertGreaterEqual(worst[0], 3.5)
+        sworst = min(found)
+        print("SELV strip (x < 7) to relay COM: %.3f mm (%s to %s)" % sworst)
+        self.assertGreaterEqual(sworst[0], 3.5)
         jctrl = [p for fp in self.b.GetFootprints() if fp.GetReference() == "J_CTRL" for p in fp.Pads()]
         self.assertTrue(jctrl)
         jworst = min((g, p.GetNetname() or "?", ref + " COM") for p in jctrl for ref, c in com

@@ -600,9 +600,12 @@ Printed and asserted by `hardware/tests/test_margins.py`:
 - J_CTRL's pads to the relay COM pads: 6.325 mm (+5V pad to K1 COM),
   asserted at 6.0 mm by `test_selv_to_relay_com`. DRC does not enforce
   this: inside the relay areas it holds every SELV item to 3.5 mm.
-- SELV strip copper (the part of each track left of the slot) to the relay
-  COM pads: 4.387 mm, the +5V track at (5.71, 56.84) to K2's COM, across the
-  slot; asserted at 3.5 mm by the same test.
+- Any SELV track or pad (the relays' own coil pads excepted) to a relay COM
+  pad: 4.050 mm minimum, the COIL_B feed track between the slot gap and its
+  coil pad to K2's COM; asserted at 3.5 mm by `test_selv_to_relay_com`.
+- The SELV strip itself (copper left of the slot, x < 7) to the COM pads:
+  4.387 mm, the +5V track at (5.71, 56.84) to K2's COM, across the slot;
+  printed and asserted at 3.5 mm by the same test.
 
 Floor asserted by a test, value measured once on the committed board with
 pcbnew (not printed by the suite):
@@ -623,9 +626,8 @@ DRC only (no test prints it):
 - Strip to COM, across the slot: the "mains to SELV at relay pads" rule
   tests the mains item, and a COM pad is always inside a relay area, so DRC
   holds any SELV item near COM, not only the relay's own coil pads, to
-  3.5 mm. The strip copper is at 4.39 mm (above) and the coil-feed tracks
-  at their island ends are 4.05 to 4.15 mm from COM (measured once with
-  pcbnew, not printed). Outside the relay areas the 6 mm holds (6.071 mm,
+  3.5 mm. The minimum is 4.050 mm over all SELV copper and 4.387 mm for
+  the strip itself (both printed above). Outside the relay areas the 6 mm holds (6.071 mm,
   printed above); inside them the strip sits at the 3.5 mm rule's
   clearance across the 2 mm slot, which is above the 3.2 mm reinforced
   figure in the desk review below.

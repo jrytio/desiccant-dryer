@@ -271,8 +271,8 @@ service 180 min) are untested guesses meant to get first cycles logging.
   past the mains board's right edge and the assumed corner-hole pattern.
   Rev B rule/clearance questions for the hardware reviewer: the NC-to-L-side
   rule gap (NC pads held to L-side mains only at 1.0 mm by DRC, 1.6 mm by
-  test), the SELV strip to the relay COM pads at 4.39 mm under the 3.5 mm
-  rule, and L to N at 1.10 mm against 1.6 mm creepage.
+  test), SELV copper to the relay COM pads at 4.05 mm (strip 4.39 mm) under the
+  3.5 mm rule, and L to N at 1.10 mm against 1.6 mm creepage.
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows
   "(waiting)" if RH is also high. Decide whether `max_service_min` should
