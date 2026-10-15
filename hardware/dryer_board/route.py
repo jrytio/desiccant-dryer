@@ -180,7 +180,8 @@ def _widen_necks(b, bd):
     n = 0
     for t in b.GetTracks():
         if t.GetClass() == "PCB_TRACK" and t.GetWidth() < floor:
-            t.SetWidth(pcbnew.FromMM(bd.NETCLASSES[t.GetNetClassName()][0])); n += 1
+            cls = bd.NETCLASSES.get(t.GetNetClassName(), bd.NETCLASSES["Default"])
+            t.SetWidth(pcbnew.FromMM(cls[0])); n += 1
     return n
 
 

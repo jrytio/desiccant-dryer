@@ -2,7 +2,8 @@
 """Minimum copper distances on the committed mains board, measured with pcbnew's shape
 collision at 1 um and printed so a bare pass is visible: mains to SELV outside the relay areas
 (>= 6.0), mains copper to each hole edge (>= 6.0), L-side mains nets to each other (>= 1.6),
-mains copper to the board edge and slot (>= 1.0). The GND pour fill is covered by
+mains copper to the board edge and slot (>= 1.0), SELV copper to the relay COM pads (>= 3.5, the
+relay-area rule) and J_CTRL to them (>= 6.0). The GND pour fill is covered by
 test_saved_pour_fill_keeps_the_mains_rules in test_routed_board.py, not here. The relay NC pads (K1/K2 pad 4, netless but live) count as mains at the full 6.0 everywhere, and as L-side nets (with the relay off the NC
 contact sits at L while L_SW_x is pulled to N through the heater, so NC to any L-side net is an
 L-to-L gap).
@@ -55,6 +56,40 @@ class Margins(unittest.TestCase):
         worst = min(found)
         print("\nmains to SELV outside relay areas: %.3f mm (%s vs %s)" % worst)
         self.assertGreaterEqual(worst[0], 6.0)
+
+    def test_selv_to_relay_com(self):
+        com = [(fp.GetReference(), p) for fp in self.b.GetFootprints() if fp.GetReference() in ("K1", "K2")
+               for p in fp.Pads() if p.GetNumber() == "1"]
+        self.assertEqual(len(com), 2)
+        # Strip copper: the part of each SELV item left of the slot (x < 7). A coil track is
+        # one segment from the strip to its relay pad, so it is clipped at the slot's left edge;
+        # the relays' own coil pads and the island ends of the coil tracks (4.05 to 4.15 mm
+        # from COM, in the docs) are SELV islands in the mains zone, not the strip.
+        edge = pcbnew.FromMM(bd.SLOT_X[0])
+        found = []
+        for ref, c in com:
+            for s in self.selv:
+                for l in LAYERS:
+                    if not (s.IsOnLayer(l) and c.IsOnLayer(l)):
+                        continue
+                    poly = pcbnew.SHAPE_POLY_SET()
+                    s.TransformShapeToPolygon(poly, l, 0, pcbnew.FromMM(0.005), pcbnew.ERROR_OUTSIDE)
+                    box = pcbnew.SHAPE_POLY_SET()
+                    box.NewOutline()
+                    for x, y in ((-10 ** 8, -10 ** 8), (edge, -10 ** 8), (edge, 10 ** 9), (-10 ** 8, 10 ** 9)):
+                        box.Append(x, y)
+                    poly.BooleanIntersection(box)
+                    if poly.OutlineCount():
+                        found.append((_gap(poly, c.GetEffectiveShape(l)), s.GetNetname(), ref + " COM"))
+        worst = min(found)
+        print("\nSELV copper to relay COM: %.3f mm (%s to %s)" % worst)
+        self.assertGreaterEqual(worst[0], 3.5)
+        jctrl = [p for fp in self.b.GetFootprints() if fp.GetReference() == "J_CTRL" for p in fp.Pads()]
+        self.assertTrue(jctrl)
+        jworst = min((g, p.GetNetname() or "?", ref + " COM") for p in jctrl for ref, c in com
+                     for g in _layer_gaps(p, c))
+        print("J_CTRL pads to relay COM: %.3f mm (%s to %s)" % jworst)
+        self.assertGreaterEqual(jworst[0], 6.0)
 
     def test_mains_to_holes(self):
         for ref, h in self.holes:

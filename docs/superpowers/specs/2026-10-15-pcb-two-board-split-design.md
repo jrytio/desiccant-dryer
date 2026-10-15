@@ -85,12 +85,16 @@ tables and the comments in `hardware/dryer_board/mains.py`.
 - **J_MAINS at (39.5, 53.5), rotated 90°, pads at x 39.5**, not x 35; the
   N links run at x 43.15. The housing overhangs the right edge by 5.05 mm
   (bounded at 5.1 mm by `test_outlines`); open with the reviewer.
-- **J_CTRL at (3.95, 33), pins y 33 to 40.5, held to the plain 6 mm from
-  the COM pads (6.32 mm measured) rather than the relay-area 3.5 mm**, with the driver parts
+- **J_CTRL at (3.95, 33), pins y 33 to 40.5, 6.32 mm from the COM pads,
+  measured and asserted by `test_margins.py`, not enforced by DRC, which holds every SELV item
+  inside the relay areas, strip copper included (4.39 mm minimum), to 3.5 mm**, with the driver parts
   in two columns (x 2 and x 5.4), not one.
-- **Antenna keep-out from x 50.5** (to 66, y 6 to 34), not from 54.
-- **Relay areas** (2, 19) to (22, 39) and (2, 41.5) to (22, 61.5).
-- **GND pour outline from y 21** on the mains board, (2, 21) to (6.5, 68).
+- **Antenna keep-out from x 50.5** (to 66, y 6 to 34), not from 54: x 50.5 is 53.5 mm from the
+  USB face (which is 3 mm past the left edge), the same distance as on rev A.
+- **Relay areas** (2, 19) to (22, 39) and (2, 41.5) to (22, 61.5): COM ± 10 mm in y, rev A's
+  geometry.
+- **GND pour outline from y 21** on the mains board, (2, 21) to (6.5, 68): its corner is
+  6.66 mm from the bounding box of F1's pad 1.
 - **A rules-aware refill** joined the pipeline (`board.refill_with_rules`),
   and two test files, `test_outlines.py` and `test_margins.py`, hold the
   outlines, overhangs and clearance margins.
@@ -113,5 +117,13 @@ enclosure.
 - The reviewer's hole pattern (corners assumed) and whether the spaces
   allow the connector bodies to overhang the board edge (J_MAINS and the
   USB-C do).
+- Strip to COM: DRC's 3.5 mm relay-area rule covers any SELV item near a COM pad, so the
+  strip copper is held to 3.5 mm across the slot (4.39 mm as built), above the 3.2 mm
+  reinforced figure of the desk review. A question for the hardware reviewer.
+- L to N is 1.10 mm against the 1.6 mm creepage figure for the same working voltage. Rev A's
+  reasoning: an L to N failure blows F1, an L to L failure across a relay contact runs a
+  heater uncontrolled, so L to L is 1.6 mm and L to N the 1.0 mm netclass clearance. For the
+  hardware reviewer.
+- The NC-to-L-side rule gap (see above): a rev B rule.
 - The on-hand fuse holder's pin pitch and the TSR clone's pin order
   (first-article checks exist).

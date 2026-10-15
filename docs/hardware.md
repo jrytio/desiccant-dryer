@@ -546,7 +546,8 @@ Both relays sit wholly inside the mains board's mains zone, with their coil
 pads as SELV islands: the Songle pattern puts COM outboard of the coil
 column, so no straight boundary separates COM from the coil pins. The coil
 tracks reach those islands through the four slot gaps (COIL_A at y 22.75,
-+5V at y 35.05, COIL_B at y 45.55, +5V at y 57.55). The mains copper is
++5V at y 35.05, COIL_B at y 45.55, +5V at y 57.55, as routed; they move on
+any re-route, and the gaps are what the generator fixes). The mains copper is
 laid by hand, not by the autorouter: 1.5 mm tracks, fixed geometry in
 `mains.MAINS_TRACKS`, locked on the board. The first autorouted board
 left 31 pads unconnected, because KiCad's Specctra export turns every rule
@@ -596,6 +597,12 @@ Printed and asserted by `hardware/tests/test_margins.py`:
   L_SW_B.
 - Mains to the board edge: 1.050 mm, the N links at x 43.15 (rule 1.0 mm).
   This is the tightest margin on the board.
+- J_CTRL's pads to the relay COM pads: 6.325 mm (+5V pad to K1 COM),
+  asserted at 6.0 mm by `test_selv_to_relay_com`. DRC does not enforce
+  this: inside the relay areas it holds every SELV item to 3.5 mm.
+- SELV strip copper (the part of each track left of the slot) to the relay
+  COM pads: 4.387 mm, the +5V track at (5.71, 56.84) to K2's COM, across the
+  slot; asserted at 3.5 mm by the same test.
 
 Floor asserted by a test, value measured once on the committed board with
 pcbnew (not printed by the suite):
@@ -613,13 +620,29 @@ pcbnew (not printed by the suite):
 
 DRC only (no test prints it):
 
+- Strip to COM, across the slot: the "mains to SELV at relay pads" rule
+  tests the mains item, and a COM pad is always inside a relay area, so DRC
+  holds any SELV item near COM, not only the relay's own coil pads, to
+  3.5 mm. The strip copper is at 4.39 mm (above) and the coil-feed tracks
+  at their island ends are 4.05 to 4.15 mm from COM (measured once with
+  pcbnew, not printed). Outside the relay areas the 6 mm holds (6.071 mm,
+  printed above); inside them the strip sits at the 3.5 mm rule's
+  clearance across the 2 mm slot, which is above the 3.2 mm reinforced
+  figure in the desk review below.
+
 - Inside the relay areas: 3.511 mm minimum, a coil pad to the COM pad of
   the same relay, against the 3.5 mm rule (detail below).
 - L to N: 1.10 mm copper to copper, from J_MAINS's L_SW_A pad 3 to the N
   link at x 43.15, held by the 1.0 mm MAINS netclass clearance (the
-  single board had 1.55 mm).
-  Regaining the margin would push F1's pad 1 to the slot's 1 mm limit. An
-  L to N fault blows F1.
+  single board had 1.55 mm). The desk review below gives 1.6 mm creepage
+  for this working voltage, so 1.10 mm is under it (unverified: for the
+  hardware reviewer, not settled). Regaining it is blocked by the
+  geometry: the N link cannot move right without breaking the 1 mm edge
+  rule, and J_MAINS cannot move left without F1's pad 1 reaching the
+  slot's 1 mm limit. Rev A's reasoning: an L to N insulation failure
+  blows F1 (fail-safe), whereas an L to L failure across a relay contact
+  runs a heater uncontrolled, so L to L is held at 1.6 mm and L to N at
+  the 1.0 mm netclass clearance.
 
 A known gap in the rules, parked rather than fixed: the DRC rules hold
 the netless relay NC pads to SELV at 6 mm, but to L-side mains copper
@@ -631,7 +654,8 @@ A rev B rule, NC to L-side 1.6 mm, is the fix.
 Freerouting narrowed some SELV tracks below their netclass width where
 space is tight. All are at least 0.2 mm, the board minimum, and DRC-clean.
 On the mains board P5 is down to 0.6 mm (netclass 0.8 mm), including its
-crossing of the COIL_A slot gap; on the controller the Default-class
+crossing of the COIL_A slot gap, and its Default-class SELV tracks go down
+to 0.225 mm too; on the controller the Default-class
 pieces go down to 0.225 mm, P24 to 0.4 mm and P5 to 0.48 mm. The currents
 are small (the relay coils about 70 mA, the valves and fan well under
 1 A). The mains tracks are 1.5 mm, locked, hand-placed and never routed.
@@ -649,7 +673,9 @@ of 150 V r.m.s. (taken on the 160 V row), pollution degree 2 and material
 group IIIb (assumed for FR-4, whose CTI the fab does not state), the
 creepage table (IEC 62368-1 Table 17, the same values as IEC 60664-1
 Table F.4) gives 1.6 mm for basic insulation, so 3.2 mm for reinforced
-(twice basic). The 6 mm rule, the 3.5 mm relay-area rule and the 3.51 mm
+(twice basic). L to N is 1.10 mm, below the 1.6 mm figure (unverified: for
+the hardware reviewer; the fail-safe reasoning is under "L to N" above).
+The 6 mm rule, the 3.5 mm relay-area rule and the 3.51 mm
 relay pad gap all exceed 3.2 mm; the relay gap by only 0.3 mm. Clearance
 through air was not looked up; at this voltage it is normally smaller than
 creepage, so creepage governs. These table values are quoted from the

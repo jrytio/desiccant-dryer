@@ -1,7 +1,7 @@
 # hardware/tests/test_outlines.py
 """The enclosure spaces are hard limits: 85 x 70 (controller) and 45 x 70 (mains).
 These run before DRC and fail on size, not on clearance."""
-import os, tempfile, unittest
+import os, shutil, tempfile, unittest
 import pcbnew
 from dryer_board import boards, board, parts, project, schematic
 
@@ -17,8 +17,9 @@ OVERHANG_OK = {("mains", "J_MAINS"): (0, 0, 5.1, 0)}
 HOLES_OK = {"H1", "H2", "H3", "H4"}
 TOL = 0.01
 
-def _built(bd):
+def _built(bd, test):
     d = tempfile.mkdtemp()
+    test.addCleanup(shutil.rmtree, d, True)
     project.write(bd, d); schematic.write_lib_tables(bd, d); schematic.write(bd, d)
     pcb = os.path.join(d, bd.PROJECT + ".kicad_pcb")
     board.build(bd, pcb, fresh=True)
@@ -32,7 +33,7 @@ class Outlines(unittest.TestCase):
 
     def test_board_edges_match(self):
         for bd in boards.BOARDS:
-            b = _built(bd)
+            b = _built(bd, self)
             # The outline's geometry, not GetBoardEdgesBoundingBox: that includes the Edge.Cuts
             # line width (0.1 mm), which is drawing, not board.
             edges = [d for d in b.GetDrawings() if d.GetLayer() == pcbnew.Edge_Cuts]
@@ -50,7 +51,7 @@ class Outlines(unittest.TestCase):
 
     def test_courtyards_inside(self):
         for bd in boards.BOARDS:
-            b = _built(bd)
+            b = _built(bd, self)
             for fp in b.GetFootprints():
                 cy = fp.GetCourtyard(pcbnew.F_CrtYd).BBox()
                 x1, y1 = cy.GetX() / 1e6, cy.GetY() / 1e6

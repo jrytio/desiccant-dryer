@@ -210,8 +210,13 @@ def refill_with_rules(bd, pcb_path):
     filler runs before the .kicad_pro and .kicad_dru are on disk (and does not read them), so
     its fill keeps only the zone's own clearance; DRC with --refill-zones would pass on its own
     refill while the saved copper, which the gerbers are plotted from, sat closer to mains than
-    the rules allow. kicad-cli loads the project beside the board, refills, and saves; it exits
-    5 when violations exist (an unrouted board), which is still a saved refill."""
+    the rules allow. kicad-cli loads the project beside the board, refills, and saves; without
+    --exit-code-violations it exits 0 even with violations (5 is accepted too, for a kicad-cli that reports them), and
+    either is a saved refill. Without the .kicad_dru beside the board the refill would be
+    rules-unaware, so that is an error."""
+    dru = os.path.join(os.path.dirname(os.path.abspath(pcb_path)), bd.PROJECT + ".kicad_dru")
+    if bd.RULES.strip() and not os.path.exists(dru):
+        raise RuntimeError("refill_with_rules: %s does not exist, so the refill would ignore the custom rules" % dru)
     fd, rpt = tempfile.mkstemp(suffix=".rpt")
     os.close(fd)
     try:

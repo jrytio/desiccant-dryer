@@ -132,7 +132,7 @@ MAINS_ZONE = (9.0, 0.0, 45.0, 70.0)
 # COM +-10 mm in y, from the strip to just past the spine at x 21 (rev A: COM +-10 both ways)
 RELAY_AREAS = [(2.0, 19.0, 22.0, 39.0), (2.0, 41.5, 22.0, 61.5)]
 # The pour starts at y 21: the outline's corner (6.5, 21) is 6.66 mm from the corner of F1
-# pad 1's bounding box (10.4, 15.6); the filled copper is 7.34 mm from the pad's copper. It
+# pad 1's bounding box (10.4, 15.6); the saved fill is 14.71 mm from the pad on F.Cu. It
 # is kept conservative by its outline anyway: board.refill_with_rules refills after every save,
 # and test_saved_pour_fill_keeps_the_mains_rules checks the saved fill.
 GND_POUR = (2.0, 21.0, 6.5, 68.0)
@@ -161,11 +161,14 @@ PLACE = {
 # custom rules in RULES are not visible to the router. Distances held (measured on the
 # generated board, copper edge to copper edge):
 # - 3.5 mm from the relay coil pads and the SELV coil corridors at y 23.05/35.05/45.55/57.55
-#   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5);
+#   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5). The rule tests the mains item
+#   and COM is always inside an area, so it also holds the SELV strip's copper to 3.5 mm from
+#   the COM pads: that copper is 4.39 mm away across the slot (test_margins.py);
 # - 6 mm from SELV copper outside the relay areas. F1's pad 1 (L_IN) is the mains copper
-#   nearest the strip outside an area: 7.34 mm to the pour, 6.07 mm to the COIL_A track,
+#   nearest the strip outside an area: 6.07 mm to the COIL_A track,
 #   6.12 mm to +5V, 6.27 mm to K1's top coil pad (test_margins.py prints 6.071 mm as the
-#   minimum over the board). The spine's short pieces between the areas are 6.5 mm from the coil pads;
+#   minimum over the board; the saved pour fill's nearest outside-area mains item is
+#   13.75 mm away, on B.Cu). The spine's short pieces between the areas are 6.5 mm from the coil pads;
 # - 6 mm hole clearance from the M4 holes (H2 at (41, 4): F1's pad 2 at (34.9, 14) is the
 #   closest mains copper, 7.76 mm from the hole's edge; test_margins.py prints H1 9.056,
 #   H2 7.760, H3 12.910, H4 9.200);
