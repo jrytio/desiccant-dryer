@@ -11,7 +11,7 @@ esphome/.gitignore
 __pycache__/
 hardware/out/
 # KiCad local view state, and the ERC/DRC reports check and board.drc_report write beside the files.
-hardware/dryer-controller/*.kicad_prl
+hardware/*/*.kicad_prl
 *.rpt
 # Freerouting intermediates (route.py removes them; ignore if a run is interrupted).
 *.dsn

@@ -1,10 +1,11 @@
 # hardware/dryer_board/board.py
-"""Build or update the .kicad_pcb with pcbnew. The generator owns footprints, nets, outline,
-zones, rule areas and text; tracks and vias survive a rebuild unless their net left the
-model or fresh=True."""
+"""Build or update a board's .kicad_pcb with pcbnew. The generator owns footprints, nets,
+outline, zones, rule areas and text; tracks and vias survive a rebuild unless their net left
+the model or fresh=True. `bd` is a board module (boards.py)."""
 import os, subprocess
 import pcbnew
-from . import circuit, libs, placement, project, kicad_env
+from . import libs, project, kicad_env, parts
+from .parts import NC
 
 MM = pcbnew.VECTOR2I_MM
 def mm(v): return pcbnew.FromMM(v)
@@ -38,23 +39,6 @@ def _rule_area(b, name, rect, fills=True, tracks=False, vias=False, pads=False):
     z.SetDoNotAllowPads(pads); z.SetDoNotAllowFootprints(False)
     _zone_outline(z, *rect); b.Add(z)
 
-def rule_areas():
-    """The rule areas build lays: (name, (x1, y1, x2, y2), (no fills, no tracks, no vias, no pads))."""
-    out = [("antenna_keepout", placement.ANTENNA_KEEPOUT, (True, True, True, True)),
-           ("mains_nopour", placement.MAINS_ZONE, (True, False, False, False))]
-    out += [("relay_pads", r, (False, False, False, False)) for r in placement.RELAY_AREAS]
-    out.append(("u1_keepout", placement.U1_KEEPOUT, (False, True, True, False)))
-    return out
-
-def edge_outlines():
-    """The Edge.Cuts shapes build draws, each as its corner points: the board rectangle, then
-    one rectangle per slot segment."""
-    def corners(x1, y1, x2, y2):
-        return [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
-    x1, x2 = placement.SLOT_X
-    return [corners(0, 0, placement.BOARD_W, placement.BOARD_H)] + \
-           [corners(x1, y1, x2, y2) for y1, y2 in placement.SLOT_SEGMENTS]
-
 def _pour(b, layer, net, rect):
     z = pcbnew.ZONE(b); z.SetLayer(layer); z.SetNet(net); z.SetZoneName("gnd_" + ("F" if layer == pcbnew.F_Cu else "B"))
     z.SetLocalClearance(mm(0.3)); z.SetMinThickness(mm(0.25)); z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
@@ -83,31 +67,32 @@ def _net(b, name):
         net = pcbnew.NETINFO_ITEM(b, name); b.Add(net)
     return net
 
-def _reconcile_footprints(b):
+def _reconcile_footprints(b, bd):
+    model = parts.board_parts(bd.PARTS)
     existing = {f.GetReference(): f for f in b.GetFootprints()}
     for ref, fp in existing.items():
-        part = next((p for p in circuit.board_parts() if p.ref == ref), None)
+        part = next((p for p in model if p.ref == ref), None)
         if part is None or fp.GetFPIDAsString() != part.footprint:
             b.Delete(fp)
-    for part in circuit.board_parts():
+    for part in model:
         fp = b.FindFootprintByReference(part.ref)
         if fp is None:
             fp = pcbnew.FootprintLoad(libs.footprint_path(part.footprint), libs.split(part.footprint)[1])
             fp.SetFPIDAsString(part.footprint); fp.SetReference(part.ref); b.Add(fp)
         fp.SetValue(part.value)
-        fp.Reference().SetVisible(part.ref not in placement.HIDDEN_REFS)
-        x, y, rot = placement.PLACE[part.ref]
+        fp.Reference().SetVisible(part.ref not in bd.HIDDEN_REFS)
+        x, y, rot = bd.PLACE[part.ref]
         fp.SetOrientationDegrees(0); fp.SetPosition(MM(x, y)); fp.SetOrientationDegrees(rot)
         for pad in fp.Pads():
-            net = part.pins.get(pad.GetNumber(), circuit.NC)
-            if net == circuit.NC:
+            net = part.pins.get(pad.GetNumber(), NC)
+            if net == NC:
                 pad.SetNetCode(0)
             else:
                 pad.SetNet(_net(b, net))
 
-def apply_netclasses(b):
+def apply_netclasses(b, bd):
     ns = b.GetDesignSettings().m_NetSettings
-    for name, (track, clearance, via, drill, patterns) in circuit.NETCLASSES.items():
+    for name, (track, clearance, via, drill, patterns) in bd.NETCLASSES.items():
         if name == "Default":
             continue
         nc = pcbnew.NETCLASS(name)
@@ -117,23 +102,26 @@ def apply_netclasses(b):
             ns.SetNetclassPatternAssignment(p, name)
     b.SynchronizeNetsAndNetClasses(False)
 
-def _drop_orphan_tracks(b):
-    names = set(circuit.nets())
+def _drop_orphan_tracks(b, bd):
+    names = set(parts.nets(bd.PARTS))
     for t in list(b.GetTracks()):
         if t.GetNetname() not in names:
             b.Delete(t)
 
-def add_mains_copper(b):
-    """Lay the mains tracks from placement.MAINS_TRACKS, locked, replacing any mains copper
-    already on the board. The router never routes mains (route.py says why). Seeded, so the
-    mains tracks get the same UUIDs whether build or route lays them."""
+def add_mains_copper(b, bd):
+    """Lay the mains tracks from bd.MAINS_TRACKS, locked, replacing any mains copper already
+    on the board. The router never routes mains (route.py says why). Seeded, so the mains
+    tracks get the same UUIDs whether build or route lays them. A board with no mains copper
+    (the controller) lays nothing."""
     pcbnew.KIID.SeedGenerator(UUID_SEED + 2)
     for t in list(b.GetTracks()):
-        if t.GetNetname() in circuit.MAINS_NETS:
+        if t.GetNetname() in bd.MAINS_NETS:
             b.Delete(t)
-    width = mm(circuit.NETCLASSES["MAINS"][0])
+    if not bd.MAINS_TRACKS:
+        return
+    width = mm(bd.NETCLASSES["MAINS"][0])
     layers = {"F.Cu": pcbnew.F_Cu, "B.Cu": pcbnew.B_Cu}
-    for net, layer, pts in placement.MAINS_TRACKS:
+    for net, layer, pts in bd.MAINS_TRACKS:
         n = _net(b, net)
         for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
             t = pcbnew.PCB_TRACK(b); t.SetStart(MM(x1, y1)); t.SetEnd(MM(x2, y2))
@@ -144,47 +132,48 @@ def add_mains_copper(b):
 # sorted by UUID in the saved board).
 UUID_SEED = 0x64727972
 
-def build(pcb_path, fresh=False):
+def build(bd, pcb_path, fresh=False):
     pcbnew.KIID.SeedGenerator(UUID_SEED)
     if os.path.exists(pcb_path) and not fresh:
         b = pcbnew.LoadBoard(pcb_path)
         _clear_generated(b)
     else:
         b = pcbnew.BOARD()
-    for name in circuit.nets():
+    for name in parts.nets(bd.PARTS):
         _net(b, name)
-    _reconcile_footprints(b)
+    _reconcile_footprints(b, bd)
     if fresh:
         for t in list(b.GetTracks()):
             b.Delete(t)
     else:
-        _drop_orphan_tracks(b)
-    add_mains_copper(b)
+        _drop_orphan_tracks(b, bd)
+    add_mains_copper(b, bd)
     # Reseed so the regenerated items get the same UUIDs whether or not footprints were
     # loaded from an existing file.
     pcbnew.KIID.SeedGenerator(UUID_SEED + 1)
     # outline and slot
-    board_outline, *slots = edge_outlines()
+    board_outline, *slots = bd.edge_outlines()
     _rect(b, pcbnew.Edge_Cuts, *board_outline[0], *board_outline[2])
     for pts in slots:
         _poly(b, pcbnew.Edge_Cuts, pts)
     # rule areas and pours
-    for name, rect, (fills, tracks, vias, pads) in rule_areas():
+    for name, rect, (fills, tracks, vias, pads) in bd.rule_areas():
         _rule_area(b, name, rect, fills=fills, tracks=tracks, vias=vias, pads=pads)
     gnd = _net(b, "GND")
-    _pour(b, pcbnew.F_Cu, gnd, placement.SELV_POUR)
-    _pour(b, pcbnew.B_Cu, gnd, placement.SELV_POUR)
+    _pour(b, pcbnew.F_Cu, gnd, bd.GND_POUR)
+    _pour(b, pcbnew.B_Cu, gnd, bd.GND_POUR)
     # silkscreen
-    for text, x, y, size, rot, layer, justify in placement.SILK:
-        _text(b, text.replace("${REVISION}", circuit.REVISION), x, y, size, rot, layer, justify)
-    _segment(b, pcbnew.F_SilkS, 73.5, 3, 73.5, 82)
-    apply_netclasses(b)
+    for text, x, y, size, rot, layer, justify in bd.SILK:
+        _text(b, text.replace("${REVISION}", bd.REVISION), x, y, size, rot, layer, justify)
+    for x1, y1, x2, y2 in bd.SILK_LINES:
+        _segment(b, pcbnew.F_SilkS, x1, y1, x2, y2)
+    apply_netclasses(b, bd)
     # A new BOARD has no connectivity data yet, and without it the filler leaves the pours empty.
     b.BuildConnectivity()
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     pcbnew.SaveBoard(pcb_path, b)
     # SaveBoard writes a default .kicad_pro beside the board; put the canonical one back.
-    project.write(os.path.dirname(pcb_path))
+    project.write(bd, os.path.dirname(pcb_path))
     return b
 
 def _touches(via, layer, b):

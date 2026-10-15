@@ -65,7 +65,7 @@ def symbol_pins(lib_id):
 def footprint_path(lib_id):
     lib, name = split(lib_id)
     if lib == "dryer":
-        base = os.path.join(kicad_env.PROJECT_DIR, "lib", "dryer.pretty")
+        base = kicad_env.LIB_DIR
     else:
         base = os.path.join(kicad_env.footprint_dir(), lib + ".pretty")
     if not os.path.isfile(os.path.join(base, name + ".kicad_mod")):

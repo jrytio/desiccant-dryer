@@ -109,7 +109,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | A-12 | 24 V PSU L spur taken before F1 instead of after; unfused PSU fault path | 🔴 P0 | WIRE | inspect |  |
 | A-13 | Heater element shorted to sheath or partially shorted; over-current or sheath live | 🔴 P0 | HW | live |  |
 | A-14 | Heater sheath / chassis PE bond missing or broken; sheath live on insulation failure | 🔴 P0 | WIRE | inspect |  |
-| A-15 | Creepage between mains and logic rows on the protoboard (5.6 mm pad-to-pad, less on plated pads) arcs over in humidity or dust. PCB rev A: a 2 mm routed slot along the mains boundary and DRC rules hold mains copper 6 mm from SELV copper (3.5 mm inside the relay pad areas, where the relay's own COM-to-coil pad gap is 3.51 mm); what is left to inspect is solder splashes and contamination | 🔴 P0 | WIRE | inspect |  |
+| A-15 | Creepage between mains and logic rows on the protoboard (5.6 mm pad-to-pad, less on plated pads) arcs over in humidity or dust. PCB rev A: the mains is on its own board, where a 2 mm routed slot along the mains boundary and DRC rules hold mains copper 6 mm from SELV copper (3.5 mm inside the relay pad areas, where the relay's own COM-to-coil pad gap is 3.51 mm); what is left to inspect is solder splashes and contamination | 🔴 P0 | WIRE | inspect |  |
 | A-16 | Mains wire pulls out of a screw terminal (stranded not ferruled, under-torqued) and touches logic or chassis | 🔴 P0 | WIRE | inspect |  |
 | A-17 | Mains conductor of wrong insulation or temperature rating chafes on pack at 90 to 133 °C | 🔴 P0 | WIRE | inspect |  |
 | A-18 | Relay coil flyback diode missing or reversed; PN2222A (protoboard; MMBT2222A on the PCB) destroyed, possible stuck-on failure later | 🟠 P1 | WIRE | bench |  |
@@ -118,7 +118,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | A-21 | Relay coil open; heater cannot be commanded on | 🟡 P2 | HW | bench |  |
 | A-22 | Heater element open circuit; no heat | 🟡 P2 | HW | live |  |
 | A-23 | PN2222A (protoboard; MMBT2222A on the PCB) base resistor or 1 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
-| A-24 | Relay harness (JST-XH 4-way) unplugged or one conductor open; both heaters dead, or one dead | 🟡 P2 | WIRE | bench |  |
+| A-24 | Relay harness (JST-XH 4-way) unplugged or one conductor open; both heaters dead, or one dead. PCB rev A: the same connector and pin order joins the controller board (J_RLY) to the mains board (J_CTRL); the 1 kΩ pulldowns R2/R5 on the mains board hold both relays off with the link unplugged | 🟡 P2 | WIRE | bench |  |
 | A-25 | Relay chatter from marginal 5 V coil supply (buck sag under two coils plus WiFi peak) | 🟠 P1 | HW | bench |  |
 | A-26 | Heater partially failed (higher resistance); heats too slowly, trips the no-rise fault or never reaches regen temperature | 🔵 P3 | HW | virtual |  |
 | A-27 | SF129E has opened once (one-shot); pack permanently unheatable until replaced, dryer appears "not heating" | 🟡 P2 | HW | live |  |
@@ -255,7 +255,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | G-06 | Screw terminal on a sensor triple loose; intermittent probe. Symptom looks like B-09's 1-wire CRC errors but the cause here is a loose mechanical joint, not bus noise | 🟡 P2 | WIRE | bench |  |
 | G-07 | Vibration from the compressor loosens headers and terminals over months | 🟠 P1 | HW | inspect |  |
 | G-08 | Solder bridge between adjacent heater and valve GPIO pins (12 and 13, 10 and 11) | 🔴 P0 | WIRE | bench |  |
-| G-09 | Wrong wire in a mains-rated terminal (24 V and mains blocks are the same 5.08 mm family). PCB rev A: keyed plugs, each header with its own pitch and pin count (mains 8-pin 5.08, loads 6-pin 5.08, 24 V 2-pin 5.08, sensors 9-pin 3.5, display 8-pin 2.54), so no plug fits another header; a wrong wire within the mains plug is still possible | 🔴 P0 | WIRE | inspect |  |
+| G-09 | Wrong wire in a mains-rated terminal (24 V and mains blocks are the same 5.08 mm family). PCB rev A: keyed plugs, each header with its own pitch and pin count (mains 8-pin 5.08, loads 6-pin 5.08, 24 V 2-pin 5.08, sensors 9-pin 3.5, display 8-pin 2.54, the board-to-board link 4-pin 2.5), so no plug fits another header; a wrong wire within the mains plug is still possible | 🔴 P0 | WIRE | inspect |  |
 | G-10 | Mains wiring routed next to the 1-wire and SPI lines; induced noise, false readings | 🟡 P2 | WIRE | inspect |  |
 | G-11 | Protoboard trace or bus wire overheats from a wiring error on the 24 V bus (no 24 V fuse). PCB rev A: a 1.1 A PPTC (F2, trips at 1.95 A at 20 °C) on the 24 V input; the LRS-35-24's own hiccup protection (110 to 150 % of 1.5 A) may act first, so a fault current stays near 2 A either way | 🟠 P1 | WIRE | bench |  |
 | G-12 | Enclosure not earthed or metal enclosure with a chafed mains lead | 🔴 P0 | WIRE | inspect |  |

@@ -1,6 +1,5 @@
-# hardware/tests/test_schematic.py
 import os, tempfile, unittest
-from dryer_board import schematic, circuit, kicad_env
+from dryer_board import schematic, boards, kicad_env
 
 
 def _read(path):
@@ -11,24 +10,33 @@ def _read(path):
 class Schematic(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dir = tempfile.mkdtemp()
-        schematic.write_lib_tables(cls.dir)
-        cls.sch = schematic.write(cls.dir)
+        cls.sch = {}
+        for bd in boards.BOARDS:
+            d = tempfile.mkdtemp()
+            schematic.write_lib_tables(bd, d)
+            cls.sch[bd] = schematic.write(bd, d)
 
     def test_deterministic(self):
-        a = _read(self.sch)
-        schematic.write(self.dir)
-        self.assertEqual(a, _read(self.sch))
+        for bd, path in self.sch.items():
+            a = _read(path)
+            schematic.write(bd, os.path.dirname(path))
+            self.assertEqual(a, _read(path), bd.SHORT)
+
+    def test_boards_do_not_share_uuids(self):
+        a, b = [_read(self.sch[bd]) for bd in boards.BOARDS]
+        self.assertNotEqual(a.split("\n")[0], b.split("\n")[0])
 
     def test_kicad_sees_the_model_netlist(self):
-        got = schematic.netlist_from_kicad(self.sch)
-        want = {net: set(pads) for net, pads in circuit.nets().items()}
-        for net in want:
-            want[net] = {(r, p) for r, p in want[net] if not r.startswith("#")}
-        self.assertEqual(got, want)
+        for bd, path in self.sch.items():
+            got = schematic.netlist_from_kicad(path)
+            want = {net: set(pads) for net, pads in bd.nets().items()}
+            for net in want:
+                want[net] = {(r, p) for r, p in want[net] if not r.startswith("#")}
+            self.assertEqual(got, want, bd.SHORT)
 
     def test_erc_clean(self):
-        rpt = os.path.join(self.dir, "erc.rpt")
-        kicad_env.run_cli("sch", "erc", "--severity-all", "-o", rpt, self.sch)
-        text = _read(rpt)
-        self.assertIn("** ERC messages: 0", text, text)
+        for bd, path in self.sch.items():
+            rpt = os.path.join(os.path.dirname(path), "erc.rpt")
+            kicad_env.run_cli("sch", "erc", "--severity-all", "-o", rpt, path)
+            text = _read(rpt)
+            self.assertIn("** ERC messages: 0", text, bd.SHORT + "\n" + text)

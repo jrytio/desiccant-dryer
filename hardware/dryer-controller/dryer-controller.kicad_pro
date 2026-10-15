@@ -50,24 +50,6 @@
       },
       {
         "bus_width": 12,
-        "clearance": 1.0,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "MAINS",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 1.5,
-        "via_diameter": 1.2,
-        "via_drill": 0.6,
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
         "clearance": 0.2,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
@@ -77,7 +59,7 @@
         "microvia_drill": 0.1,
         "name": "P24",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 2,
+        "priority": 1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.8,
         "via_diameter": 0.8,
@@ -95,7 +77,7 @@
         "microvia_drill": 0.1,
         "name": "P5",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 3,
+        "priority": 2,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.8,
         "via_diameter": 0.8,
@@ -109,26 +91,6 @@
     "net_colors": null,
     "netclass_assignments": null,
     "netclass_patterns": [
-      {
-        "netclass": "MAINS",
-        "pattern": "L_IN"
-      },
-      {
-        "netclass": "MAINS",
-        "pattern": "L_FUSED"
-      },
-      {
-        "netclass": "MAINS",
-        "pattern": "L_SW_A"
-      },
-      {
-        "netclass": "MAINS",
-        "pattern": "L_SW_B"
-      },
-      {
-        "netclass": "MAINS",
-        "pattern": "N"
-      },
       {
         "netclass": "P24",
         "pattern": "+24V*"
@@ -156,14 +118,6 @@
       {
         "netclass": "P5",
         "pattern": "VBUS"
-      },
-      {
-        "netclass": "P5",
-        "pattern": "COIL_A"
-      },
-      {
-        "netclass": "P5",
-        "pattern": "COIL_B"
       }
     ]
   },

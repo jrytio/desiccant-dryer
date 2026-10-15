@@ -1,13 +1,18 @@
-# hardware/dryer_board/kicad_env.py
 """Where KiCad lives. macOS app bundle first, then the kicad/kicad Docker image layout,
 then anything on PATH. Override with KICAD_CLI, KICAD_SYMBOL_DIR, KICAD_FOOTPRINT_DIR."""
 import os, shutil, subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
-PROJECT_DIR = os.path.join(REPO, "hardware", "dryer-controller")
-OUT_DIR = os.path.join(REPO, "hardware", "out")
-PROJECT = "dryer-controller"
+HARDWARE_DIR = os.path.join(REPO, "hardware")
+OUT_DIR = os.path.join(HARDWARE_DIR, "out")
+# The local footprints (dryer:*), shared by both boards; schematic.write_lib_tables copies them
+# into each project's lib/dryer.pretty so a project opens on its own.
+LIB_DIR = os.path.join(HARDWARE_DIR, "lib", "dryer.pretty")
+
+def project_dir(bd):
+    """The committed KiCad project directory of a board (hardware/<PROJECT>/)."""
+    return os.path.join(HARDWARE_DIR, bd.PROJECT)
 
 _MAC_APP = "/Applications/KiCad/KiCad.app/Contents"
 _CANDIDATES = {

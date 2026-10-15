@@ -1,6 +1,6 @@
-import os, shutil, tempfile, unittest
+import os, shutil, tempfile, types, unittest
 import pcbnew
-from dryer_board import route, libs
+from dryer_board import route, libs, controller
 
 
 @unittest.skipUnless(shutil.which("docker"), "docker not available")
@@ -28,4 +28,7 @@ class Route(unittest.TestCase):
             list(fp.Pads())[0].SetNet(net)
         pcb = os.path.join(d, "t.kicad_pcb")
         pcbnew.SaveBoard(pcb, b)
-        self.assertGreaterEqual(route.route(pcb, passes=5), 1)
+        # A stand-in board definition: the whole outline is routable.
+        bd = types.SimpleNamespace(PROJECT="t", REVISION="A", RULES="(version 1)\n", NETCLASSES=controller.NETCLASSES,
+                                   MAINS_NETS=[], MAINS_TRACKS=[], GND_POUR=(0, 0, 30, 20), BOARD_W=30, BOARD_H=20)
+        self.assertGreaterEqual(route.route(bd, pcb, passes=5), 1)

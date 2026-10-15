@@ -1,41 +1,57 @@
 # hardware/dryer_board/check_sync.py
-"""Is the committed KiCad project what the model would generate? Compared semantically
+"""Is a committed KiCad project what the model would generate? Compared semantically
 (netlists, footprints, pad nets, positions, rules, rule-area and Edge.Cuts geometry, mains
-copper), not byte for byte, so a GUI
-re-save that changes only formatting still passes. SELV routing is never compared: the router
-is not deterministic, and DRC already judges it."""
+copper, the local footprint copies), not byte for byte, so a GUI re-save that changes only
+formatting still passes. SELV routing is never compared: the router is not deterministic,
+and DRC already judges it."""
 import json, os, shutil, tempfile
 import pcbnew
-from . import board as board_mod, circuit, placement, project, schematic
+from . import kicad_env, parts, project, schematic
+from .parts import NC
 
 def _read(path):
     with open(path, encoding="utf-8") as f:
         return f.read()
 
-def schematic_diffs(project_dir):
-    committed = os.path.join(project_dir, circuit.PROJECT + ".kicad_sch")
+def schematic_diffs(bd, project_dir):
+    committed = os.path.join(project_dir, bd.PROJECT + ".kicad_sch")
     if not os.path.exists(committed):
         return ["%s missing" % committed]
     diffs = []
     tmp = tempfile.mkdtemp()
     try:
-        schematic.write_lib_tables(tmp); schematic.write(tmp); project.write(tmp)
-        want = schematic.netlist_from_kicad(os.path.join(tmp, circuit.PROJECT + ".kicad_sch"))
+        schematic.write_lib_tables(bd, tmp); schematic.write(bd, tmp); project.write(bd, tmp)
+        want = schematic.netlist_from_kicad(os.path.join(tmp, bd.PROJECT + ".kicad_sch"))
         got = schematic.netlist_from_kicad(committed)
         for net in sorted(set(want) | set(got)):
             if want.get(net) != got.get(net):
                 diffs.append("schematic net %s: model %s, committed %s"
                              % (net, sorted(want.get(net, [])), sorted(got.get(net, []))))
-        for name in (circuit.PROJECT + ".kicad_dru", "sym-lib-table", "fp-lib-table"):
+        for name in (bd.PROJECT + ".kicad_dru", "sym-lib-table", "fp-lib-table"):
             other = os.path.join(project_dir, name)
             if not os.path.exists(other) or _read(os.path.join(tmp, name)) != _read(other):
                 diffs.append("%s differs from the generator's output" % name)
-        pro = circuit.PROJECT + ".kicad_pro"
+        pro = bd.PROJECT + ".kicad_pro"
         other = os.path.join(project_dir, pro)
         if not os.path.exists(other) or json.loads(_read(os.path.join(tmp, pro))) != json.loads(_read(other)):
             diffs.append("%s differs from the generator's output" % pro)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    return diffs
+
+def lib_diffs(project_dir):
+    """The project's lib/dryer.pretty is a copy of hardware/lib/dryer.pretty: every source
+    footprint present and identical."""
+    local = os.path.join(project_dir, "lib", "dryer.pretty")
+    diffs = []
+    for name in sorted(os.listdir(kicad_env.LIB_DIR)):
+        if not name.endswith(".kicad_mod"):
+            continue
+        copy = os.path.join(local, name)
+        if not os.path.exists(copy):
+            diffs.append("lib/dryer.pretty/%s missing from the project" % name)
+        elif _read(copy) != _read(os.path.join(kicad_env.LIB_DIR, name)):
+            diffs.append("lib/dryer.pretty/%s differs from hardware/lib/dryer.pretty" % name)
     return diffs
 
 def _seg(layer, a, b):
@@ -45,16 +61,16 @@ def _seg(layer, a, b):
                   (int(round(b[0] * 1000)), int(round(b[1] * 1000)))])
     return (layer, pts[0], pts[1])
 
-def _mains_diffs(b):
+def _mains_diffs(b, bd):
     diffs = []
     want = set()
-    for _net, layer, pts in placement.MAINS_TRACKS:
+    for _net, layer, pts in bd.MAINS_TRACKS:
         for p, q in zip(pts, pts[1:]):
             want.add(_seg(layer, p, q))
-    width = pcbnew.FromMM(circuit.NETCLASSES["MAINS"][0])
+    width = pcbnew.FromMM(bd.NETCLASSES["MAINS"][0]) if "MAINS" in bd.NETCLASSES else None
     have = set()
     for t in b.GetTracks():
-        if t.GetNetname() not in circuit.MAINS_NETS:
+        if t.GetNetname() not in bd.MAINS_NETS:
             continue
         if t.Type() == pcbnew.PCB_VIA_T:
             diffs.append("via on mains net %s at (%.2f, %.2f)" % (t.GetNetname(), t.GetPosition().x / 1e6, t.GetPosition().y / 1e6))
@@ -103,10 +119,10 @@ def _pair(want, have, same):
 
 _FLAGS = ("fills", "tracks", "vias", "pads")
 
-def _area_diffs(b):
+def _area_diffs(b, bd):
     """Each rule area board.build lays, by name, outline and what it forbids."""
     want = [(name, [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], flags)
-            for name, r, flags in board_mod.rule_areas()]
+            for name, r, flags in bd.rule_areas()]
     have = [(z.GetZoneName(), _pts(z.Outline()),
              (z.GetDoNotAllowZoneFills(), z.GetDoNotAllowTracks(), z.GetDoNotAllowVias(), z.GetDoNotAllowPads()))
             for z in b.Zones() if z.GetIsRuleArea()]
@@ -122,7 +138,7 @@ def _area_diffs(b):
                 diffs.append("rule area %s %s: no %s is %s, model %s" % (name, _fmt(pts), flag, h, w))
     return diffs
 
-def _edge_diffs(b):
+def _edge_diffs(b, bd):
     """The board rectangle and the slot segments on Edge.Cuts."""
     have = []
     for s in b.GetDrawings():
@@ -135,36 +151,37 @@ def _edge_diffs(b):
             have.append(_pts(s.GetPolyShape()))
         else:
             have.append([(p.x / 1e6, p.y / 1e6) for p in (s.GetStart(), s.GetEnd())])
-    _pairs, missing, extra = _pair(board_mod.edge_outlines(), have, _same)
+    _pairs, missing, extra = _pair(bd.edge_outlines(), have, _same)
     return (["Edge.Cuts outline %s missing from the board" % _fmt(p) for p in missing] +
             ["Edge.Cuts shape %s on the board but not in the model" % _fmt(p) for p in extra])
 
-def board_diffs(pcb_path):
+def board_diffs(bd, pcb_path):
     diffs = []
     if not os.path.exists(pcb_path):
         return ["%s missing" % pcb_path]
     b = pcbnew.LoadBoard(pcb_path)
     have = {f.GetReference(): f for f in b.GetFootprints()}
-    for part in circuit.board_parts():
+    for part in parts.board_parts(bd.PARTS):
         fp = have.pop(part.ref, None)
         if fp is None:
             diffs.append("%s missing from the board" % part.ref); continue
         if fp.GetFPIDAsString() != part.footprint:
             diffs.append("%s footprint %s, model %s" % (part.ref, fp.GetFPIDAsString(), part.footprint))
-        x, y, rot = placement.PLACE[part.ref]
+        x, y, rot = bd.PLACE[part.ref]
         px, py = fp.GetPosition().x / 1e6, fp.GetPosition().y / 1e6
         drot = (fp.GetOrientationDegrees() - rot) % 360
         if abs(px - x) > 0.01 or abs(py - y) > 0.01 or min(drot, 360 - drot) > 0.01:
             diffs.append("%s at (%.2f, %.2f, %.0f), model (%.2f, %.2f, %d)"
                          % (part.ref, px, py, fp.GetOrientationDegrees(), x, y, rot))
         for pad in fp.Pads():
-            want = part.pins.get(pad.GetNumber(), circuit.NC)
-            got = pad.GetNetname() or circuit.NC
+            want = part.pins.get(pad.GetNumber(), NC)
+            got = pad.GetNetname() or NC
             if want != got:
                 diffs.append("%s pad %s on %s, model %s" % (part.ref, pad.GetNumber(), got, want))
     for ref in have:
         diffs.append("%s on the board but not in the model" % ref)
-    return diffs + _area_diffs(b) + _edge_diffs(b) + _mains_diffs(b)
+    return diffs + _area_diffs(b, bd) + _edge_diffs(b, bd) + _mains_diffs(b, bd)
 
-def all_diffs(project_dir):
-    return schematic_diffs(project_dir) + board_diffs(os.path.join(project_dir, circuit.PROJECT + ".kicad_pcb"))
+def all_diffs(bd, project_dir):
+    return (schematic_diffs(bd, project_dir) + lib_diffs(project_dir)
+            + board_diffs(bd, os.path.join(project_dir, bd.PROJECT + ".kicad_pcb")))

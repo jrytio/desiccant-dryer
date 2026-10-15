@@ -1,5 +1,5 @@
 import os, unittest
-from dryer_board import kicad_env
+from dryer_board import kicad_env, boards
 
 class KicadEnv(unittest.TestCase):
     def test_tools_exist(self):
@@ -12,5 +12,8 @@ class KicadEnv(unittest.TestCase):
         self.assertRegex(out.strip(), r"^10\.")
 
     def test_paths(self):
-        self.assertTrue(kicad_env.PROJECT_DIR.endswith("hardware/dryer-controller"))
+        self.assertTrue(kicad_env.project_dir(boards.by_name("controller")).endswith("hardware/dryer-controller"))
+        self.assertTrue(kicad_env.project_dir(boards.by_name("mains")).endswith("hardware/dryer-mains"))
+        self.assertTrue(kicad_env.LIB_DIR.endswith("hardware/lib/dryer.pretty"))
+        self.assertTrue(os.path.isdir(kicad_env.LIB_DIR))
         self.assertTrue(os.path.isfile(os.path.join(kicad_env.REPO, "CLAUDE.md")))

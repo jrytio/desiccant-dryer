@@ -1,45 +1,10 @@
 # hardware/dryer_board/project.py
-"""The KiCad project file (netclasses, DRC severities, board rules) and the custom DRC rules.
-Net settings use the schema KiCad 10 writes (net_settings meta version 5); an older or
-sparser schema is silently ignored by kicad-cli, which is how a rule can fail to apply."""
+"""The KiCad project file (netclasses, DRC severities, board rules) and the custom DRC rules,
+written for one board. Net settings use the schema KiCad 10 writes (net_settings meta
+version 5); an older or sparser schema is silently ignored by kicad-cli, which is how a rule
+can fail to apply. The rules themselves are each board's RULES (mains.py carries the mains
+set; the controller has none)."""
 import json, os
-from . import circuit
-
-# The relay NC pad (4) carries no net, so no copper ever reaches it, but COM connects to it
-# whenever the coil is off: it is live mains that the netclass rules cannot see. The last
-# rule names it directly; it comes after the relay_pads relaxation so that cannot override it.
-# memberOfFootprint('K*') does not match in KiCad 10.0.6, so both relays are named.
-# The NC pad is netless, so the two "mains to selv" rules would also see it as SELV on the B
-# side; it is at mains potential, so they exclude it and mains copper passes it at the MAINS
-# in-class clearance. An M3 head or washer bears on the area round each mounting hole, so
-# mains copper keeps 6 mm from every non-plated hole (spec, "Stackup and fab").
-# The MAINS netclass clearance (1 mm) covers L to N; the L-side nets (L_IN, L_FUSED, L_SW_A,
-# L_SW_B) keep 1.6 mm from each other: a bridge between two of them bypasses the fuse or turns
-# a heater on with its relay open, so they get more margin than the netclass gives.
-# The net name is A.NetName: A.Net != 'N' parses in 10.0.6 but does not exclude N.
-RULES = """(version 1)
-(rule "mains track width"
-  (condition "A.NetClass == 'MAINS'")
-  (constraint track_width (min 1.5mm)))
-(rule "mains to board edge"
-  (condition "A.NetClass == 'MAINS'")
-  (constraint edge_clearance (min 1mm)))
-(rule "mains to selv"
-  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
-  (constraint clearance (min 6mm)))
-(rule "mains L to L"
-  (condition "A.NetClass == 'MAINS' && B.NetClass == 'MAINS' && A.NetName != 'N' && B.NetName != 'N'")
-  (constraint clearance (min 1.6mm)))
-(rule "mains to selv at relay pads"
-  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads') && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
-  (constraint clearance (min 3.5mm)))
-(rule "relay NC contact is live"
-  (condition "(A.memberOfFootprint('K1') || A.memberOfFootprint('K2')) && A.Pad_Number == '4' && B.NetClass != 'MAINS'")
-  (constraint clearance (min 6mm)))
-(rule "mains to mounting holes"
-  (condition "A.NetClass == 'MAINS' && B.Pad_Type == 'NPTH, mechanical'")
-  (constraint hole_clearance (min 6mm)))
-"""
 
 
 def _class(name, track, clearance, via, drill, priority):
@@ -50,17 +15,17 @@ def _class(name, track, clearance, via, drill, priority):
             "via_drill": drill, "wire_width": 6}
 
 
-def netclass_patterns():
+def netclass_patterns(bd):
     out = []
-    for name, (_t, _c, _v, _d, patterns) in circuit.NETCLASSES.items():
+    for name, (_t, _c, _v, _d, patterns) in bd.NETCLASSES.items():
         for p in patterns:
             out.append((p, name))
     return out
 
 
-def project_dict():
+def project_dict(bd):
     classes = []
-    for i, (name, (track, clearance, via, drill, _p)) in enumerate(circuit.NETCLASSES.items()):
+    for i, (name, (track, clearance, via, drill, _p)) in enumerate(bd.NETCLASSES.items()):
         classes.append(_class(name, track, clearance, via, drill, 2147483647 if name == "Default" else i))
     return {
         "board": {"design_settings": {
@@ -76,17 +41,17 @@ def project_dict():
                                 "silk_overlap": "ignore", "silk_over_copper": "ignore",
                                 "silk_edge_clearance": "ignore", "lib_footprint_issues": "ignore",
                                 "lib_footprint_mismatch": "ignore"}}},
-        "meta": {"filename": circuit.PROJECT + ".kicad_pro", "version": 3},
+        "meta": {"filename": bd.PROJECT + ".kicad_pro", "version": 3},
         "net_settings": {"classes": classes, "meta": {"version": 5}, "net_colors": None,
                          "netclass_assignments": None,
-                         "netclass_patterns": [{"netclass": c, "pattern": p} for p, c in netclass_patterns()]},
-        "text_variables": {"REVISION": circuit.REVISION},
+                         "netclass_patterns": [{"netclass": c, "pattern": p} for p, c in netclass_patterns(bd)]},
+        "text_variables": {"REVISION": bd.REVISION},
     }
 
 
-def write(project_dir):
-    with open(os.path.join(project_dir, circuit.PROJECT + ".kicad_pro"), "w", encoding="utf-8") as f:
-        json.dump(project_dict(), f, indent=2, sort_keys=True)
+def write(bd, project_dir):
+    with open(os.path.join(project_dir, bd.PROJECT + ".kicad_pro"), "w", encoding="utf-8") as f:
+        json.dump(project_dict(bd), f, indent=2, sort_keys=True)
         f.write("\n")
-    with open(os.path.join(project_dir, circuit.PROJECT + ".kicad_dru"), "w", encoding="utf-8") as f:
-        f.write(RULES)
+    with open(os.path.join(project_dir, bd.PROJECT + ".kicad_dru"), "w", encoding="utf-8") as f:
+        f.write(bd.RULES)

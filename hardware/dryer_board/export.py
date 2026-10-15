@@ -1,7 +1,8 @@
 # hardware/dryer_board/export.py
-"""Everything the fab and the reviewer need, from the committed project, with kicad-cli."""
+"""Everything the fab and the reviewer need, from a committed project, with kicad-cli. Every
+file is named <PROJECT>-rev<REVISION>-..., so both boards' outputs share one directory."""
 import csv, os, shutil, subprocess, zipfile
-from . import circuit, kicad_env
+from . import kicad_env
 
 GERBER_LAYERS = "F.Cu,B.Cu,F.Paste,B.Paste,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts"
 
@@ -35,18 +36,18 @@ def clean_bom(path):
         csv.writer(f, quoting=csv.QUOTE_ALL, lineterminator="\n").writerows(rows)
 
 
-def export_all(project_dir, out_dir, docs_dir=None):
-    sch = os.path.join(project_dir, circuit.PROJECT + ".kicad_sch")
-    pcb = os.path.join(project_dir, circuit.PROJECT + ".kicad_pcb")
-    stem = "%s-rev%s" % (circuit.PROJECT, circuit.REVISION)
+def export_all(bd, project_dir, out_dir, docs_dir=None):
+    sch = os.path.join(project_dir, bd.PROJECT + ".kicad_sch")
+    pcb = os.path.join(project_dir, bd.PROJECT + ".kicad_pcb")
+    stem = "%s-rev%s" % (bd.PROJECT, bd.REVISION)
     os.makedirs(out_dir, exist_ok=True)
-    gerbers = os.path.join(out_dir, "gerbers")
+    gerbers = os.path.join(out_dir, "gerbers-" + bd.SHORT)
     shutil.rmtree(gerbers, ignore_errors=True)
     os.makedirs(gerbers)
     paths = {}
-    paths["erc"] = os.path.join(out_dir, "erc.rpt")
+    paths["erc"] = os.path.join(out_dir, stem + "-erc.rpt")
     _cli("sch", "erc", "--severity-all", "-o", paths["erc"], sch)
-    paths["drc"] = os.path.join(out_dir, "drc.rpt")
+    paths["drc"] = os.path.join(out_dir, stem + "-drc.rpt")
     _cli("pcb", "drc", "--severity-all", "--refill-zones", "-o", paths["drc"], pcb)
     kicad_env.run_cli("pcb", "export", "gerbers", "-o", gerbers + "/", "-l", GERBER_LAYERS, pcb)
     kicad_env.run_cli("pcb", "export", "drill", "-o", gerbers + "/", "--format", "excellon", "--excellon-units", "mm",
@@ -55,7 +56,7 @@ def export_all(project_dir, out_dir, docs_dir=None):
     with zipfile.ZipFile(paths["gerber_zip"], "w", zipfile.ZIP_DEFLATED) as z:
         for name in sorted(os.listdir(gerbers)):
             z.write(os.path.join(gerbers, name), name)
-    kpos = os.path.join(out_dir, "pos-kicad.csv")
+    kpos = os.path.join(out_dir, stem + "-pos-kicad.csv")
     kicad_env.run_cli("pcb", "export", "pos", "--format", "csv", "--units", "mm", "--side", "front", "--exclude-dnp",
                       "-o", kpos, pcb)
     paths["cpl"] = os.path.join(out_dir, stem + "-cpl.csv")
@@ -79,5 +80,5 @@ def export_all(project_dir, out_dir, docs_dir=None):
         os.makedirs(docs_dir, exist_ok=True)
         for key, name in (("schematic_pdf", "schematic.pdf"), ("top_svg", "top.svg"),
                           ("render_top", "render-top.png"), ("render_iso", "render-iso.png")):
-            shutil.copy(paths[key], os.path.join(docs_dir, name))
+            shutil.copy(paths[key], os.path.join(docs_dir, bd.SHORT + "-" + name))
     return paths

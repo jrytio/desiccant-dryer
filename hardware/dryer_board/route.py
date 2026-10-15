@@ -1,10 +1,10 @@
 # hardware/dryer_board/route.py
-"""Autoroute the SELV nets with Freerouting running in Docker (no Java on the host); the
-mains copper is fixed geometry. The routed board is committed and CI never routes."""
+"""Autoroute a board's SELV nets with Freerouting running in Docker (no Java on the host);
+the mains copper is fixed geometry. The routed boards are committed and CI never routes."""
 import os, subprocess, shutil
 import pcbnew
 from . import board as board_mod
-from . import placement, project
+from . import project
 
 IMAGE = "ghcr.io/freerouting/freerouting:2.5.0"
 
@@ -26,14 +26,12 @@ def run_freerouting(dsn_path, ses_path, passes=50):
 
 
 # Freerouting reads netclass widths and clearances from the DSN but not the custom rules in
-# project.RULES (6 mm mains to SELV, 3.5 mm at the relay pads, 6 mm from the live NC pad), so
-# it does not route the mains nets: their copper is fixed geometry (placement.MAINS_TRACKS,
-# laid by board.add_mains_copper). The router gets the board with that copper locked and the
-# mains side closed to it, except a narrow corridor from the slot to each relay coil pad.
+# mains.RULES (6 mm mains to SELV, 3.5 mm at the relay pads, 6 mm from the live NC pad), so
+# it does not route the mains nets: their copper is fixed geometry (bd.MAINS_TRACKS, laid by
+# board.add_mains_copper). The router gets the board with that copper locked and the mains
+# side closed to it, except a narrow corridor from the slot to each relay coil pad. On the
+# controller board there is no mains side: the keepout is the strip past the GND pour.
 
-# Where the SELV keepout starts: the pour's right edge, which keeps SELV tracks the 0.5 mm
-# edge clearance from the slot and more than 6 mm from F1's L_IN pad (edge at x 76).
-SELV_LIMIT_X = placement.SELV_POUR[2]
 CORRIDOR = 0.9               # half-height of the opening at each coil pad (track 0.8 + 0.2 clearance fits)
 COIL_PADS = ("2", "5")
 
@@ -53,7 +51,7 @@ def _coil_pads(b):
     out = []
     for ref in ("K1", "K2"):
         fp = b.FindFootprintByReference(ref)
-        if fp is None:           # a test board without relays
+        if fp is None:           # a board without relays
             continue
         for pad in fp.Pads():
             if pad.GetNumber() in COIL_PADS:
@@ -62,7 +60,7 @@ def _coil_pads(b):
     return out
 
 
-def _routing_copy(pcb_path):
+def _routing_copy(bd, pcb_path):
     """The board as the router should see it.
     - KiCad's DSN export writes every rule area as a full keepout, whatever it forbids, so the
       fill-only areas (the whole mains zone, the relay_pads areas) would wall off the coil
@@ -72,44 +70,47 @@ def _routing_copy(pcb_path):
     - Mains tracks are locked, so they export as protected wiring. Every other track goes:
       Freerouting keeps wiring it is given, so a bad route would survive every rerun. The
       SELV side is routed from scratch each time (seconds).
-    - Everything from SELV_LIMIT_X rightwards is a keepout except the coil corridors."""
+    - Everything right of the GND pour's edge (the slot and the mains zone on the mains board,
+      the edge strip on the controller) is a keepout except the coil corridors."""
     b = pcbnew.LoadBoard(pcb_path)
-    board_mod.apply_netclasses(b)
+    board_mod.apply_netclasses(b, bd)
     for z in list(b.Zones()):
         if not z.GetIsRuleArea() or not (z.GetDoNotAllowTracks() or z.GetDoNotAllowVias()):
             b.Delete(z)
     for t in list(b.GetTracks()):
         if not t.IsLocked():
             b.Delete(t)
-    x0 = SELV_LIMIT_X
+    x0 = bd.GND_POUR[2]
     corridors = sorted((y, x + h + 0.3) for x, y, h in _coil_pads(b))
     xc = max([x for _y, x in corridors] + [x0])
-    _keepout(b, xc, 0, placement.BOARD_W, placement.BOARD_H)
-    y = 0.0
-    for cy, _x in corridors:
-        _keepout(b, x0, y, xc, cy - CORRIDOR)
-        y = cy + CORRIDOR
-    _keepout(b, x0, y, xc, placement.BOARD_H)
+    if xc < bd.BOARD_W:
+        _keepout(b, xc, 0, bd.BOARD_W, bd.BOARD_H)
+    if xc > x0:
+        y = 0.0
+        for cy, _x in corridors:
+            _keepout(b, x0, y, xc, cy - CORRIDOR)
+            y = cy + CORRIDOR
+        _keepout(b, x0, y, xc, bd.BOARD_H)
     return b
 
 
-def route(pcb_path, passes=50):
+def route(bd, pcb_path, passes=50):
     base = pcb_path[:-len(".kicad_pcb")]
     dsn, ses = base + ".dsn", base + ".ses"
     for p in (dsn, ses):
         if os.path.exists(p):
             os.remove(p)
-    board_mod.export_dsn(_routing_copy(pcb_path), dsn)
+    board_mod.export_dsn(_routing_copy(bd, pcb_path), dsn)
     run_freerouting(dsn, ses, passes)
     b = pcbnew.LoadBoard(pcb_path)
-    board_mod.apply_netclasses(b)
+    board_mod.apply_netclasses(b, bd)
     # The SES carries every wire, the protected mains ones included; import onto a bare board
     # so nothing is doubled, then lay the mains copper again from the table.
     for t in list(b.GetTracks()):
         b.Delete(t)
     if not pcbnew.ImportSpecctraSES(b, ses):
         raise RuntimeError("SES import failed")
-    board_mod.add_mains_copper(b)
+    board_mod.add_mains_copper(b, bd)
     b.BuildConnectivity()
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     if board_mod.remove_dangling_vias(b):
@@ -117,7 +118,7 @@ def route(pcb_path, passes=50):
         pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     pcbnew.SaveBoard(pcb_path, b)
     # SaveBoard rewrites the .kicad_pro beside the board with defaults.
-    project.write(os.path.dirname(os.path.abspath(pcb_path)))
+    project.write(bd, os.path.dirname(os.path.abspath(pcb_path)))
     for p in (dsn, ses):
         os.remove(p)
     return len(list(b.GetTracks()))

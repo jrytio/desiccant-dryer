@@ -1,5 +1,5 @@
 import unittest
-from dryer_board import libs, circuit, sexp
+from dryer_board import libs, boards, sexp
 
 
 class Libs(unittest.TestCase):
@@ -21,12 +21,13 @@ class Libs(unittest.TestCase):
         self.assertEqual(values, ["MMBT2222A"])
 
     def test_every_part_symbol_and_footprint(self):
-        for p in circuit.PARTS:
-            pins = libs.symbol_pins(p.symbol)
-            self.assertTrue(set(p.pins) <= set(pins), "%s: pins %s not in symbol %s" % (p.ref, set(p.pins) - set(pins), p.symbol))
-            if p.footprint:
-                pads = libs.footprint_pads(p.footprint)
-                self.assertTrue(set(p.pins) <= pads, "%s: pads %s not in footprint %s" % (p.ref, set(p.pins) - pads, p.footprint))
+        for bd in boards.BOARDS:
+            for p in bd.PARTS:
+                pins = libs.symbol_pins(p.symbol)
+                self.assertTrue(set(p.pins) <= set(pins), "%s: pins %s not in symbol %s" % (p.ref, set(p.pins) - set(pins), p.symbol))
+                if p.footprint:
+                    pads = libs.footprint_pads(p.footprint)
+                    self.assertTrue(set(p.pins) <= pads, "%s: pads %s not in footprint %s" % (p.ref, set(p.pins) - pads, p.footprint))
 
     def test_relay_pad_geometry_matches_songle(self):
         """docs/hardware.md: COM (0,0), coil (2.0, +-6.0), NO/NC (14.2, +-6.0); KiCad's SANYOU pattern is within 0.1 mm."""
@@ -46,3 +47,18 @@ class Libs(unittest.TestCase):
         pos = libs.footprint_pad_positions("Converter_DCDC:Converter_DCDC_TRACO_TSR-1_THT")
         self.assertAlmostEqual(pos["2"][0] - pos["1"][0], 2.54, delta=0.01)
         self.assertAlmostEqual(pos["3"][0] - pos["2"][0], 2.54, delta=0.01)
+
+    def test_fuse_holder_pitch_and_slots(self):
+        """22.5 mm nominal (XFCN PTF-77 datasheet), slots 2.4 x 1.6 along the pitch so a BLX-A
+        holder at 21.5 to 22.7 mm (its acceptance range) and a PTF-77 both fit."""
+        fp = "dryer:Fuseholder_5x20mm_Covered_P22.50mm_Slot"
+        pos = libs.footprint_pad_positions(fp)
+        self.assertAlmostEqual(pos["2"][0] - pos["1"][0], 22.5, delta=0.01)
+        for pad in sexp.find_all(libs._footprint(fp), "pad"):
+            drill = sexp.find(pad, "drill")
+            self.assertEqual(drill[1], "oval", pad[1])
+            self.assertEqual([float(drill[2]), float(drill[3])], [2.4, 1.6], pad[1])
+
+    def test_link_header_pitch(self):
+        pos = libs.footprint_pad_positions(boards.by_name("controller").by_ref("J_RLY").footprint)
+        self.assertAlmostEqual(pos["4"][0] - pos["1"][0], 7.5, delta=0.01)   # 3 x 2.50 mm: JST XH, not 2.54

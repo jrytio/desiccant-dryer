@@ -98,8 +98,9 @@ labels, not chip GPIOs. Checked against SparkFun's Eagle files only
 (docs/pinout-verification.md). The rest of this section is the S2.
 
 Outputs on the 12-pin header: heater A 13, heater B 12, valve A 11,
-valve B 10, fan 8. Sensors/display on the 16-pin header: I2C 1/2 (Qwiic),
-SPI 36/35, display CS 5 / DC 7 / RST 9 / BL 17, 1-wire 37.
+valve B 10, fan 8; I2C 1/2 (Qwiic) is on the 12-pin header too, positions
+12/11, and is not wired on the controller board. Sensors/display on the
+16-pin header: SPI 36/35, display CS 5 / DC 7 / RST 9 / BL 17, 1-wire 37.
 GPIO13 also drives the on-board blue LED (1 kΩ, active high) — it shows heater
 A's relay state. GPIO18 (A1) has an optional 10 kΩ pullup behind a solder
 jumper (open by default); unused. The 12-pin header carries GPIO8 and GPIO4
@@ -108,19 +109,26 @@ where a standard Feather has "9" and "5" — GPIO9/GPIO5 are A3/A5 on the
 (docs/pinout-verification.md); wiring picture in docs/breadboard.svg,
 the previous protoboard build in docs/board-layout.svg.
 
-`hardware/` is the controller PCB (rev A, one 110 × 85 mm two-layer
-board, JLCPCB-assembled; docs/hardware.md "Printed circuit board" and
-`hardware/README.md`). `hardware/dryer_board/` is a Python package run
-under KiCad 10's bundled Python by `scripts/hardware.sh`
-(`test`, `generate`, `route`, `check`, `export`): `circuit.py` is the
-parts and nets table and `REVISION`, `pinmap.py` header position to
-function, `placement.py` the board geometry and the hand-placed mains
-copper, `project.py` the netclasses and DRC rules. It writes the committed
-KiCad project in `hardware/dryer-controller/`, which opens normally in
-the GUI. `generate` keeps existing tracks; `route` runs Freerouting in
-Docker on the low-voltage nets only. CI (`.github/workflows/hardware.yml`)
-checks the committed files against the generator, runs ERC, DRC and the
-exports, and never routes. Review renders live in `docs/hardware/`.
+`hardware/` is the PCB design (rev A): two two-layer, JLCPCB-assembled
+boards, the 76 × 85 mm controller (`dryer-controller`: ESP sockets, 24 V,
+5 V, MOSFET stages, sensor and display headers) and the 64 × 85 mm mains
+board (`dryer-mains`: fuse, relays and their drivers, the 120 VAC plug),
+joined by a keyed JST-XH 4-way link (5 V, GND, heater A, heater B);
+docs/hardware.md "Printed circuit board" and `hardware/README.md`.
+`hardware/dryer_board/` is a Python package run under KiCad 10's bundled
+Python by `scripts/hardware.sh` (`test`, `generate`, `route`, `check`,
+`export`, each over both boards unless one is named): `parts.py` is the
+part catalogue, `controller.py` and `mains.py` each board's parts, nets,
+geometry and `REVISION` (mains.py also the hand-placed mains copper and the
+DRC rules), `boards.py` the pair, `pinmap.py` header position to function,
+`project.py` the netclass writer. It writes the committed KiCad projects in
+`hardware/dryer-controller/` and `hardware/dryer-mains/`, which open
+normally in the GUI; the local footprints live in `hardware/lib/dryer.pretty`
+and are copied into each project. `generate` keeps existing tracks; `route`
+runs Freerouting in Docker on the low-voltage nets only. CI
+(`.github/workflows/hardware.yml`) checks the committed files against the
+generator, runs ERC, DRC and the exports, and never routes. Review renders
+live in `docs/hardware/` (`controller-*`, `mains-*`).
 
 ## Control logic (see docs/control-logic.md for the full state machine)
 
@@ -166,11 +174,12 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - `hardware/dryer_board/pinmap.py` and the two board packages agree by
   header position; `tests/test_pinmap.py` enforces it (in `build.yml`'s
   lint job and in `hardware.yml`). A pin change touches both together.
-- The mains nets are `L_IN`, `L_FUSED`, `L_SW_A`, `L_SW_B` and `N`, and
-  nothing but J_MAINS, F1, K1 and K2 may touch them (`circuit.check()`).
-  Mains copper is fixed geometry in `placement.MAINS_TRACKS`, laid locked by
+- The mains nets are `L_IN`, `L_FUSED`, `L_SW_A`, `L_SW_B` and `N`; they
+  exist only on the mains board, and nothing but J_MAINS, F1, K1 and K2 may
+  touch them (`mains.check()`; `controller.check()` rejects them outright).
+  Mains copper is fixed geometry in `mains.MAINS_TRACKS`, laid locked by
   the generator; it is never autorouted.
-- The DRC rules in `hardware/dryer_board/project.py` (`RULES`: mains to
+- The DRC rules in `hardware/dryer_board/mains.py` (`RULES`: mains to
   SELV 6 mm, 3.5 mm only inside `relay_pads`, the relay NC pads 6 mm, mains
   to mounting holes 6 mm, and the NC-pad exclusion on the mains-to-SELV
   rules) are never weakened to make a check pass; move the copper instead.
@@ -247,14 +256,18 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - Confirm real breakthrough curve and regen time; retune defaults.
 - Decide whether a proper dew-point transmitter (4–20 mA / Modbus) is needed
   once real data is in.
-- PCB rev A is designed but not ordered or built. Before a first article:
-  review the renders, print `docs/hardware/top.svg` 1:1 against the real
-  parts, run JLCPCB's DFM check, confirm stock. Unverified: the IEC 62368-1
-  creepage desk review, the CJ2310 at 3.3 V gate drive, the K78 module's
-  body height, NO/NC on the fitted relays (docs/hardware.md), board
-  thermal (U1 at about 0.4 A, the SS34s at about 0.2 W, in a closed
-  enclosure: unmeasured), the USB-C overhang (3 mm past the bottom edge;
-  room for a plug with the board on standoffs: unchecked).
+- PCB rev A (controller and mains boards) is designed but not ordered or
+  built. Before a first article: review the renders, print
+  `docs/hardware/controller-top.svg` and `mains-top.svg` 1:1 against the
+  real parts, run JLCPCB's DFM check, confirm stock. Measure the pin pitch
+  of the fuse holders on hand (the F1 footprint takes 21.5 to 23.5 mm; the
+  BLX-A moulding they match is 22.3 ± 1.0) and bench-check the pin order of
+  the Amazon-sourced 5 V module before soldering (hardware/README.md).
+  Unverified: the IEC 62368-1 creepage desk review, the CJ2310 at 3.3 V
+  gate drive, NO/NC on the fitted relays (docs/hardware.md), board thermal
+  (U1 at about 0.4 A, the SS34s at about 0.2 W, in a closed enclosure:
+  unmeasured), the USB-C overhang (3 mm past the bottom edge; room for a
+  plug with the board on standoffs: unchecked).
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows
   "(waiting)" if RH is also high. Decide whether `max_service_min` should

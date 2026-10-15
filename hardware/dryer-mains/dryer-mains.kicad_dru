@@ -1,0 +1,22 @@
+(version 1)
+(rule "mains track width"
+  (condition "A.NetClass == 'MAINS'")
+  (constraint track_width (min 1.5mm)))
+(rule "mains to board edge"
+  (condition "A.NetClass == 'MAINS'")
+  (constraint edge_clearance (min 1mm)))
+(rule "mains to selv"
+  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
+  (constraint clearance (min 6mm)))
+(rule "mains L to L"
+  (condition "A.NetClass == 'MAINS' && B.NetClass == 'MAINS' && A.NetName != 'N' && B.NetName != 'N'")
+  (constraint clearance (min 1.6mm)))
+(rule "mains to selv at relay pads"
+  (condition "A.NetClass == 'MAINS' && B.NetClass != 'MAINS' && A.insideArea('relay_pads') && !(B.Pad_Number == '4' && (B.memberOfFootprint('K1') || B.memberOfFootprint('K2')))")
+  (constraint clearance (min 3.5mm)))
+(rule "relay NC contact is live"
+  (condition "(A.memberOfFootprint('K1') || A.memberOfFootprint('K2')) && A.Pad_Number == '4' && B.NetClass != 'MAINS'")
+  (constraint clearance (min 6mm)))
+(rule "mains to mounting holes"
+  (condition "A.NetClass == 'MAINS' && B.Pad_Type == 'NPTH, mechanical'")
+  (constraint hole_clearance (min 6mm)))

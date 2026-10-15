@@ -385,3 +385,81 @@ as built.
 - **No GND stitching vias** are placed by the generator; the pours connect
   through pads and the vias the router places (DRC reports nothing
   unconnected).
+
+## As built, after the hardware review (2026-10-15)
+
+The review of the single board (PR #49, JWardT3D) asked for six things.
+What changed, each with its reason; the sections above stay as approved.
+
+- **Two boards, not one.** The "Topology: one board" decision is reversed
+  at the reviewer's request: the mains is on its own board. The split is
+  the protoboard's, at the mains boundary: the 76 × 85 mm **controller
+  board** (`dryer-controller`: ESP sockets, 24 V in, 5 V, SW-USB, the
+  three MOSFET stages, sensor and display headers, test points) and the
+  64 × 85 mm **mains board** (`dryer-mains`: F1, K1, K2 with their driver
+  stages R2/R5, Q1/Q2, D1/D2, R3/R6, D3/D4, and J_MAINS). The 1 kΩ base
+  series resistors R1/R4 stay on the controller, as on the protoboard's
+  logic board, so a link fault puts at most 5 V through 1 kΩ on a GPIO.
+  The mains board is the single board's mains strip moved 48 mm left and
+  6 mm down (J_MAINS and the N copper 2 mm further right on a 2 mm wider
+  board), so every clearance measured before holds; the drop and the width
+  are what F1's new pitch needs (below).
+- **The link is the protoboard harness again:** JST B4B-XH-A 4-way
+  (LCSC C144395) on both boards, J_RLY and J_CTRL, pin order 1 = 5 V,
+  2 = GND, 3 = heater A, 4 = heater B, cable 1:1. Keyed and latched, and
+  its 2.5 mm pitch fits no other header. The reviewer's "header pin
+  connectors" were read as this rather than a bare 2.54 mm pin header
+  (XFCN PZ254V-11-04P, LCSC C492403, would be the swap if plain Dupont
+  leads are preferred).
+- **The SHT45 stays on the Thing Plus's Qwiic connector**, as the firmware
+  and docs already had it; no header or pull-up on either board. Checked
+  2026-10-15: `hw-real.yaml`'s `sht4x` block is on the default I2C bus at
+  0x44, heater off; `board-s2.yaml` puts SDA/SCL on GPIO1/GPIO2 and
+  `board-c6.yaml` on GPIO6/GPIO7, the pins SparkFun wires to the Qwiic
+  connector on each board (12-pin positions 12/11, left unconnected on
+  the controller board); the Adafruit 5665 breakout carries its own
+  pull-ups. One stale sentence in CLAUDE.md had the I2C pins on the
+  16-pin header; corrected.
+- **U1 is the Amazon-listed "TSR 1-2450"** (B0GTTJ4PNX) the owner holds,
+  hand-fitted. Its listing gives 11.5 × 10 × 7.5 mm, 6.5 to 36 V in, 1 A,
+  three SIP pins with the pin-1 dot where TRACO's drawing has it: inside
+  the stock TSR-1 footprint's outline and on its 2.54 mm pitch. The
+  listing states no pinout and the label has no TRACO logo, so the
+  first-article check gains a bench test of a loose module before
+  soldering (12 V on pins 1 and 2, 5 V expected on pin 3). Unverified
+  until then: pin order and set accuracy.
+- **F1 is a 22.5 mm-pitch footprint with slotted holes** (2.4 × 1.6 mm,
+  taking 21.5 to 23.5 mm), hand-fitted from the covered 5 × 20 mm
+  holders on hand (Amazon B0FCS5MK1Y, 10 A 250 V). The listing's drawing
+  gives the body (25.8 mm long, 13.4 mm with the cover, 11.5 wide at the
+  base) but no pitch; those dimensions are the BLX-A moulding, whose
+  datasheet (JKSEMI, `docs/datasheets/fuses/jksemi-blx-a.pdf`) puts the
+  pins 22.3 ± 1.0 mm apart with 21.5 to 22.7 accepted, so the 15 mm
+  PTF-76-B pads would not have taken them. The inference is from the
+  dimensions, not a statement about that listing: the owner measures one
+  before ordering. The XFCN PTF-77 (LCSC C717030, 22.50 mm, the PTF-76-B
+  body) is the fab-fitted alternative on the same pads; the PTF-76-B
+  footprint stays in `hardware/lib/dryer.pretty` for a one-line switch
+  back if a holder measures 15 mm.
+- **Mounting holes are 4.3 mm (M4)** on both boards, for the hardware on
+  hand; the 6 mm mains-to-hole rule is unchanged and holds (closest:
+  F1's L_FUSED pad to H2, 7.8 mm).
+- **PCBWay** (advice only, no board change): feasible, the files and
+  footprints are standard and PCBWay assembles through-hole and accepts
+  DNP lines. The risk is sourcing the LCSC-only parts (DORABO headers
+  and plugs, Kinghelm sockets, SOFNG switch, XFCN display header, Songle
+  relays); its BOM wants manufacturer, MPN and a distributor number per
+  line rather than JLCPCB's four columns. Details in `hardware/README.md`.
+- **Generator**: `circuit.py`/`placement.py` became `parts.py` (the
+  catalogue and helpers), `controller.py` and `mains.py` (each board's
+  parts, nets, geometry, silkscreen; the mains rules and copper in
+  `mains.py`) and `boards.py`; every command runs over both boards or the
+  one named. The local footprints moved to `hardware/lib/dryer.pretty`
+  and are copied into each project (the sync check compares the copies).
+  Fab files and review renders are per board (`dryer-controller-revA-*`,
+  `dryer-mains-revA-*`; `docs/hardware/controller-*`, `mains-*`). Only one
+  generator-built board may be alive in a pcbnew process at a time
+  (building a second invalidates the first), which the tests now respect.
+- The DRC rules, the netclasses, the SELV routing method and the mains
+  copper geometry are unchanged in substance; the controller project
+  carries an empty rule file, since nothing on it is mains.

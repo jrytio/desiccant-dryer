@@ -17,25 +17,38 @@ in the path.
 
 ## PCB rev A
 
-First-article check for the printed circuit board in
-[hardware.md](hardware.md#printed-circuit-board-rev-a). Run it on the first
-assembled board, and again on any board whose relay, fuse holder or 5 V
-module was changed. Nothing in this section has been run yet: every
-"expect" value is derived from `hardware/dryer_board/circuit.py` and the
-hardware.md budget, not measured. The protoboard sections below
+First-article check for the two printed circuit boards in
+[hardware.md](hardware.md#printed-circuit-board-rev-a): the controller
+board and the mains board, joined by the JST-XH 4-way link (J_RLY on the
+controller, J_CTRL on the mains board; pin 1 = 5 V, 2 = GND, 3 = heater A,
+4 = heater B). Run it on the first assembled pair, and again on any board
+whose relay, fuse holder or 5 V module was changed. Nothing in this section
+has been run yet: every "expect" value is derived from
+`hardware/dryer_board/controller.py` and `mains.py` and the hardware.md
+budget, not measured. The protoboard sections below
 (Socket map to step 7) are for the protoboard build only; the socket map
 and the socket-position numbering hold for both.
 
 **Before you start:** ESP pulled out of its sockets, 24 V supply off, mains
-unplugged, **F1 holder empty, SW-USB slid toward its OFF legend.** OFF is defined electrically: SW1 pin 2 to pin 3 closed, pin 2 to pin 1 open (item 6 checks this with the meter). Probe socket positions with a
+unplugged, **the link cable unplugged at both ends unless an item says
+otherwise, F1 holder empty, SW-USB slid toward its OFF legend.** OFF is defined electrically: SW1 pin 2 to pin 3 closed, pin 2 to pin 1 open (item 6 checks this with the meter). Probe socket positions with a
 stiff wire or a spare header pin. Pin numbers are the ones in
 hardware.md "Header pinouts" (J_MAINS 1 to 8, J_LOADS 1 to 6, J_24V 1 = 24V+,
 2 = 0V). The test points: TP1 GND, TP2 3V3, TP3 5 V, TP4 24 V, TP5 to TP9
-the HTR_A, HTR_B, VLV_A, VLV_B and FAN drive lines. K1 and K2 pads are
-numbered as on the relay (1 COM, 2 and 5 coil, 3 NO, 4 NC).
+the HTR_A, HTR_B, VLV_A, VLV_B and FAN drive lines, all on the controller.
+The mains board has no test points: its SELV references are J_CTRL pin 2
+(GND) and pin 1 (5 V). K1 and K2 pads are numbered as on the relay (1 COM,
+2 and 5 coil, 3 NO, 4 NC).
 
 If any mains reading (items 1, 2, 3 or 8) is wrong, stop: do not apply
 mains or connect a heater until it is understood.
+
+### Item 0: Parts on hand, before they go on a board
+
+| | Check | Expect |
+|---|---|---|
+| [ ] | The 5 V module (U1): current-limited 12 V supply, + on pin 1 and − on pin 2 (pin 1 is the end with the dot; 1 Vin, 2 GND, 3 Vout), nothing on pin 3 but the meter | 5.0 V on pin 3 to pin 2, under 20 mA drawn. A module that reads 0 V, the input voltage, or draws current with nothing on its output has another pinout: do not fit it. The Amazon-listed "TSR 1-2450" has no stated pinout (hardware/README.md) |
+| [ ] | The fuse holder (F1): calipers across the two pins, centre to centre | 21.5 to 23.5 mm fits F1's slotted pads (the holders on hand should read about 22.3). A 15 mm holder needs the PTF-76-B footprint instead: do not force it |
 
 ### Item 1: Shorts
 
@@ -49,9 +62,11 @@ a steady beep is a short.
 | [ ] | TP3 (5 V) → TP1 (GND) | beep | open |
 | [ ] | TP2 (3V3) → TP1 (GND) | beep | open |
 | [ ] | TP4 (24 V) → TP1 (GND) | beep | open |
-| [ ] | Each J_MAINS pin 1 to 8 → TP1, then → TP3, then → TP4 | Ω, top range | OL on all 24 readings (not merely no beep) |
-| [ ] | Slot, SELV side TP1 → mains side J_MAINS pin 2 (N) | MΩ range | OL |
-| [ ] | Slot, SELV side TP3 → mains side J_MAINS pin 7 (L fused) | MΩ range | OL |
+| [ ] | J_RLY pin 1 (5 V) → J_RLY pin 2 (GND), controller | beep | open (C4 may chirp) |
+| [ ] | J_CTRL pin 1 (5 V) → J_CTRL pin 2 (GND), mains board | beep | open |
+| [ ] | Each J_MAINS pin 1 to 8 → J_CTRL pin 2 (GND), then → J_CTRL pin 1 (5 V) | Ω, top range | OL on all 16 readings (not merely no beep) |
+| [ ] | Slot, SELV side J_CTRL pin 2 → mains side J_MAINS pin 2 (N) | MΩ range | OL |
+| [ ] | Slot, SELV side J_CTRL pin 1 → mains side J_MAINS pin 7 (L fused) | MΩ range | OL |
 | [ ] | K1 pad 2 and pad 5 (coil) → K1 pad 1 and pad 3 (contacts), each pair; same for K2 | MΩ range | OL (the coil is the only link across the slot, through its own pads) |
 | [ ] | Look along the slot against a light | visual | the routed slot is open through the board in all five segments, with the four gaps only where the coil tracks cross |
 
@@ -91,6 +106,8 @@ Remove the fuse again before items 4 to 8 unless a step says otherwise.
 | [ ] | The 8-pin mains plug is offered to the 6-pin J_LOADS header and the 2-pin J_24V header | does not enter |
 | [ ] | The 3.5 mm sensor plug is offered to every other header | fits only J_SENS |
 | [ ] | The display cable is offered to every other header | fits only J_DISP |
+| [ ] | The link cable is offered to J_DISP and J_SENS | does not enter (2.5 mm pitch) |
+| [ ] | The link cable is plugged into J_RLY and J_CTRL | latch engages at both ends; pin 1 (5V legend) to pin 1 |
 
 ### Item 5: Drivers
 
@@ -101,12 +118,12 @@ transistor pin is too small to hold.
 
 | | From → To | Mode | Expect |
 |---|---|---|---|
-| [ ] | 12-pin 4 (heater A) → Q1 base (R1/R2 junction) | Ω | ~1 kΩ |
-| [ ] | Q1 base → GND | Ω | ~1 kΩ (R2) |
-| [ ] | 12-pin 5 (heater B) → Q2 base (R4/R5 junction) | Ω | ~1 kΩ |
-| [ ] | Q2 base → GND | Ω | ~1 kΩ (R5) |
+| [ ] | Controller: 12-pin 4 (heater A) → J_RLY pin 3; 12-pin 5 (heater B) → J_RLY pin 4 | Ω | ~1 kΩ (R1, R4) |
+| [ ] | Mains board: J_CTRL pin 3 → Q1 base; J_CTRL pin 4 → Q2 base | beep | ~0 Ω |
+| [ ] | Mains board: Q1 base → J_CTRL pin 2 (GND); Q2 base → J_CTRL pin 2 | Ω | ~1 kΩ (R2, R5) |
 | [ ] | Q1 pin 3 (collector) → K1 pad 5; Q2 pin 3 → K2 pad 5 | beep | ~0 Ω |
-| [ ] | TP3 (5 V) → K1 pad 5, and → K2 pad 5, red on TP3 | Ω | the coil alone (the LED branch does not conduct at meter voltage); about 70 Ω nominal from the Songle datasheet, not measured |
+| [ ] | J_CTRL pin 1 (5 V) → K1 pad 5, and → K2 pad 5, red on pin 1 | Ω | the coil alone (the LED branch does not conduct at meter voltage); about 70 Ω nominal from the Songle datasheet, not measured |
+| [ ] | Link plugged in at both ends: 12-pin 4 → Q1 base, 12-pin 5 → Q2 base, TP1 → J_CTRL pin 2, TP3 → J_CTRL pin 1 | Ω / beep | ~1 kΩ, ~1 kΩ, ~0 Ω, ~0 Ω. Unplug the link again |
 | [ ] | 12-pin 6 (valve A) → Q3 gate | Ω | ~100 Ω (R7) |
 | [ ] | 12-pin 7 (valve B) → Q4 gate | Ω | ~100 Ω (R10) |
 | [ ] | 12-pin 8 (fan) → Q5 gate | Ω | ~100 Ω (R13) |
@@ -133,6 +150,7 @@ beep is not.
 | [ ] | SW1 slider each way: SW1 pin 2 (common) → pin 1, and pin 2 → pin 3 | beep | in one slider position pin 2 to pin 1 is closed and pin 2 to pin 3 is open; the other position swaps them. The position with 2 to 1 closed must be the one toward the ON legend on the silkscreen, and 2 to 3 closed the one toward OFF; if the legend disagrees with the meter, stop |
 | [ ] | Slider OFF: 12-pin 3 → TP3 and → TP1 | Ω, top range | OL on both |
 | [ ] | Slider ON: 12-pin 3 → SW1 pin 2 | beep | closed (pin 3 of SW1 is unconnected) |
+| [ ] | J_RLY pin 1 → TP3; J_RLY pin 2 → TP1 | beep | closed (the 5 V and GND the link carries) |
 
 Return the slider to OFF. **Then power up** (the ESP still out, SW-USB OFF,
 DC supply with a current limit if you have one, 24 V on). DC volts, black
@@ -165,32 +183,36 @@ and the LEDs there show only that the driver stage conducts.
 |---|---|---|---|---|---|
 | [ ] | D12 | +24V (R16 10 kΩ to GND) | green | 24 V present after F2 and D11 | lit |
 | [ ] | D13 | +5V (R17 2.2 kΩ to GND) | green | 5 V module output present | lit |
-| [ ] | D3 | COIL_A, Q1 collector | red | Heater A relay driven | dark |
-| [ ] | D4 | COIL_B, Q2 collector | red | Heater B relay driven | dark |
+| [ ] | D3 (mains board; read with the link plugged in, then unplug it) | COIL_A, Q1 collector | red | Heater A relay driven | dark |
+| [ ] | D4 (mains board, as D3) | COIL_B, Q2 collector | red | Heater B relay driven | dark |
 | [ ] | D8 | SW_VA, Q3 drain | yellow | Valve A driven | dark |
 | [ ] | D9 | SW_VB, Q4 drain | yellow | Valve B driven | dark |
 | [ ] | D10 | SW_FAN, Q5 drain | yellow | Fan driven | dark |
 
 With the ESP out **none of the five output LEDs (D3, D4, D8, D9, D10) may
-light.** Any of them lit means a gate or base is floating high or a
-transistor is in backwards: power down and look at that stage.
+light**, D3 and D4 with the link plugged in and 5 V reaching the mains
+board. Any of them lit means a gate or base is floating high or a
+transistor is in backwards: power down and look at that stage. Neither
+relay may click when the link is plugged in.
 
 ### Item 8: Mains isolation
 
 Mains unplugged, 24 V off, ohmmeter on its top range (the highest
-resistance range the meter has, or its MΩ range). Probe **TP1 and TP3**
-as the SELV side. Every row is two readings (to TP1, to TP3). **Expect OL
-on every one.** F1 in place or out makes no difference to the result; do
-both for the F1 pads.
+resistance range the meter has, or its MΩ range). With the link unplugged,
+probe **J_CTRL pin 2 (GND) and pin 1 (5 V)** as the mains board's SELV
+side; then plug the link in and repeat the J_MAINS row against **TP1 and
+TP3** on the controller, so the cable is included. Every row is two
+readings (to GND, to 5 V). **Expect OL on every one.** F1 in place or out
+makes no difference to the result; do both for the F1 pads.
 
-| | Mains-side point | → TP1 and → TP3 | Expect |
+| | Mains-side point | → SELV GND and → SELV 5 V | Expect |
 |---|---|---|---|
 | [ ] | J_MAINS pin 1 (L in), 2 (N), 3 (HTR A), 4, 5 (HTR B), 6, 7 (PSU L), 8 | Ω, top range | OL |
 | [ ] | F1 clip 1 (L_IN side) and F1 clip 2 (L_FUSED side) | Ω, top range | OL |
 | [ ] | K1 pad 1, pad 3, pad 4 | Ω, top range | OL |
 | [ ] | K2 pad 1, pad 3, pad 4 | Ω, top range | OL |
 
-If every row reads OL, the board is cleared for the mains-side work in
+If every row reads OL, the boards are cleared for the mains-side work in
 docs/hardware-bringup.md; the formal sign-off (earthing, creepage) is
 `docs/inspection-checklist.md`. Record the reading of any row that is not
 OL, with its two probe points, before changing anything.
