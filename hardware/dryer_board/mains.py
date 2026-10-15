@@ -107,7 +107,7 @@ def check():
 #
 # What fixes each position (courtyards measured from the KiCad 10.0.6 footprints):
 # - J_MAINS at x 39.5: the N links run 1.1 mm right of the pads (x 43.15, 1.5 wide) and keep
-#   1.1 mm from the board edge, so the pads cannot go further right; its courtyard (x 36.95 to
+#   1.05 mm from the board edge (copper edge to the Edge.Cuts stroke), so the pads cannot go further right; its courtyard (x 36.95 to
 #   50.05, 43.7 tall) runs from y 13.86 to 57.58, between F1 and H4's courtyard (from y 61.4).
 # - F1 at (12.4, 14): its courtyard (x 10.46 to 36.84) must end left of J_MAINS's, which puts
 #   pad 1 at x 12.4 (its edge 1.4 mm from the slot), and that courtyard reaches H2's (x 36.4 up, to

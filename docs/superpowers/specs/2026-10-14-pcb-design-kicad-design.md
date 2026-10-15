@@ -280,12 +280,13 @@ as generated differs from them as follows; each line gives the reason.
 `docs/hardware.md` ("Printed circuit board (rev A)") describes the board
 as built.
 
-- **Outline 110 × 85 mm**, not about 100 × 80: fixed in the implementation
+- **Outline 110 × 85 mm** (single board; superseded by the two-board
+  As-built below), not about 100 × 80: fixed in the implementation
   plan's placement table, which needed the room for the mains strip, the
   relay areas and the 6 mm clearances; the spec left the size to the
   generator.
 - **Mains zone is x ≥ 72.5 mm behind a 2 mm slot (x 70.5 to 72.5) with
-  four gaps**, one per relay coil track, rather than a slot broken only
+  four gaps** (single board; superseded by the two-board As-built below), one per relay coil track, rather than a slot broken only
   under each relay body.
 - **Both relays sit wholly inside the mains zone, their coil pads SELV
   islands**, instead of straddling the boundary with the coil pins
@@ -368,7 +369,8 @@ as built.
   copied from the stock Phoenix ones and drilled to the DORABO drawings
   (Ø1.7 mm for the 5.08 mm headers, Ø1.4 mm for the 3.5 mm one, 0.3 mm
   annular ring); the stock drills were too small for their pins.
-- **TP2 sits at x 37.4**, off the 3.5 mm grid, to avoid a KiCad 10 DRC
+- **TP2 sits at x 37.4** (single board; superseded by the two-board
+  As-built below: TP2 is at x 11.5 on the controller board), off the 3.5 mm grid, to avoid a KiCad 10 DRC
   false positive (GND fill reported touching TP2 with 0 mm clearance while
   the saved fill keeps 0.3 mm).
 - **`export.py` instead of a `.kicad_jobset`**: the exports run as

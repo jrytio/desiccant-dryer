@@ -253,8 +253,9 @@ On the controller board the Thing Plus lies along the top edge, 12-pin
 row above the 16-pin row, pin 1 at the USB end, with its USB-C face 3 mm
 past the left edge (x = −3); its antenna end is at the right, over a
 keep-out (x 50.5 to 66, y 6 to 34) with no copper on either layer. The top
-copper is also bare over roughly x 29 to 66, y 5 to 34, an island between
-tracks that the pour removed; that is not a keep-out. J_LOADS, J_24V and
+copper is also bare in a band right of the 12-pin socket as far as the
+keep-out, an island between tracks that the pour removed (read from the
+render, not measured); that is not a keep-out. J_LOADS, J_24V and
 J_DISP are on the bottom edge (vertical headers, plugs from above),
 J_SENS is vertical on the right edge and J_RLY, the link, is at the top
 right beside the keep-out. On the mains board the plug J_MAINS is on the
@@ -582,31 +583,43 @@ KiCad applies the 3.5 mm relaxation to a whole track segment if any part
 of it touches a `relay_pads` area, so the mains tracks are split at the
 area edges and only the pieces at the relay pads are relaxed.
 
-Measured on the committed mains board (`hardware/tests/test_margins.py`
-prints the figures that follow with its test run; DRC re-checks the rules
-on every generate and route):
+Measured on the committed mains board, in three groups by what guards
+each figure. DRC re-checks the rules on every generate and route.
+
+Printed and asserted by `hardware/tests/test_margins.py`:
 
 - Mains to SELV outside the relay areas: 6.071 mm, L_IN at F1's pad 1 to
   the COIL_A track on B.Cu. The rule is 6.0 mm, so the margin is 0.07 mm.
-- Inside the relay areas: 3.511 mm minimum, a coil pad to the COM pad of
-  the same relay (rule 3.5 mm; detail below).
-- The saved GND fill is 5.488 mm from mains copper inside the relay areas
-  (floor 3.5 mm) and 13.75 mm outside them (floor 6.0 mm). The pour
-  outline is kept at y ≥ 21 as a conservative outline, and the fill that
-  is saved is what the test checks, after a refill that applies the
-  custom rules (`board.refill_with_rules`, then `kicad-cli pcb drc
-  --refill-zones --save-board` after every save).
 - Mains to a mounting hole's edge (rule 6.0 mm): H1 9.056 mm, H2 7.760 mm,
   H3 12.910 mm, H4 9.200 mm.
 - Between the L-side mains nets (rule 1.6 mm): 1.800 mm, L_IN against
-  L_SW_B. The relay NC pads (netless, live when the coil is off) are
-  2.05 mm from L_SW_B.
-- L to N: 1.10 mm centre to centre of the N links beside the plug pins
-  (netclass rule 1.0 mm; the single board had 1.55 mm). Regaining the
-  margin would push F1's pad 1 to the slot's 1 mm limit. An L to N fault
-  blows F1.
+  L_SW_B.
 - Mains to the board edge: 1.050 mm, the N links at x 43.15 (rule 1.0 mm).
   This is the tightest margin on the board.
+
+Floor asserted by a test, value measured once on the committed board with
+pcbnew (not printed by the suite):
+
+- The saved GND fill is 5.488 mm from mains copper inside the relay areas
+  and 13.75 mm outside them, asserted at 3.5 and 6.0 mm by
+  `test_saved_pour_fill_keeps_the_mains_rules`. The pour outline is kept
+  at y ≥ 21 as a conservative outline, and the fill that is saved is what
+  the test checks, after a refill that applies the custom rules
+  (`board.refill_with_rules`, then `kicad-cli pcb drc --refill-zones
+  --save-board` after every save).
+- The relay NC pads (netless, live when the coil is off) are 2.05 mm from
+  L_SW_B, asserted at 1.6 mm by `test_l_side_nets_apart`, whose printed
+  worst case is the 1.800 mm above.
+
+DRC only (no test prints it):
+
+- Inside the relay areas: 3.511 mm minimum, a coil pad to the COM pad of
+  the same relay, against the 3.5 mm rule (detail below).
+- L to N: 1.10 mm copper to copper, from J_MAINS's L_SW_A pad 3 to the N
+  link at x 43.15, held by the 1.0 mm MAINS netclass clearance (the N
+  track to L track gap is 2.05 mm; the single board had 1.55 mm).
+  Regaining the margin would push F1's pad 1 to the slot's 1 mm limit. An
+  L to N fault blows F1.
 
 A known gap in the rules, parked rather than fixed: the DRC rules hold
 the netless relay NC pads to SELV at 6 mm, but to L-side mains copper

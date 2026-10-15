@@ -71,6 +71,34 @@ areas (3.5 mm rule) around each relay's pads; mains copper re-laid in
 lists (6 mm to SELV outside the areas, 3.5 inside, 1.6 mm L to L, 1 mm
 in-class, 1 mm to the edge, 6 mm to the holes).
 
+## As built (2026-10-15)
+
+Where the boards differ from the layout above, each with its reason.
+Figures are from the `PLACE`, `HOLES`, `RELAY_AREAS` and `GND_POUR`
+tables and the comments in `hardware/dryer_board/mains.py`.
+
+- **K1 COM at (12, 29) and K2 COM at (12, 51.5)**, not y 24 and 54, so the
+  coil corridors clear F1 and H3.
+- **F1 at (12.4, 14), pads at x 12.4 and 34.9**, not x 10 and 32.5 at
+  y 12: its courtyard must end left of J_MAINS's, and its pad 2 keeps
+  7.76 mm from H2's hole edge.
+- **J_MAINS at (39.5, 53.5), rotated 90°, pads at x 39.5**, not x 35; the
+  N links run at x 43.15. The housing overhangs the right edge by 5.05 mm
+  (bounded at 5.1 mm by `test_outlines`); open with the reviewer.
+- **J_CTRL at (3.95, 33), outside both relay areas**, with the driver parts
+  in two columns (x 2 and x 5.4), not one.
+- **Antenna keep-out from x 50.5** (to 66, y 6 to 34), not from 54.
+- **Relay areas** (2, 19) to (22, 39) and (2, 41.5) to (22, 61.5).
+- **GND pour outline from y 21** on the mains board, (2, 21) to (6.5, 68).
+- **A rules-aware refill** joined the pipeline (`board.refill_with_rules`),
+  and two test files, `test_outlines.py` and `test_margins.py`, hold the
+  outlines, overhangs and clearance margins.
+- **L to N is 1.10 mm**, down from 1.55 mm on the single board.
+- **Parked rule gap**: the DRC rules hold the netless relay NC pads to
+  SELV at 6 mm but to L-side mains copper only at the 1.0 mm netclass
+  clearance; `test_margins.py` holds them at 1.6 mm. A rev B rule, NC to
+  L-side 1.6 mm, is the fix.
+
 ## Not in this work
 
 Any part, value or net change; the link pinout; moving the SHT45; the
