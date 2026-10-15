@@ -49,7 +49,7 @@ def export_all(bd, project_dir, out_dir, docs_dir=None):
     _cli("sch", "erc", "--severity-all", "-o", paths["erc"], sch)
     paths["drc"] = os.path.join(out_dir, stem + "-drc.rpt")
     _cli("pcb", "drc", "--severity-all", "--refill-zones", "-o", paths["drc"], pcb)
-    kicad_env.run_cli("pcb", "export", "gerbers", "-o", gerbers + "/", "-l", GERBER_LAYERS, pcb)
+    kicad_env.run_cli("pcb", "export", "gerbers", "-o", gerbers + "/", "-l", GERBER_LAYERS, "--check-zones", pcb)
     kicad_env.run_cli("pcb", "export", "drill", "-o", gerbers + "/", "--format", "excellon", "--excellon-units", "mm",
                       "--generate-map", "--map-format", "gerberx2", pcb)
     paths["gerber_zip"] = os.path.join(out_dir, stem + "-gerbers.zip")
@@ -70,7 +70,7 @@ def export_all(bd, project_dir, out_dir, docs_dir=None):
     kicad_env.run_cli("sch", "export", "pdf", "-o", paths["schematic_pdf"], sch)
     paths["top_svg"] = os.path.join(out_dir, stem + "-top.svg")
     kicad_env.run_cli("pcb", "export", "svg", "-l", "F.Cu,F.SilkS,F.Fab,Edge.Cuts", "--page-size-mode", "2",
-                      "--exclude-drawing-sheet", "--mode-single", "-o", paths["top_svg"], pcb)
+                      "--exclude-drawing-sheet", "--mode-single", "--check-zones", "-o", paths["top_svg"], pcb)
     paths["render_top"] = os.path.join(out_dir, stem + "-render-top.png")
     kicad_env.run_cli("pcb", "render", "-o", paths["render_top"], "--width", "1600", "--height", "1240", pcb)
     paths["render_iso"] = os.path.join(out_dir, stem + "-render-iso.png")

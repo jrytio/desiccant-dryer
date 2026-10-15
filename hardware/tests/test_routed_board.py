@@ -1,7 +1,7 @@
 """The gate on the committed, routed boards: DRC clean, fully routed, nothing in the antenna
 keep-out or under U1 (controller), wide mains tracks and bare relay NC pads (mains). CI never
 routes; these run on the files."""
-import os, unittest
+import gc, os, shutil, tempfile, types, unittest
 import pcbnew
 from dryer_board import board, boards, controller, mains, kicad_env
 
@@ -21,6 +21,50 @@ def _copper_in(track, layer, area):
     track.TransformShapeToPolygon(poly, layer, 0, pcbnew.FromMM(0.005), pcbnew.ERROR_INSIDE)
     poly.BooleanIntersection(area)
     return poly.OutlineCount() != 0
+
+
+def _gap(a, b, cap=40.0):
+    """Edge-to-edge distance in mm between two pcbnew SHAPEs, by bisection on Collide with a
+    clearance, to 1 um."""
+    lo, hi = 0.0, cap
+    while hi - lo > 0.001:
+        mid = (lo + hi) / 2
+        if a.Collide(b, pcbnew.FromMM(mid)):
+            hi = mid
+        else:
+            lo = mid
+    return lo
+
+
+def pour_to_mains_shortfalls(b, bd):
+    """Every (filled polygon of a GND pour, mains track or pad) pair on a layer that sits closer
+    than the rules allow in the saved fill: 6 mm, or 3.5 mm where the mains item touches a relay
+    area (the relay_pads rule tests the mains item, A). Returns [(gap, floor, description)]."""
+    areas = [pcbnew.BOX2I(pcbnew.VECTOR2I_MM(x1, y1), pcbnew.VECTOR2I_MM(x2 - x1, y2 - y1))
+             for x1, y1, x2, y2 in bd.RELAY_AREAS]
+    items = [t for t in b.GetTracks() if t.GetNetname() in bd.MAINS_NETS]
+    items += [p for fp in b.GetFootprints() for p in fp.Pads() if p.GetNetname() in bd.MAINS_NETS]
+    out = []
+    for z in b.Zones():
+        if z.GetIsRuleArea() or z.GetNetname() != "GND":
+            continue
+        for layer in (pcbnew.F_Cu, pcbnew.B_Cu):
+            if not z.IsOnLayer(layer):
+                continue
+            fill = z.GetFilledPolysList(layer)
+            for i in range(fill.OutlineCount()):
+                poly = fill.UnitSet(i)
+                for it in items:
+                    if not it.IsOnLayer(layer):
+                        continue
+                    shape = it.GetEffectiveShape(layer)
+                    floor = 3.5 if any(a.Intersects(shape.BBox()) for a in areas) else 6.0
+                    gap = _gap(poly, shape)
+                    if gap < floor:
+                        out.append((gap, floor, "%s fill %d on %s to %s %s at %s" % (
+                            z.GetZoneName(), i, b.GetLayerName(layer), it.GetClass(), it.GetNetname(),
+                            it.GetPosition())))
+    return out
 
 
 @unittest.skipUnless(all(os.path.exists(p) for p in PCBS.values()), "no committed boards yet")
@@ -90,3 +134,25 @@ class RoutedBoard(unittest.TestCase):
         b = self.b[controller]
         for n in mains.MAINS_NETS:
             self.assertIsNone(b.FindNet(n), n)
+
+    def test_saved_pour_fill_keeps_the_mains_rules(self):
+        # The saved fill, not DRC's own refill: the gerbers are plotted from the file.
+        short = pour_to_mains_shortfalls(self.b[mains], mains)
+        self.assertEqual(short, [], "\n".join("%.3f < %.1f: %s" % s for s in short))
+
+
+class SavedFill(unittest.TestCase):
+    def test_build_saves_a_rules_aware_fill(self):
+        """A pour drawn to within 4 mm of F1's pad 1 (mains, outside the relay areas) must come
+        out of board.build pulled back to 6 mm in the saved file: the pcbnew filler sees only
+        the zone's own 0.3 mm clearance, the project's rules come from the refill after it."""
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        bd = types.SimpleNamespace(**{k: getattr(mains, k) for k in dir(mains) if not k.startswith("__")})
+        bd.GND_POUR = (2.0, 2.0, 6.5, 68.0)
+        pcb = os.path.join(d, bd.PROJECT + ".kicad_pcb")
+        b = board.build(bd, pcb, fresh=True)
+        del b
+        gc.collect()
+        short = pour_to_mains_shortfalls(pcbnew.LoadBoard(pcb), bd)
+        self.assertEqual(short, [], "\n".join("%.3f < %.1f: %s" % s for s in short))

@@ -2,7 +2,7 @@
 """Build or update a board's .kicad_pcb with pcbnew. The generator owns footprints, nets,
 outline, zones, rule areas and text; tracks and vias survive a rebuild unless their net left
 the model or fresh=True. `bd` is a board module (boards.py)."""
-import os, subprocess
+import os, subprocess, tempfile
 import pcbnew
 from . import libs, project, kicad_env, parts
 from .parts import NC
@@ -174,6 +174,7 @@ def build(bd, pcb_path, fresh=False):
     pcbnew.SaveBoard(pcb_path, b)
     # SaveBoard writes a default .kicad_pro beside the board; put the canonical one back.
     project.write(bd, os.path.dirname(pcb_path))
+    refill_with_rules(bd, pcb_path)
     return b
 
 def _touches(via, layer, b):
@@ -201,6 +202,26 @@ def remove_dangling_vias(b):
         if v.GetClass() == "PCB_VIA" and not (_touches(v, pcbnew.F_Cu, b) and _touches(v, pcbnew.B_Cu, b)):
             b.Delete(v); gone += 1
     return gone
+
+def refill_with_rules(bd, pcb_path):
+    """Refill the saved board's pours with the project's rules and save it again. The pcbnew
+    filler runs before the .kicad_pro and .kicad_dru are on disk (and does not read them), so
+    its fill keeps only the zone's own clearance; DRC with --refill-zones would pass on its own
+    refill while the saved copper, which the gerbers are plotted from, sat closer to mains than
+    the rules allow. kicad-cli loads the project beside the board, refills, and saves; it exits
+    5 when violations exist (an unrouted board), which is still a saved refill."""
+    fd, rpt = tempfile.mkstemp(suffix=".rpt")
+    os.close(fd)
+    try:
+        r = subprocess.run([kicad_env.kicad_cli(), "pcb", "drc", "--refill-zones", "--save-board", "-o", rpt, pcb_path],
+                           capture_output=True, text=True)
+    finally:
+        os.remove(rpt)
+    if r.returncode not in (0, 5):
+        raise RuntimeError("kicad-cli pcb drc --refill-zones --save-board failed (exit %d)\nstdout:\n%s\nstderr:\n%s"
+                           % (r.returncode, r.stdout, r.stderr))
+    # The save rewrites the .kicad_pro beside the board; put the canonical one back.
+    project.write(bd, os.path.dirname(os.path.abspath(pcb_path)))
 
 def export_dsn(b, dsn_path):
     if not pcbnew.ExportSpecctraDSN(b, dsn_path):
