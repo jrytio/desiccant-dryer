@@ -3,24 +3,13 @@ keep-out or under U1 (controller), wide mains tracks and bare relay NC pads (mai
 routes; these run on the files."""
 import gc, os, shutil, tempfile, types, unittest
 import pcbnew
-from dryer_board import board, boards, controller, mains, kicad_env
+from dryer_board import board, boards, controller, mains, kicad_env, route
 
 PCBS = {bd: os.path.join(kicad_env.project_dir(bd), bd.PROJECT + ".kicad_pcb") for bd in boards.BOARDS}
 
 
-def _rect_poly(x1, y1, x2, y2):
-    area = pcbnew.SHAPE_POLY_SET(); area.NewOutline()
-    for x, y in ((x1, y1), (x2, y1), (x2, y2), (x1, y2)):
-        area.Append(pcbnew.VECTOR2I_MM(x, y))
-    return area
-
-
-def _copper_in(track, layer, area):
-    """True if any of the track's (or via's) copper on this layer lies inside the area."""
-    poly = pcbnew.SHAPE_POLY_SET()
-    track.TransformShapeToPolygon(poly, layer, 0, pcbnew.FromMM(0.005), pcbnew.ERROR_INSIDE)
-    poly.BooleanIntersection(area)
-    return poly.OutlineCount() != 0
+_rect_poly = route.rect_poly
+_copper_in = route.copper_in_area
 
 
 def _gap(a, b, cap=40.0):
@@ -38,12 +27,15 @@ def _gap(a, b, cap=40.0):
 
 def pour_to_mains_shortfalls(b, bd):
     """Every (filled polygon of a GND pour, mains track or pad) pair on a layer that sits closer
-    than the rules allow in the saved fill: 6 mm, or 3.5 mm where the mains item touches a relay
-    area (the relay_pads rule tests the mains item, A). Returns [(gap, floor, description)]."""
-    areas = [pcbnew.BOX2I(pcbnew.VECTOR2I_MM(x1, y1), pcbnew.VECTOR2I_MM(x2 - x1, y2 - y1))
-             for x1, y1, x2, y2 in bd.RELAY_AREAS]
+    than the rules allow in the saved fill: 6 mm, or 3.5 mm where the mains item's copper touches a
+    relay area (never for the NC pads) (the relay_pads rule tests the mains item, A). Returns [(gap, floor, description)]."""
+    areas = route.relay_area_polys(bd)
     items = [t for t in b.GetTracks() if t.GetNetname() in bd.MAINS_NETS]
     items += [p for fp in b.GetFootprints() for p in fp.Pads() if p.GetNetname() in bd.MAINS_NETS]
+    # The relay NC pads are netless but live: 6 mm everywhere, never the relay-area 3.5.
+    nc = [p for ref in ("K1", "K2") if b.FindFootprintByReference(ref) is not None
+          for p in b.FindFootprintByReference(ref).Pads() if p.GetNumber() == "4"]
+    items += nc
     out = []
     for z in b.Zones():
         if z.GetIsRuleArea() or z.GetNetname() != "GND":
@@ -58,7 +50,7 @@ def pour_to_mains_shortfalls(b, bd):
                     if not it.IsOnLayer(layer):
                         continue
                     shape = it.GetEffectiveShape(layer)
-                    floor = 3.5 if any(a.Intersects(shape.BBox()) for a in areas) else 6.0
+                    floor = 3.5 if it not in nc and route.in_relay_area(it, layer, areas) else 6.0
                     gap = _gap(poly, shape)
                     if gap < floor:
                         out.append((gap, floor, "%s fill %d on %s to %s %s at %s" % (

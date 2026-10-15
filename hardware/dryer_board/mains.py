@@ -113,8 +113,9 @@ def check():
 #   pad 1 at x 12.4 (its edge 1.4 mm from the slot), and that courtyard reaches H2's (x 36.4 up, to
 #   y 8.6), so F1's top courtyard edge sits at y 8.65 (y 14). Pad 2 is then 7.8 mm from H2's
 #   hole edge.
-# - K1 at y 29: K1's top coil pad (SELV) keeps 6 mm from F1's pad 1 (6.27 measured); F1 is
-#   not in a relay area. K2 at y 51.5: L_IN reaches J_MAINS pin 1 at y 53.5 between K2's NC
+# - K1 at y 29: the SELV copper nearest F1's pad 1 keeps 6 mm from it: the COIL_A track at
+#   6.07 mm (B.Cu), +5V at 6.12 mm (F.Cu), then K1's top coil pad at 6.27; F1 is not in a
+#   relay area. K2 at y 51.5: L_IN reaches J_MAINS pin 1 at y 53.5 between K2's NC
 #   and NO pads, as on rev A (y COM + 2, 1.8 mm from NO).
 # - The SELV strip: H1 and H3's courtyards leave y 8.6 to 61.4. Nothing SELV comes within
 #   6 mm of F1's pad 1 (x 10.4 up, y 12.4 to 15.6): the column beside it (x 2) carries driver
@@ -132,8 +133,8 @@ MAINS_ZONE = (9.0, 0.0, 45.0, 70.0)
 RELAY_AREAS = [(2.0, 19.0, 22.0, 39.0), (2.0, 41.5, 22.0, 61.5)]
 # The pour starts at y 21: the outline's corner (6.5, 21) is 6.66 mm from the corner of F1
 # pad 1's bounding box (10.4, 15.6); the filled copper is 7.34 mm from the pad's copper. It
-# has to hold that by its outline: board.build fills it before the project's DRC rules exist,
-# so the saved fill would not pull back the 6 mm by itself.
+# is kept conservative by its outline anyway: board.refill_with_rules refills after every save,
+# and test_saved_pour_fill_keeps_the_mains_rules checks the saved fill.
 GND_POUR = (2.0, 21.0, 6.5, 68.0)
 
 PLACE = {
@@ -162,13 +163,15 @@ PLACE = {
 # - 3.5 mm from the relay coil pads and the SELV coil corridors at y 23.05/35.05/45.55/57.55
 #   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5);
 # - 6 mm from SELV copper outside the relay areas. F1's pad 1 (L_IN) is the mains copper
-#   nearest the strip outside an area: 7.34 mm to the pour, 6.27 mm to K1's top coil
-#   pad. The spine's short pieces between the areas are 6.5 mm from the coil pads;
+#   nearest the strip outside an area: 7.34 mm to the pour, 6.07 mm to the COIL_A track,
+#   6.12 mm to +5V, 6.27 mm to K1's top coil pad (test_margins.py prints 6.071 mm as the
+#   minimum over the board). The spine's short pieces between the areas are 6.5 mm from the coil pads;
 # - 6 mm hole clearance from the M4 holes (H2 at (41, 4): F1's pad 2 at (34.9, 14) is the
-#   closest mains copper, 7.8 mm from the hole's edge);
+#   closest mains copper, 7.76 mm from the hole's edge; test_margins.py prints H1 9.056,
+#   H2 7.760, H3 12.910, H4 9.200);
 # - 1 mm between mains nets (the NC pads are mains). L to N 1.10 mm (the rule is 1.0; the
 #   single board had 1.55; regaining it would put F1's pad 1 at the slot's 1 mm limit): the N
-#   links beside the plug pins. 1.8 mm between the L-side nets (RULES holds them
+#   links beside the plug pins. 1.8 mm between the L-side nets (test_margins.py: 1.800, RULES holds them
 #   to 1.6 mm): L_IN passes K2's NO pad at 1.8, L_SW_B passes K1's NO pad at 2.1 on B.Cu;
 # - 1 mm to the board edge: the N links at x 43.15 are 1.1 mm from it;
 # - the relay_pads relaxation (3.5 mm) applies to a whole segment if any of it touches a relay

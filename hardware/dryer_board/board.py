@@ -133,6 +133,8 @@ def add_mains_copper(b, bd):
 UUID_SEED = 0x64727972
 
 def build(bd, pcb_path, fresh=False):
+    """Build the board and save it. The returned in-memory board keeps the plain pcbnew fill;
+    the saved file has the rules-aware fill that refill_with_rules writes after the save."""
     pcbnew.KIID.SeedGenerator(UUID_SEED)
     if os.path.exists(pcb_path) and not fresh:
         b = pcbnew.LoadBoard(pcb_path)

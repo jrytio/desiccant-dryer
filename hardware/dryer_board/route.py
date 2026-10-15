@@ -57,17 +57,44 @@ def _keepout(b, x1, y1, x2, y2):
 MAINS_KEEPOUT = 5.85
 
 
+def rect_poly(x1, y1, x2, y2):
+    """A rectangle in mm as a SHAPE_POLY_SET."""
+    area = pcbnew.SHAPE_POLY_SET(); area.NewOutline()
+    for x, y in ((x1, y1), (x2, y1), (x2, y2), (x1, y2)):
+        area.Append(pcbnew.VECTOR2I_MM(x, y))
+    return area
+
+
+def copper_in_area(item, layer, area):
+    """True if any of the item's copper (track, via or pad) on this layer lies inside the area
+    polygon. The real outline, as DRC's insideArea judges it, not the bounding box: a diagonal
+    segment past an area's corner has a box that overlaps it with no copper inside."""
+    poly = pcbnew.SHAPE_POLY_SET()
+    item.TransformShapeToPolygon(poly, layer, 0, pcbnew.FromMM(0.005), pcbnew.ERROR_INSIDE)
+    poly.BooleanIntersection(area)
+    return poly.OutlineCount() != 0
+
+
+def relay_area_polys(bd):
+    """The board's relay areas as polygons."""
+    return [rect_poly(*r) for r in getattr(bd, "RELAY_AREAS", [])]
+
+
+def in_relay_area(item, layer, areas):
+    """True if the item's copper on this layer touches any of the relay-area polygons."""
+    return any(copper_in_area(item, layer, a) for a in areas)
+
+
 def _mains_keepouts(b, bd):
     """Keepouts round the mains copper outside the relay areas (F1's pad 1 and the L_IN run
     from it, beside the SELV strip). Inside an area the coil corridors already govern."""
-    areas = [pcbnew.BOX2I(pcbnew.VECTOR2I_MM(x1, y1), pcbnew.VECTOR2I_MM(x2 - x1, y2 - y1))
-             for x1, y1, x2, y2 in getattr(bd, "RELAY_AREAS", [])]
+    areas = relay_area_polys(bd)
     items = [t for t in b.GetTracks() if t.GetNetname() in bd.MAINS_NETS]
     items += [p for fp in b.GetFootprints() for p in fp.Pads() if p.GetNetname() in bd.MAINS_NETS]
     n = 0
     for it in items:
         for layer in (pcbnew.F_Cu, pcbnew.B_Cu):
-            if not it.IsOnLayer(layer) or any(a.Intersects(it.GetEffectiveShape(layer).BBox()) for a in areas):
+            if not it.IsOnLayer(layer) or in_relay_area(it, layer, areas):
                 continue
             poly = pcbnew.SHAPE_POLY_SET()
             it.TransformShapeToPolygon(poly, layer, pcbnew.FromMM(MAINS_KEEPOUT), pcbnew.FromMM(0.01),
