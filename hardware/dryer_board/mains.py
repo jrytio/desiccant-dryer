@@ -110,7 +110,7 @@ def check():
 #   1.1 mm from the board edge, so the pads cannot go further right; its courtyard (x 36.95 to
 #   50.05, 43.7 tall) runs from y 13.86 to 57.58, between F1 and H4's courtyard (from y 61.4).
 # - F1 at (12.4, 14): its courtyard (x 10.46 to 36.84) must end left of J_MAINS's, which puts
-#   pad 1 at x 12.4 (2 mm from the slot), and that courtyard reaches H2's (x 36.4 up, to
+#   pad 1 at x 12.4 (its edge 1.4 mm from the slot), and that courtyard reaches H2's (x 36.4 up, to
 #   y 8.6), so F1's top courtyard edge sits at y 8.65 (y 14). Pad 2 is then 7.8 mm from H2's
 #   hole edge.
 # - K1 at y 29: K1's top coil pad (SELV) keeps 6 mm from F1's pad 1 (6.27 measured); F1 is
@@ -118,7 +118,8 @@ def check():
 #   and NO pads, as on rev A (y COM + 2, 1.8 mm from NO).
 # - The SELV strip: H1 and H3's courtyards leave y 8.6 to 61.4. Nothing SELV comes within
 #   6 mm of F1's pad 1 (x 10.4 up, y 12.4 to 15.6): the column beside it (x 2) carries driver
-#   A's flyback diode and transistor, the second column (x 5.4) starts at y 20.8.
+#   A's flyback diode and transistor, the second column (x 5.4) starts at y 20.8. J_CTRL and
+#   the second column also keep the plain 6 mm from the relay COM pads.
 
 BOARD_W, BOARD_H = 45.0, 70.0
 HOLES = {"H1": (4, 4), "H2": (41, 4), "H3": (4, 66), "H4": (41, 66)}
@@ -129,21 +130,25 @@ SLOT_SEGMENTS = [(3, 21), (25, 33), (37, 43.5), (47.5, 55.5), (59.5, 67)]
 MAINS_ZONE = (9.0, 0.0, 45.0, 70.0)
 # COM +-10 mm in y, from the strip to just past the spine at x 21 (rev A: COM +-10 both ways)
 RELAY_AREAS = [(2.0, 19.0, 22.0, 39.0), (2.0, 41.5, 22.0, 61.5)]
-# The pour starts at y 21: its corner at (6.5, 21) is 6.7 mm from F1's pad 1 corner
-# (10.4, 15.6) (6.0 at y 20.5). It has to hold that by its outline: board.build fills it
-# before the project's DRC rules exist, so the saved fill would not pull back the 6 mm by itself.
+# The pour starts at y 21: the outline's corner (6.5, 21) is 6.66 mm from the corner of F1
+# pad 1's bounding box (10.4, 15.6); the filled copper is 7.34 mm from the pad's copper. It
+# has to hold that by its outline: board.build fills it before the project's DRC rules exist,
+# so the saved fill would not pull back the 6 mm by itself.
 GND_POUR = (2.0, 21.0, 6.5, 68.0)
 
 PLACE = {
     "H1": (4, 4, 0), "H2": (41, 4, 0), "H3": (4, 66, 0), "H4": (41, 66, 0),
     # link header on the left edge, pin 1 at the top (rotation 270 runs the XH's pins down the
-    # board), between the two driver stages; x 3.95 keeps its courtyard (x 0.01 to 6.84) on the board
-    "J_CTRL": (3.95, 30.7, 270),
+    # board), between the two driver stages; x 3.95 keeps its courtyard (x 0.01 to 6.84) on the
+    # board. Pins y 33 to 40.5: the plain 6 mm from both COM pads (y 29 and 51.5), not the
+    # relay-area 3.5, which is for the relay's own coil-to-COM geometry.
+    "J_CTRL": (3.95, 33, 270),
     # relay driver A above it: diode, transistor, pulldown, LED down the edge column, the LED
     # resistor in the second column
     "D1": (2, 12.4, 90), "Q1": (2, 18.2, 90), "R2": (2, 22.2, 90), "D3": (2, 25.9, 90), "R3": (5.4, 22.5, 90),
-    # relay driver B below it
-    "R5": (2, 43.5, 90), "Q2": (2, 47.6, 90), "D2": (2, 54, 90), "D4": (2, 59.6, 90), "R6": (5.4, 45, 90),
+    # relay driver B below it, down the edge column; the second column (x 5.4) stays 6 mm from
+    # K2's COM (y 51.5), so only the LED resistor sits there, at the bottom
+    "R5": (2, 45.3, 90), "Q2": (2, 49.1, 90), "D2": (2, 55, 90), "D4": (2, 59.6, 0), "R6": (5.4, 59.6, 90),
     # mains zone
     "K1": (12, 29, 0), "K2": (12, 51.5, 0),
     "F1": (12.4, 14, 0),
@@ -157,12 +162,13 @@ PLACE = {
 # - 3.5 mm from the relay coil pads and the SELV coil corridors at y 23.05/35.05/45.55/57.55
 #   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5);
 # - 6 mm from SELV copper outside the relay areas. F1's pad 1 (L_IN) is the mains copper
-#   nearest the strip outside an area: 6.7 mm to the pour's corner, 6.27 mm to K1's top coil
+#   nearest the strip outside an area: 7.34 mm to the pour, 6.27 mm to K1's top coil
 #   pad. The spine's short pieces between the areas are 6.5 mm from the coil pads;
 # - 6 mm hole clearance from the M4 holes (H2 at (41, 4): F1's pad 2 at (34.9, 14) is the
 #   closest mains copper, 7.8 mm from the hole's edge);
-# - 1 mm between mains nets (the NC pads are mains), at least 1.1 mm from L to N copper
-#   (the N links beside the plug pins) and 1.8 mm between the L-side nets (RULES holds them
+# - 1 mm between mains nets (the NC pads are mains). L to N 1.10 mm (the rule is 1.0; the
+#   single board had 1.55; regaining it would put F1's pad 1 at the slot's 1 mm limit): the N
+#   links beside the plug pins. 1.8 mm between the L-side nets (RULES holds them
 #   to 1.6 mm): L_IN passes K2's NO pad at 1.8, L_SW_B passes K1's NO pad at 2.1 on B.Cu;
 # - 1 mm to the board edge: the N links at x 43.15 are 1.1 mm from it;
 # - the relay_pads relaxation (3.5 mm) applies to a whole segment if any of it touches a relay
@@ -200,16 +206,16 @@ SILK = [
     ("github.com/jrytio/desiccant-dryer", 22.5, 3.0, 0.8, 0, "F.SilkS", "center"),
     ("MAINS 120 VAC", 25, 66, 2.0, 0, "F.SilkS", "center"),
     ("keep 6 mm from SELV", 25, 68.5, 1.0, 0, "F.SilkS", "center"),
-    ("HTR A", 3.75, 25.9, 0.8, 90, "F.SilkS", "center"), ("HTR B", 3.75, 59.6, 0.8, 90, "F.SilkS", "center"),
+    ("HTR A", 3.75, 25.9, 0.8, 90, "F.SilkS", "center"), ("HTR B", 5.4, 54.5, 0.8, 90, "F.SilkS", "center"),
     # On the back, mirrored by board.py: on the front J_CTRL's body covers the whole strip
     # width beside its pads.
-    ("CONTROLLER", 6.0, 34.45, 0.8, 90, "B.SilkS", "center"),
+    ("CONTROLLER", 6.0, 36.75, 0.8, 90, "B.SilkS", "center"),
 ]
 # Link pins, pin 1 first, as one column reading down the header beside its pads (pin 1 at
-# y 30.7, pitch 2.5 downward), on the back: on the front the header body covers the strip
+# y 33, pitch 2.5 downward), on the back: on the front the header body covers the strip
 # (right of it is the slot), and "HTR B" at the 0.8 mm minimum is wider than the room beside
 # the pads, so the names cannot sit one per pin.
-SILK += [("5V  GND  HTR A  HTR B", 1.05, 34.45, 0.8, 90, "B.SilkS", "center")]
+SILK += [("5V  GND  HTR A  HTR B", 1.05, 36.75, 0.8, 90, "B.SilkS", "center")]
 # Mains header pins, left of the pads, one per position (pin 1 at y 53.5, pitch 5.08 upward).
 # Vertical, centred at x 33.5 in the gap between the relay outline (x 30.55) and J_MAINS's
 # pin-1 triangle (x 36.5): horizontal labels would run under the relay bodies.

@@ -6,7 +6,11 @@ import pcbnew
 from dryer_board import boards, board, parts, project, schematic
 
 SPACES = {"controller": (85.0, 70.0), "mains": (45.0, 70.0)}
-OVERHANG_OK = {"J_ESP12", "J_ESP16", "J_MAINS"}   # the USB-C face and the mains plug leave the edge by design
+# The mains plug's housing leaves the mains board's right edge by design (its wire entry points
+# outward), by at most this much and nowhere else: (board, ref) -> (left, top, right, bottom)
+# overhang allowed in mm. The Thing Plus body overhangs the controller's left edge, not its
+# socket footprints, which must lie inside.
+OVERHANG_OK = {("mains", "J_MAINS"): (0, 0, 5.1, 0)}
 # The M4 holes sit 4 mm in from each edge (test_declared_sizes), so the stock footprint's
 # 9.2 mm head courtyard reaches 0.6 mm past both edges at every corner: a washer seated over
 # the corner, not a part leaving the board.
@@ -51,9 +55,11 @@ class Outlines(unittest.TestCase):
                 cy = fp.GetCourtyard(pcbnew.F_CrtYd).BBox()
                 x1, y1 = cy.GetX() / 1e6, cy.GetY() / 1e6
                 x2, y2 = x1 + cy.GetWidth() / 1e6, y1 + cy.GetHeight() / 1e6
-                inside = x1 >= -TOL and y1 >= -TOL and x2 <= bd.BOARD_W + TOL and y2 <= bd.BOARD_H + TOL
-                if fp.GetReference() in OVERHANG_OK or fp.GetReference() in HOLES_OK:
+                if fp.GetReference() in HOLES_OK:
                     continue
+                ol, ot, orr, ob = OVERHANG_OK.get((bd.SHORT, fp.GetReference()), (0, 0, 0, 0))
+                inside = (x1 >= -ol - TOL and y1 >= -ot - TOL and x2 <= bd.BOARD_W + orr + TOL
+                          and y2 <= bd.BOARD_H + ob + TOL)
                 self.assertTrue(inside, "%s %s courtyard (%.2f,%.2f)-(%.2f,%.2f) leaves the %sx%s board"
                                 % (bd.SHORT, fp.GetReference(), x1, y1, x2, y2, bd.BOARD_W, bd.BOARD_H))
 
