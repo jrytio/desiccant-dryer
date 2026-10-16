@@ -448,10 +448,13 @@ What changed, each with its reason; the sections above stay as approved.
   before ordering. The XFCN PTF-77 (LCSC C717030, 22.50 mm, the PTF-76-B
   body) is the fab-fitted alternative on the same pads; the PTF-76-B
   footprint stays in `hardware/lib/dryer.pretty` for a one-line switch
-  back if a holder measures 15 mm.
+  back if a holder measures 15 mm. Superseded 2026-10-15: the reviewer
+  measured the holders at about 12.5 mm, and F1 is now a 12.5 mm slotted
+  footprint on the mains board (fit spec, "As built").
 - **Mounting holes are 4.3 mm (M4)** on both boards, for the hardware on
   hand; the 6 mm mains-to-hole rule is unchanged and holds (closest:
-  F1's L_FUSED pad to H2, 7.8 mm).
+  F1's L_FUSED pad to H2, 7.8 mm at the time; 7.54 mm, the L_IN drop to
+  the plug's pin 1, after the second review round).
 - **PCBWay** (advice only, no board change): feasible, the files and
   footprints are standard and PCBWay assembles through-hole and accepts
   DNP lines. The risk is sourcing the LCSC-only parts (DORABO headers

@@ -6,11 +6,11 @@ import pcbnew
 from dryer_board import boards, board, parts, project, schematic
 
 SPACES = {"controller": (85.0, 70.0), "mains": (45.0, 70.0)}
-# The mains plug's housing leaves the mains board's right edge by design (its wire entry points
-# outward), by at most this much and nowhere else: (board, ref) -> (left, top, right, bottom)
-# overhang allowed in mm. The Thing Plus body overhangs the controller's left edge, not its
-# socket footprints, which must lie inside.
-OVERHANG_OK = {("mains", "J_MAINS"): (0, 0, 5.1, 0)}
+# Courtyards that may leave the outline, (board, ref) -> (left, top, right, bottom) mm. None
+# today: the mains plug became a vertical header inside the outline in the second review
+# round. The Thing Plus body overhangs the controller's left edge, not its socket footprints,
+# which must lie inside.
+OVERHANG_OK = {}
 # The M4 holes sit 4 mm in from each edge (test_declared_sizes), so the stock footprint's
 # 9.2 mm head courtyard reaches 0.6 mm past both edges at every corner: a washer seated over
 # the corner, not a part leaving the board.

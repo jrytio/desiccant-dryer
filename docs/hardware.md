@@ -258,10 +258,11 @@ keep-out, an island between tracks that the pour removed (read from the
 render, not measured); that is not a keep-out. J_LOADS, J_24V and
 J_DISP are on the bottom edge (vertical headers, plugs from above),
 J_SENS is vertical on the right edge and J_RLY, the link, is at the top
-right beside the keep-out. On the mains board the plug J_MAINS is on the
-right edge, wires leaving to the right, with its housing overhanging the
-edge by 5.05 mm. Both overhangs, and that the plug bodies may overhang
-at all, are assumptions awaiting the reviewer (unverified).
+right beside the keep-out. On the mains board the plug J_MAINS is a
+vertical header along the right edge, wires leaving perpendicular to the
+board (a wall borders that space, reviewer 2026-10-15), pin 1 at the top,
+its body inside the outline. The USB-C overhang is an assumption awaiting
+the reviewer (unverified).
 
 Every field connection is a pluggable header with its own pitch and pin
 count, so no plug fits another header, except that a smaller plug of the
@@ -285,9 +286,21 @@ unverified below:
 - The USB-C overhang: the Thing Plus's USB-C face sits 3 mm past the
   controller board's left edge. Whether a plug fits with the board on its
   standoffs is unchecked.
-- The pin pitch of the fuse holders on hand: F1's footprint takes 21.5 to
-  23.5 mm; the listing gives no pitch, and the BLX-A moulding the holders
-  match is 22.3 ± 1.0 mm by its datasheet. Measure one before ordering.
+- The pin pitch of the fuse holders on hand: the reviewer measured about
+  12.5 mm (body 25.7 × 10 mm), and F1's footprint now takes 11.5 to
+  13.5 mm. That body is the BLX-A moulding, whose drawing puts the pins
+  22.3 ± 1.0 mm apart, so the two disagree: confirm the pin positions
+  against the body ends before ordering (the 22.5 mm footprint stays in
+  the library).
+- The vertical mains header (DORABO DB2EV-5.08-8P-GN, LCSC C395787): its
+  drawing is not retrieved. The perpendicular wire entry is inferred from
+  the series letter and LCSC's "open side" listing, the 1.7 mm holes from
+  the DB2EVC and DB2ERC drawings on file, and the body envelope is KiCad's
+  MSTBVA footprint (5.34 mm one side of the pin row, 4.34 the other). A
+  latch like the DB2EVC's (8.65 mm deep in all) facing the fuse would reach
+  x ≈ 34.75, level with F1's assumed body edge. Its UL rating is unknown
+  (the right-angle DB2ERC it replaced was UL 300 V 15 A). Confirm all of
+  this from the drawing before ordering.
 - The pin order of the Amazon-sourced 5 V module: bench-check before
   soldering ([USB-pin drop budget](#usb-pin-drop-budget)).
 
@@ -401,9 +414,9 @@ Mains board:
 |---|---|---|---|---|---|
 | D1, D2 | 2 | S1M | `D_SMA` | C95872 | basic |
 | D3, D4 | 2 | LED red | `LED_0805_2012Metric` | C84256 | basic |
-| F1 | 1 | T 3.15 A 5x20 | `Fuseholder_5x20mm_Covered_P22.50mm_Slot` | — | hand-fit |
+| F1 | 1 | T 3.15 A 5x20 | `Fuseholder_5x20mm_Covered_P12.50mm_Slot` | — | hand-fit |
 | J_CTRL | 1 | from controller | `JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical` | C144395 | extended |
-| J_MAINS | 1 | 120 VAC | `PhoenixContact_MSTBA_2,5_8-G-5,08_1x08_P5.08mm_Horizontal_Drill1.7mm` | C395786 | extended |
+| J_MAINS | 1 | 120 VAC | `PhoenixContact_MSTBVA_2,5_8-G-5,08_1x08_P5.08mm_Vertical_Drill1.7mm` | C395787 | extended |
 | K1, K2 | 2 | SRD-05VDC-SL-C | `Relay_SPDT_SANYOU_SRD_Series_Form_C` | C35449 | extended |
 | Q1, Q2 | 2 | MMBT2222A | `SOT-23` | C8512 | basic |
 | R2, R5 | 2 | 1k | `R_0805_2012Metric` | C17513 | basic |
@@ -425,14 +438,18 @@ Notes on the tables:
   but a wider tolerance (budget below).
 - F1 has no LCSC number either: the holder is hand-fitted from the covered
   5 × 20 mm holders on hand (Amazon B0FCS5MK1Y, 10 A 250 V). Its footprint
-  has slotted holes (2.4 × 1.6 mm) on a 22.5 mm pitch, taking any pin
-  spacing from 21.5 to 23.5 mm: the holders' body (25.8 × 10 mm, 13.4 mm
-  with the cover) is the BLX-A moulding, 22.3 ± 1.0 mm by its datasheet
-  (`datasheets/fuses/jksemi-blx-a.pdf`), and the XFCN PTF-77 (LCSC
-  C717030, 22.50 mm, the PTF-76-B body) is the fab-fitted alternative. The
-  15 mm PTF-76-B footprint stays in `hardware/lib/dryer.pretty` if a
-  measured holder turns out to be that pitch. The T 3.15 A 5 × 20 mm fuse
-  is bought separately.
+  has slotted holes (2.4 × 1.6 mm) on a 12.5 mm pitch, taking any pin
+  spacing from 11.5 to 13.5 mm, drawn to the reviewer's measurement of
+  2026-10-15 (pins about 12.5 mm apart, body 25.7 × 10 mm, assumed centred
+  on the pins). That body is the BLX-A moulding, whose datasheet
+  (`datasheets/fuses/jksemi-blx-a.pdf`) puts the pins 22.3 ± 1.0 mm apart,
+  so confirm the pin positions before ordering. The 22.5 mm slotted
+  footprint and the 15 mm PTF-76-B footprint stay in
+  `hardware/lib/dryer.pretty`, and the XFCN PTF-77 (LCSC C717030, 22.50 mm)
+  is the fab-fitted alternative on the 22.5 mm pads; either swap needs F1
+  and the L_IN/L_FUSED copper re-laid, since the 25.8 mm body and the
+  vertical plug share 26.2 mm. The T 3.15 A 5 × 20 mm fuse is bought
+  separately.
 - The four pluggable headers are DORABO parts on local copies of the
   stock Phoenix footprints, drilled to the DORABO drawings: Ø1.7 mm for
   the 5.08 mm headers (1.0 mm square pins), Ø1.4 mm for J_SENS (0.8 mm
@@ -444,9 +461,13 @@ Notes on the tables:
 
 ### Header pinouts
 
-J_MAINS (mains board), 8-pin 5.08 mm, right angle, rated 300 V (UL). Pin
-1 is the bottom pin on the board's right edge. Silkscreen labels in
-brackets.
+J_MAINS (mains board), 8-pin 5.08 mm, vertical (DORABO DB2EV-5.08-8P-GN,
+630 V 15 A per LCSC; it was right-angle until the reviewer reported a wall
+beside the mains space). Pin 1 is the top pin on the board's right edge
+and the wires leave perpendicular to the board; the entry direction and
+the hole size are inferred from the DB2EVC/DB2ERC drawings, the DB2EV's
+own drawing not being retrieved (unverified, see above). Silkscreen
+labels in brackets.
 
 | Pin | Net | Function |
 |---|---|---|
@@ -558,13 +579,16 @@ The mains board's layout, in board millimetres (origin top left): the SELV
 strip is x 0 to 7, with J_CTRL at (3.95, 33) and the two relay driver
 stages in two columns beside it; the slot is x 7 to 9, in segments
 (3, 21), (25, 33), (37, 43.5), (47.5, 55.5), (59.5, 67); F1 is at
-(12.4, 14) on its 22.5 mm slotted footprint; K1's COM is at (12, 29) and
-K2's at (12, 51.5); J_MAINS is at (39.5, 53.5), rotated 90°. The mains
+(15.6, 14) on its 12.5 mm slotted footprint (body x 9.0 to 34.7); K1's COM
+is at (12, 29) and K2's at (12, 51.5); J_MAINS is at (39.5, 17.94), rotated
+270° so that pin 1 is at the top and the body's deeper side faces the edge
+(courtyard x 35.16 to 44.84). The mains
 GND pour is small (F.Cu about x 2 to 5.6, y 27.5 to 58.6; B.Cu about
 y 35 to 55) and GND is routed as tracks as well. Every position is fixed
 by a distance, explained in the comment block above `PLACE` in
-`mains.py`: F1's pad 2 against H2, J_MAINS's N links against the board
-edge, F1's pad 1 against the SELV copper beside it.
+`mains.py`: J_MAINS's N links against the board edge, F1's body between
+the slot and J_MAINS's courtyard (the two courtyards 0.16 mm apart),
+F1's pad 1 6.285 mm above K1's top coil pad.
 
 DRC enforces these rules (`hardware/dryer_board/mains.py`, `RULES`):
 
@@ -589,12 +613,14 @@ each figure. DRC re-checks the rules on every generate and route.
 
 Printed and asserted by `hardware/tests/test_margins.py`:
 
-- Mains to SELV outside the relay areas: 6.071 mm, L_IN at F1's pad 1 to
-  the COIL_A track on B.Cu. The rule is 6.0 mm, so the margin is 0.07 mm.
-- Mains to a mounting hole's edge (rule 6.0 mm): H1 9.056 mm, H2 7.760 mm,
-  H3 12.910 mm, H4 9.200 mm.
-- Between the L-side mains nets (rule 1.6 mm): 1.800 mm, L_IN against
-  L_SW_B.
+- Mains to SELV outside the relay areas: 6.285 mm, L_IN at F1's pad 1 to
+  K1's top coil pad (the COIL_A track from that pad is 6.99 mm away). The
+  rule is 6.0 mm, so the margin is 0.29 mm.
+- Mains to a mounting hole's edge (rule 6.0 mm): H1 9.980 mm, H2 7.536 mm,
+  H3 12.910 mm, H4 9.229 mm.
+- Between the L-side mains nets, the relay NC pads included (rule
+  1.6 mm): 1.850 mm, the L_FUSED branch to J_MAINS pin 7 against K2's NC
+  pad.
 - Mains to the board edge: 1.050 mm, the N links at x 43.15 (rule 1.0 mm).
   This is the tightest margin on the board.
 - J_CTRL's pads to the relay COM pads: 6.325 mm (+5V pad to K1 COM),
@@ -611,15 +637,15 @@ Floor asserted by a test, value measured once on the committed board with
 pcbnew (not printed by the suite):
 
 - The saved GND fill is 5.488 mm from mains copper inside the relay areas
-  and 13.75 mm outside them, asserted at 3.5 and 6.0 mm by
+  and 15.26 mm outside them, asserted at 3.5 and 6.0 mm by
   `test_saved_pour_fill_keeps_the_mains_rules`. The pour outline is kept
   at y ≥ 21 as a conservative outline, and the fill that is saved is what
   the test checks, after a refill that applies the custom rules
   (`board.refill_with_rules`, then `kicad-cli pcb drc --refill-zones
   --save-board` after every save).
 - The relay NC pads (netless, live when the coil is off) are 2.05 mm from
-  L_SW_B, asserted at 1.6 mm by `test_l_side_nets_apart`, whose printed
-  worst case is the 1.800 mm above.
+  L_SW_B's lane; `test_l_side_nets_apart` holds them at 1.6 mm, and its
+  printed worst case is the 1.850 mm to the L_FUSED branch above.
 
 DRC only (no test prints it):
 
@@ -627,7 +653,7 @@ DRC only (no test prints it):
   tests the mains item, and a COM pad is always inside a relay area, so DRC
   holds any SELV item near COM, not only the relay's own coil pads, to
   3.5 mm. The minimum is 4.050 mm over all SELV copper and 4.387 mm for
-  the strip itself (both printed above). Outside the relay areas the 6 mm holds (6.071 mm,
+  the strip itself (both printed above). Outside the relay areas the 6 mm holds (6.285 mm,
   printed above); inside them the strip sits at the 3.5 mm rule's
   clearance across the 2 mm slot, which is above the 3.2 mm reinforced
   figure in the desk review below.
@@ -640,8 +666,8 @@ DRC only (no test prints it):
   for this working voltage, so 1.10 mm is under it (unverified: for the
   hardware reviewer, not settled). Regaining it is blocked by the
   geometry: the N link cannot move right without breaking the 1 mm edge
-  rule, and J_MAINS cannot move left without F1's pad 1 reaching the
-  slot's 1 mm limit. Rev A's reasoning: an L to N insulation failure
+  rule, and J_MAINS cannot move left without its courtyard meeting F1's
+  body, which already sits at the slot. Rev A's reasoning: an L to N insulation failure
   blows F1 (fail-safe), whereas an L to L failure across a relay contact
   runs a heater uncontrolled, so L to L is held at 1.6 mm and L to N at
   the 1.0 mm netclass clearance.

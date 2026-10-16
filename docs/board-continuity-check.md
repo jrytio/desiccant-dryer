@@ -48,7 +48,7 @@ mains or connect a heater until it is understood.
 | | Check | Expect |
 |---|---|---|
 | [ ] | The 5 V module (U1): current-limited 12 V supply, + on pin 1 and − on pin 2 (pin 1 is the end with the dot; 1 Vin, 2 GND, 3 Vout), nothing on pin 3 but the meter | 5.0 V on pin 3 to pin 2, under 20 mA drawn. A module that reads 0 V, the input voltage, or draws current with nothing on its output has another pinout: do not fit it. The Amazon-listed "TSR 1-2450" has no stated pinout (hardware/README.md) |
-| [ ] | The fuse holder (F1): calipers across the two pins, centre to centre | 21.5 to 23.5 mm fits F1's slotted pads (the holders on hand should read about 22.3). A 15 mm holder needs the PTF-76-B footprint instead: do not force it |
+| [ ] | The fuse holder (F1): calipers across the two pins, centre to centre, and from each body end to its nearest pin | 11.5 to 13.5 mm fits F1's slotted pads (the reviewer measured about 12.5 on the holders on hand, with the body 25.7 × 10 mm; the BLX-A drawing that body matches says 22.3, so this reading settles it). A holder that reads about 22.3 or 15 mm needs the 22.5 mm or PTF-76-B footprint instead, and the fuse end of the board re-laid (hardware/README.md item 8): do not force it |
 
 ### Item 1: Shorts
 

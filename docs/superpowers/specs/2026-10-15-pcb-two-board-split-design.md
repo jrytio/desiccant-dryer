@@ -79,12 +79,26 @@ tables and the comments in `hardware/dryer_board/mains.py`.
 
 - **K1 COM at (12, 29) and K2 COM at (12, 51.5)**, not y 24 and 54, so the
   coil corridors clear F1 and H3.
-- **F1 at (12.4, 14), pads at x 12.4 and 34.9**, not x 10 and 32.5 at
-  y 12: its courtyard must end left of J_MAINS's, and its pad 2 keeps
-  7.76 mm from H2's hole edge.
-- **J_MAINS at (39.5, 53.5), rotated 90°, pads at x 39.5**, not x 35; the
-  N links run at x 43.15. The housing overhangs the right edge by 5.05 mm
-  (bounded at 5.1 mm by `test_outlines`); open with the reviewer.
+- **F1 at (15.6, 14), pads at x 15.6 and 28.1 on a 12.5 mm slotted
+  footprint**, not x 10 and 32.5 at y 12 on the 22.5 mm one. Second
+  review round (2026-10-15): the reviewer measured the holders on hand at
+  about 12.5 mm pitch with a 25.7 × 10 mm body, not the 22.3 mm the
+  BLX-A drawing gives for that body, so the footprint takes 11.5 to
+  13.5 mm and the pin positions are to be confirmed before ordering. The
+  body fills the 26.2 mm between the slot and J_MAINS's courtyard with
+  0.2 mm spare, and L_IN runs over the top of the fuse body because it
+  can pass neither below (6 mm from K1's coil pad) nor between the pads.
+- **J_MAINS at (39.5, 17.94), rotated 270°, a vertical header (DORABO
+  DB2EV-5.08-8P-GN, LCSC C395787) with pin 1 at the top**, not the
+  right-angle plug at x 35 entering from the right. Second review round:
+  the reviewer reported a wall beside the mains space, so the wires leave
+  perpendicular to the board (the DB2EV's drawing is not retrieved: entry
+  direction, 1.7 mm holes and body envelope are inferred from the DB2EVC
+  and DB2ERC drawings and the MSTBVA footprint; confirm before ordering);
+  the body stays inside the outline (courtyard x 35.16 to 44.84,
+  its deeper side toward the edge), the N links still run at x 43.15, and
+  pin 1 at the top keeps the two switched lines from crossing (K1 feeds
+  the upper pin, K2 the lower).
 - **J_CTRL at (3.95, 33), pins y 33 to 40.5, 6.32 mm from the COM pads,
   measured and asserted by `test_margins.py`, not enforced by DRC, which holds every SELV item
   inside the relay areas, SELV copper near COM at 4.05 mm minimum, 4.39 mm for the strip, to 3.5 mm**, with the driver parts
@@ -94,7 +108,7 @@ tables and the comments in `hardware/dryer_board/mains.py`.
 - **Relay areas** (2, 19) to (22, 39) and (2, 41.5) to (22, 61.5): COM ± 10 mm in y, rev A's
   geometry.
 - **GND pour outline from y 21** on the mains board, (2, 21) to (6.5, 68): its corner is
-  6.66 mm from the bounding box of F1's pad 1.
+  8.9 mm from the bounding box of F1's pad 1 (6.66 mm before F1 moved in the second round).
 - **A rules-aware refill** joined the pipeline (`board.refill_with_rules`),
   and two test files, `test_outlines.py` and `test_margins.py`, hold the
   outlines, overhangs and clearance margins.
@@ -114,9 +128,12 @@ enclosure.
 - That both outlines hold their parts with the rev A clearances; the
   tests and DRC decide, and a board that will not route at these sizes is
   reported, not forced.
-- The reviewer's hole pattern (corners assumed) and whether the spaces
-  allow the connector bodies to overhang the board edge (J_MAINS and the
-  USB-C do).
+- The reviewer's hole pattern (corners assumed) and whether the controller
+  space allows the USB-C to overhang the board edge by 3 mm (J_MAINS no
+  longer overhangs: it is a vertical header since the second round).
+- The fuse holder's pin positions: about 12.5 mm apart by the reviewer's
+  measurement, 22.3 ± 1.0 mm by the BLX-A drawing its body matches; the
+  footprint takes 11.5 to 13.5 mm with the body drawn centred on the pins.
 - Strip to COM: DRC's 3.5 mm relay-area rule covers any SELV item near a COM pad, so the
   SELV copper near COM is held to 3.5 mm (4.05 mm minimum as built, 4.39 mm for the strip across the slot), above the 3.2 mm
   reinforced figure of the desk review. A question for the hardware reviewer.
@@ -125,5 +142,4 @@ enclosure.
   heater uncontrolled, so L to L is 1.6 mm and L to N the 1.0 mm netclass clearance. For the
   hardware reviewer.
 - The NC-to-L-side rule gap (see above): a rev B rule.
-- The on-hand fuse holder's pin pitch and the TSR clone's pin order
-  (first-article checks exist).
+- The TSR clone's pin order (a first-article check exists).

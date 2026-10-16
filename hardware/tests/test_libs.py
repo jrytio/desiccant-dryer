@@ -59,6 +59,29 @@ class Libs(unittest.TestCase):
             self.assertEqual(drill[1], "oval", pad[1])
             self.assertEqual([float(drill[2]), float(drill[3])], [2.4, 1.6], pad[1])
 
+    def test_fitted_fuse_holder_pitch_and_slots(self):
+        """The footprint F1 uses: 12.5 mm nominal (the reviewer's measurement of the holders on
+        hand), the same 2.4 x 1.6 slots along the pitch, taking 11.5 to 13.5 mm."""
+        fp = boards.by_name("mains").by_ref("F1").footprint
+        self.assertEqual(fp, "dryer:Fuseholder_5x20mm_Covered_P12.50mm_Slot")
+        pos = libs.footprint_pad_positions(fp)
+        self.assertAlmostEqual(pos["2"][0] - pos["1"][0], 12.5, delta=0.01)
+        for pad in sexp.find_all(libs._footprint(fp), "pad"):
+            drill = sexp.find(pad, "drill")
+            self.assertEqual(drill[1], "oval", pad[1])
+            self.assertEqual([float(drill[2]), float(drill[3])], [2.4, 1.6], pad[1])
+
+    def test_mains_header_is_vertical_with_dorabo_drills(self):
+        """J_MAINS: 8 pins on 5.08 mm in a line, 1.7 mm holes for the DORABO 1.0 mm square pins,
+        on the local copy of KiCad's MSTBVA vertical footprint."""
+        fp = boards.by_name("mains").by_ref("J_MAINS").footprint
+        self.assertIn("MSTBVA", fp); self.assertIn("Vertical", fp)
+        pos = libs.footprint_pad_positions(fp)
+        self.assertEqual(len(pos), 8)
+        self.assertAlmostEqual(pos["8"][0] - pos["1"][0], 7 * 5.08, delta=0.01)
+        for pad in sexp.find_all(libs._footprint(fp), "pad"):
+            self.assertEqual(float(sexp.find(pad, "drill")[1]), 1.7, pad[1])
+
     def test_link_header_pitch(self):
         pos = libs.footprint_pad_positions(boards.by_name("controller").by_ref("J_RLY").footprint)
         self.assertAlmostEqual(pos["4"][0] - pos["1"][0], 7.5, delta=0.01)   # 3 x 2.50 mm: JST XH, not 2.54
