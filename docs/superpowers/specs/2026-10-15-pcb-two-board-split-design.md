@@ -79,15 +79,15 @@ tables and the comments in `hardware/dryer_board/mains.py`.
 
 - **K1 COM at (12, 29) and K2 COM at (12, 51.5)**, not y 24 and 54, so the
   coil corridors clear F1 and H3.
-- **F1 at (15.6, 14), pads at x 15.6 and 28.1 on a 12.5 mm slotted
-  footprint**, not x 10 and 32.5 at y 12 on the 22.5 mm one. Second
-  review round (2026-10-15): the reviewer measured the holders on hand at
-  about 12.5 mm pitch with a 25.7 × 10 mm body, not the 22.3 mm the
-  BLX-A drawing gives for that body, so the footprint takes 11.5 to
-  13.5 mm and the pin positions are to be confirmed before ordering. The
-  body fills the 26.2 mm between the slot and J_MAINS's courtyard with
-  0.2 mm spare, and L_IN runs over the top of the fuse body because it
-  can pass neither below (6 mm from K1's coil pad) nor between the pads.
+- **F1 at (28.7, 14), rotated 180°, the fab-fitted XFCN PTF-76-B on its
+  15 mm footprint (pads x 13.7 and 28.7)**, not the 22.5 mm slotted
+  footprint for the holders on hand at x 10 and 32.5. Second review round
+  (2026-10-15): the reviewer confirmed those holders at about 22 mm (a
+  first reading of 12.5 mm came from the listing's picture), and with the
+  plug vertical they no longer fit: mains copper 1 mm from the slot puts
+  their 25.8 mm body at x 10.35 to 36.15, into the plug's courtyard at
+  35.16. The PTF-76-B body (24.4 mm) sits at x 9.0 to 33.4; the rotation
+  puts the L_IN pad on the plug side, one short diagonal from pin 1.
 - **J_MAINS at (39.5, 17.94), rotated 270°, a vertical header (DORABO
   DB2EV-5.08-8P-GN, LCSC C395787) with pin 1 at the top**, not the
   right-angle plug at x 35 entering from the right. Second review round:
@@ -101,14 +101,14 @@ tables and the comments in `hardware/dryer_board/mains.py`.
   the upper pin, K2 the lower).
 - **J_CTRL at (3.95, 33), pins y 33 to 40.5, 6.32 mm from the COM pads,
   measured and asserted by `test_margins.py`, not enforced by DRC, which holds every SELV item
-  inside the relay areas, SELV copper near COM at 4.05 mm minimum, 4.39 mm for the strip, to 3.5 mm**, with the driver parts
+  inside the relay areas, SELV copper near COM at 3.95 mm minimum, 4.41 mm for the strip, to 3.5 mm**, with the driver parts
   in two columns (x 2 and x 5.4), not one.
 - **Antenna keep-out from x 50.5** (to 66, y 6 to 34), not from 54: x 50.5 is 53.5 mm from the
   USB face (which is 3 mm past the left edge), the same distance as on rev A.
 - **Relay areas** (2, 19) to (22, 39) and (2, 41.5) to (22, 61.5): COM ± 10 mm in y, rev A's
   geometry.
 - **GND pour outline from y 21** on the mains board, (2, 21) to (6.5, 68): its corner is
-  8.9 mm from the bounding box of F1's pad 1 (6.66 mm before F1 moved in the second round).
+  7.9 mm from the bounding box of F1's pad 2 (6.66 mm before the second round moved F1).
 - **A rules-aware refill** joined the pipeline (`board.refill_with_rules`),
   and two test files, `test_outlines.py` and `test_margins.py`, hold the
   outlines, overhangs and clearance margins.
@@ -131,11 +131,8 @@ enclosure.
 - The reviewer's hole pattern (corners assumed) and whether the controller
   space allows the USB-C to overhang the board edge by 3 mm (J_MAINS no
   longer overhangs: it is a vertical header since the second round).
-- The fuse holder's pin positions: about 12.5 mm apart by the reviewer's
-  measurement, 22.3 ± 1.0 mm by the BLX-A drawing its body matches; the
-  footprint takes 11.5 to 13.5 mm with the body drawn centred on the pins.
 - Strip to COM: DRC's 3.5 mm relay-area rule covers any SELV item near a COM pad, so the
-  SELV copper near COM is held to 3.5 mm (4.05 mm minimum as built, 4.39 mm for the strip across the slot), above the 3.2 mm
+  SELV copper near COM is held to 3.5 mm (3.95 mm minimum as built, 4.41 mm for the strip across the slot), above the 3.2 mm
   reinforced figure of the desk review. A question for the hardware reviewer.
 - L to N is 1.10 mm against the 1.6 mm creepage figure for the same working voltage. Rev A's
   reasoning: an L to N failure blows F1, an L to L failure across a relay contact runs a

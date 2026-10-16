@@ -58,10 +58,10 @@ class Export(unittest.TestCase):
             for r in _rows(paths["bom"])[1:]:
                 refs = [d.strip() for d in r[1].split(",")]
                 if all(bd.by_ref(ref).hand_fit for ref in refs):
-                    self.assertEqual(r[3], "", r)   # U1, F1: hand-fitted (hardware/README.md)
+                    self.assertEqual(r[3], "", r)   # U1: hand-fitted (hardware/README.md)
                 else:
                     self.assertTrue(r[3], (bd.SHORT, r))
 
     def test_hand_fitted_parts(self):
         self.assertEqual([p.ref for p in boards.by_name("controller").PARTS if p.hand_fit], ["U1"])
-        self.assertEqual([p.ref for p in boards.by_name("mains").PARTS if p.hand_fit], ["F1"])
+        self.assertEqual([p.ref for p in boards.by_name("mains").PARTS if p.hand_fit], [])

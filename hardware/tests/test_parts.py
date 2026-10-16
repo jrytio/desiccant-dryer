@@ -179,10 +179,11 @@ class Mains(unittest.TestCase):
             for ref, _ in nets[n]:
                 self.assertIn(ref, mains.MAINS_PARTS, "%s touches mains net %s" % (ref, n))
 
-    def test_fuse_holder_is_the_12_5mm_slotted_footprint(self):
+    def test_fuse_holder_is_the_fab_fitted_15mm_xfcn(self):
         f1 = mains.by_ref("F1")
-        self.assertEqual(f1.footprint, "dryer:Fuseholder_5x20mm_Covered_P12.50mm_Slot")
-        self.assertTrue(f1.hand_fit)
+        self.assertEqual(f1.footprint, "dryer:Fuseholder_5x20mm_Covered_XFCN_PTF-76-B_P15.00mm")
+        self.assertFalse(f1.hand_fit)
+        self.assertEqual(f1.lcsc, "C48603682")
 
     def test_check_flags_mains_pin_on_a_selv_net(self):
         k = mains.by_ref("K1")

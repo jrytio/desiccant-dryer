@@ -259,13 +259,15 @@ service 180 min) are untested guesses meant to get first cycles logging.
 - PCB rev A (controller and mains boards) is designed but not ordered or
   built. Before a first article: review the renders, print
   `docs/hardware/controller-top.svg` and `mains-top.svg` 1:1 against the
-  real parts, run JLCPCB's DFM check, confirm stock. Confirm the pin
-  positions of the fuse holders on hand (the F1 footprint takes 11.5 to
-  13.5 mm after the reviewer's 12.5 mm measurement, which disagrees with
-  the 22.3 ± 1.0 of the BLX-A drawing their body matches), retrieve the
+  real parts, run JLCPCB's DFM check, confirm stock. The fuse holders on
+  hand are not used (F1 is the fab-fitted XFCN PTF-76-B: their 25.8 mm
+  BLX-A body and the vertical plug do not both fit across the 45 mm
+  board); retrieve the
   DB2EV-5.08-8P-GN drawing and confirm the vertical mains header's entry
   direction, 1.7 mm holes and body envelope (all inferred from the
-  DB2EVC/DB2ERC drawings), and bench-check the pin order of the
+  DB2EVC/DB2ERC drawings) and which side the plug's screws face (the
+  reviewer wants them away from the wall; turning the header 180° is the
+  fix), and bench-check the pin order of the
   Amazon-sourced 5 V module before soldering (hardware/README.md).
   Unverified: the IEC 62368-1 creepage desk review, the CJ2310 at 3.3 V
   gate drive, NO/NC on the fitted relays (docs/hardware.md), board thermal
@@ -276,7 +278,7 @@ service 180 min) are untested guesses meant to get first cycles logging.
   reviewer reported a wall beside the mains space).
   Rev B rule/clearance questions for the hardware reviewer: the NC-to-L-side
   rule gap (NC pads held to L-side mains only at 1.0 mm by DRC, 1.6 mm by
-  test), SELV copper to the relay COM pads at 4.05 mm (strip 4.39 mm) under the
+  test), SELV copper to the relay COM pads at 3.95 mm (strip 4.41 mm) under the
   3.5 mm rule, and L to N at 1.10 mm against 1.6 mm creepage.
 - The max-service fallback only fires from READY. A standby stuck in COOLING
   (cooldown below ambient, probe reading high) never swaps and only shows

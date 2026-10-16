@@ -59,17 +59,15 @@ class Libs(unittest.TestCase):
             self.assertEqual(drill[1], "oval", pad[1])
             self.assertEqual([float(drill[2]), float(drill[3])], [2.4, 1.6], pad[1])
 
-    def test_fitted_fuse_holder_pitch_and_slots(self):
-        """The footprint F1 uses: 12.5 mm nominal (the reviewer's measurement of the holders on
-        hand), the same 2.4 x 1.6 slots along the pitch, taking 11.5 to 13.5 mm."""
+    def test_fitted_fuse_holder_pitch_and_holes(self):
+        """The footprint F1 uses is the fab-fitted XFCN PTF-76-B: pins 15 mm apart in 1.6 mm
+        holes (its datasheet). The holders on hand do not fit beside the vertical plug."""
         fp = boards.by_name("mains").by_ref("F1").footprint
-        self.assertEqual(fp, "dryer:Fuseholder_5x20mm_Covered_P12.50mm_Slot")
+        self.assertEqual(fp, "dryer:Fuseholder_5x20mm_Covered_XFCN_PTF-76-B_P15.00mm")
         pos = libs.footprint_pad_positions(fp)
-        self.assertAlmostEqual(pos["2"][0] - pos["1"][0], 12.5, delta=0.01)
+        self.assertAlmostEqual(pos["2"][0] - pos["1"][0], 15.0, delta=0.01)
         for pad in sexp.find_all(libs._footprint(fp), "pad"):
-            drill = sexp.find(pad, "drill")
-            self.assertEqual(drill[1], "oval", pad[1])
-            self.assertEqual([float(drill[2]), float(drill[3])], [2.4, 1.6], pad[1])
+            self.assertEqual(float(sexp.find(pad, "drill")[1]), 1.6, pad[1])
 
     def test_mains_header_is_vertical_with_dorabo_drills(self):
         """J_MAINS: 8 pins on 5.08 mm in a line, 1.7 mm holes for the DORABO 1.0 mm square pins,

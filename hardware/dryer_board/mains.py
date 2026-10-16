@@ -47,14 +47,14 @@ PARTS: List[Part] = [
          "heater B relay; Songle SRD-05VDC-SL-C; JLCPCB extended"),
 
     # Mains: fuse and the single 8-pin plug
-    Part("F1", "T 3.15 A 5x20", "Device:Fuse", "dryer:Fuseholder_5x20mm_Covered_P12.50mm_Slot",
-         {"1": "L_IN", "2": "L_FUSED"}, hand_fit=True,
-         description="covered 5 x 20 mm holder, hand-fitted from the holders on hand (Amazon B0FCS5MK1Y, 10 A 250 V), "
-                     "drawn to the hardware reviewer's measurement of 2026-10-15: pins about 12.5 mm apart, body "
-                     "25.7 x 10 mm; slotted holes take 11.5 to 13.5 mm. That pitch conflicts with the BLX-A drawing the "
-                     "body matches (22.3 +-1.0 mm), so confirm the pin positions before ordering; the 22.5 mm slotted "
-                     "footprint stays in hardware/lib/dryer.pretty (hardware/README.md). The T 3.15 A fuse itself is "
-                     "fitted by hand"),
+    Part("F1", "T 3.15 A 5x20", "Device:Fuse", "dryer:Fuseholder_5x20mm_Covered_XFCN_PTF-76-B_P15.00mm",
+         {"1": "L_IN", "2": "L_FUSED"}, "C48603682",
+         description="XFCN PTF-76-B covered 5 x 20 mm holder with lift-off cap, 15 mm pitch, UL 250 VAC 20 A, rev A's "
+                     "original choice, fab-fitted, JLCPCB extended. Chosen again on 2026-10-15: the BLX-A holders on "
+                     "hand (25.8 mm body, about 22 mm pitch as the reviewer confirmed, 22.3 on the drawing) and the vertical mains plug do not "
+                     "both fit across the 45 mm board once mains copper keeps 1 mm from the slot (the sum is 45.6 mm); "
+                     "the 22.5 mm slotted footprint stays in hardware/lib/dryer.pretty for a right-angle-plug layout. "
+                     "The T 3.15 A fuse itself is fitted by hand"),
     Part("J_MAINS", "120 VAC", "Connector_Generic:Conn_01x08",
          "dryer:PhoenixContact_MSTBVA_2,5_8-G-5,08_1x08_P5.08mm_Vertical_Drill1.7mm",
          {"1": "L_IN", "2": "N", "3": "L_SW_A", "4": "N", "5": "L_SW_B", "6": "N", "7": "L_FUSED", "8": "N"}, "C395787",
@@ -118,19 +118,22 @@ def check():
 #   deep side toward the edge, courtyard x 35.16 to 44.84, y 13.86 to 57.58, between F1 and
 #   H4's courtyard (from y 61.4). Pin 1 at the top keeps L_SW_A (pin 3) and L_SW_B (pin 5) from
 #   crossing: K1's contact feeds the upper pin and K2's the lower.
-# - F1 at (15.6, 14): the 25.7 mm body (reviewer's measurement) has 26.16 mm between the slot
-#   (x 9) and J_MAINS's courtyard (x 35.16); it sits at x 9.0 to 34.7, courtyard 8.71 to 34.99,
-#   0.16 mm short of the plug's. Pad 1 (L_IN) is at x 15.6, pad 2 (L_FUSED) at 28.1 on the
-#   12.5 mm pitch; the courtyard top (y 8.75) clears H1's and H2's (to y 8.6).
-# - K1 at y 29: K1's top coil pad (SELV, (13.95, 23.05)) is 6.285 mm below F1's pad 1 (x
-#   overlaps, so the gap is vertical); F1 is not in a relay area. K2 at y 51.5.
-# - L_IN cannot pass below F1 (6 mm from the coil pad) or between the pads (pad 2 is in the
-#   way), so it runs over the top of the fuse body at y 9.6, under the holder, 2.05 mm above
-#   pad 2 and about 7.5 mm from H2, then drops to pin 1.
+# - F1 at (28.7, 14) rotated 180: the XFCN PTF-76-B body (24.4 mm, pins 4.7 mm from each end)
+#   sits at x 9.0 to 33.4 from the slot edge, courtyard 8.75 to 33.65, 1.5 mm short of
+#   J_MAINS's (x 35.16). The rotation puts pad 1 (L_IN) on the plug side at x 28.7, a short
+#   diagonal from pin 1, and pad 2 (L_FUSED) at x 13.7 beside the strip, its copper (x 12.2
+#   up) 3.2 mm from the slot; the courtyard top (y 9.05) clears H1's and H2's (to y 8.6). The
+#   BLX-A holders on hand do not fit here: pad copper 1 mm from the slot puts their 25.8 mm
+#   body at x 10.35 to 36.15, into the plug (the 22.5 mm slotted footprint stays in the
+#   library for a right-angle-plug layout).
+# - K1 at y 29: K1's top coil pad (SELV, (13.95, 23.05)) is 6.3 mm below F1's pad 2 (x
+#   overlaps, so the gap is vertical; test_margins.py prints the figure); F1 is not in a relay
+#   area. K2 at y 51.5.
 # - The SELV strip: H1 and H3's courtyards leave y 8.6 to 61.4. Nothing SELV comes within
-#   6 mm of F1's pad 1 (x 13.6 up, y 12.4 to 15.6): the column beside it (x 2) carries driver
-#   A's flyback diode and transistor, the second column (x 5.4) starts at y 20.8. J_CTRL and
-#   the second column also keep the plain 6 mm from the relay COM pads.
+#   6 mm of F1's pad 2 (copper x 12.2 up, y 12.5 to 15.5): the column beside it (x 2) carries
+#   driver A's flyback diode and transistor (copper to x 3.25, 9 mm away), the second column
+#   (x 5.4) starts at y 20.8. J_CTRL and the second column also keep the plain 6 mm from the
+#   relay COM pads.
 
 BOARD_W, BOARD_H = 45.0, 70.0
 HOLES = {"H1": (4, 4), "H2": (41, 4), "H3": (4, 66), "H4": (41, 66)}
@@ -141,8 +144,8 @@ SLOT_SEGMENTS = [(3, 21), (25, 33), (37, 43.5), (47.5, 55.5), (59.5, 67)]
 MAINS_ZONE = (9.0, 0.0, 45.0, 70.0)
 # COM +-10 mm in y, from the strip to just past the spine at x 21 (rev A: COM +-10 both ways)
 RELAY_AREAS = [(2.0, 19.0, 22.0, 39.0), (2.0, 41.5, 22.0, 61.5)]
-# The pour starts at y 21: the outline's corner (6.5, 21) is 8.9 mm from the corner of F1
-# pad 1's bounding box (13.6, 15.6); the saved fill is 16.69 mm from the pad on F.Cu. It
+# The pour starts at y 21: the outline's corner (6.5, 21) is 7.9 mm from the corner of F1
+# pad 2's bounding box (12.2, 15.5); the saved fill is 10.17 mm from the pad on F.Cu. It
 # is kept conservative by its outline anyway: board.refill_with_rules refills after every save,
 # and test_saved_pour_fill_keeps_the_mains_rules checks the saved fill.
 GND_POUR = (2.0, 21.0, 6.5, 68.0)
@@ -162,7 +165,7 @@ PLACE = {
     "R5": (2, 45.3, 90), "Q2": (2, 49.1, 90), "D2": (2, 55, 90), "D4": (2, 59.6, 0), "R6": (5.4, 59.6, 90),
     # mains zone
     "K1": (12, 29, 0), "K2": (12, 51.5, 0),
-    "F1": (15.6, 14, 0),
+    "F1": (28.7, 14, 180),
     "J_MAINS": (39.5, 17.94, 270),
 }
 
@@ -174,18 +177,17 @@ PLACE = {
 #   inside the relay areas (the spine at x 21 is 5.05 mm from the coil pads, COM 3.5). The rule
 #   tests the mains item and COM is always inside an area, so it also holds the SELV strip's
 #   copper to 3.5 mm from the COM pads (minimum and strip figures: test_margins.py);
-# - 6 mm from SELV copper outside the relay areas. F1's pad 1 (L_IN, x 13.6 to 17.6) is the
-#   mains copper nearest the strip outside an area: 6.285 mm above K1's top coil pad
-#   (test_margins.py prints it; the COIL_A track from that pad is 6.99 mm away). The spine's
-#   short pieces between the areas are
-#   6.5 mm from the coil pads;
-# - 6 mm hole clearance from the M4 holes (H2 at (41, 4): the L_IN drop from (32, 9.6) to
-#   pin 1 is the closest mains copper, about 7.5 mm from the hole's edge);
+# - 6 mm from SELV copper outside the relay areas. F1's pad 2 (L_FUSED, copper x 12.2 to
+#   15.2) is the mains copper nearest the strip outside an area: 6.3 mm above K1's top coil
+#   pad, 9 mm from the strip's parts (test_margins.py prints the minimum). The spine's short
+#   pieces between the areas are 6.5 mm from the coil pads;
+# - 6 mm hole clearance from the M4 holes (H2 at (41, 4): the plug's pin 1 and the L_IN
+#   diagonal to it are the closest mains copper, about 10 mm from the hole's edge);
 # - 1 mm between mains nets (the NC pads are mains). L to N 1.10 mm (the rule is 1.0; the
 #   single board had 1.55; regaining it would put the N links at the edge's 1 mm limit): the N
-#   links beside the plug pins. The L-side nets keep 1.6 mm from each other (RULES): the L_IN
-#   run at y 9.6 passes F1's pad 2 at 2.05, the L_FUSED branch to pin 7 passes K2's NC pad at
-#   1.85, L_SW_B's lane passes K2's NC pad at 2.05;
+#   links beside the plug pins. The L-side nets keep 1.6 mm from each other (RULES): the
+#   L_FUSED branch to pin 7 passes K2's NC pad at 1.85, L_SW_B's lane passes K2's NC pad at
+#   2.05;
 # - 1 mm to the board edge: the N links at x 43.15 are 1.05 mm from it (copper edge);
 # - the relay_pads relaxation (3.5 mm) applies to a whole segment if any of it touches a relay
 #   area (insideArea tests the item, not the overlapping part), so every segment that would cross
@@ -194,13 +196,13 @@ PLACE = {
 #   at x 22.75, so no mains segment outside an area is relaxed.
 # The spine at x 21 carries L_FUSED on F.Cu between the coil pads (x <= 13.95 + 1.25) and the
 # NC/NO pads, from F1's pad 2 down to both COM pads, with a branch at y 49.6 to J_MAINS pin 7
-# (PSU L). L_IN leaves F1's pad 1 upward, runs along y 9.6 over the top of the fuse body and
-# drops to pin 1 at the top of the plug. N links the four N pins on the edge side of J_MAINS.
+# (PSU L). L_IN is one short diagonal from F1's pad 1, on the plug side, to pin 1 at the top
+# of the plug. N links the four N pins on the edge side of J_MAINS.
 # The switched lines reach pins 3 and 5 from the left: L_SW_A straight from K1's NO pad on
 # F.Cu, L_SW_B from K2's NO pad up the x 30.5 lane on B.Cu (it crosses under the pin-7 branch).
 MAINS_TRACKS = [
-    ("L_IN", "F.Cu", [(15.6, 14), (15.6, 9.6), (32, 9.6), (39.5, 17.94)]),
-    ("L_FUSED", "F.Cu", [(28.1, 14), (24, 14), (21, 17), (21, 18.2), (21, 39.8), (21, 40.7), (21, 51.5), (12, 51.5)]),
+    ("L_IN", "F.Cu", [(28.7, 14), (39.5, 17.94)]),
+    ("L_FUSED", "F.Cu", [(13.7, 14), (18, 14), (21, 17), (21, 18.2), (21, 39.8), (21, 40.7), (21, 51.5), (12, 51.5)]),
     ("L_FUSED", "F.Cu", [(12, 29), (21, 29)]),
     ("L_FUSED", "F.Cu", [(21, 49.6), (22.75, 49.6), (38, 49.6), (39.5, 48.42)]),
     ("L_SW_A", "F.Cu", [(26.15, 35.05), (39.5, 28.1)]),
