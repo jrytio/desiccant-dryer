@@ -56,6 +56,27 @@ Both boards can be fabricated and assembled by PCBWay with no design change: the
 - PCBWay sources from Digi-Key, Mouser, Farnell, Arrow, Avnet and "local suppliers", and will buy from a supplier or link you name in the BOM, with substitutes only on your approval. Whether they buy from LCSC was not confirmed on their pages. The parts at risk are the LCSC-only Chinese brands: the DORABO pluggable headers and plugs, the Kinghelm sockets, the SOFNG slide switch, the XFCN display header, and the Songle relays (not at Digi-Key; a TE equivalent would need its pin pattern checked). The passives, LEDs, diodes, transistors and electrolytics are generic and have Western-distributor equivalents in the same footprints.
 - Practical route if PCBWay is chosen: order it as a kitted or combo job, buy the LCSC-only parts yourself (with spares, PCBWay asks for extra passives) and ship them, or put the LCSC links in the BOM and get the all-in quote in writing before paying. PCBWay's MOQ is 1 (the quote form starts at 5); the online price excludes parts and the exact quote follows a manual review in one to two days.
 
+#### Quote packet (2026-10-16)
+
+Everything PCBWay's quote form asks for, so the request takes a few minutes. The request itself needs a PCBWay account and contact details, so a person files it (the hardware reviewer asked for an estimate on PR #49).
+
+Files: the `hardware-outputs` artifact of the latest green [hardware workflow run](https://github.com/jrytio/desiccant-dryer/actions/workflows/hardware.yml) on the PR branch (or `scripts/hardware.sh export` locally, into `hardware/out/`): `dryer-controller-revA-gerbers.zip` and `dryer-mains-revA-gerbers.zip` (gerbers and drill files, one zip per board), `dryer-*-revA-bom.csv` (JLCPCB columns: comment, designators, footprint, LCSC number; PCBWay accepts it, the LCSC number is the distributor part number), `dryer-*-revA-cpl.csv` (centroids, top side) and `dryer-*-revA-schematic.pdf`.
+
+| | Controller board | Mains board |
+|---|---|---|
+| Size | 85 × 70 mm | 45 × 70 mm |
+| Layers, material, thickness, copper | 2, FR-4, 1.6 mm, 1 oz | same |
+| Surface finish | lead-free HASL (ENIG if preferred; nothing in the design needs it) | same |
+| Min track / clearance | 0.2 / 0.2 mm (0.225 mm is the narrowest track routed) | same |
+| Min hole | 0.3 mm via drill; smallest part hole 0.95 mm | same; 1.6 mm fuse-holder holes |
+| Cutouts | none | one 2 mm wide routed slot in five segments (internal cutouts, in the Edge.Cuts layer) |
+| Mounting holes | 4 × 4.3 mm non-plated | same |
+| Quantity | 5 (the form's minimum; 2 to 5 are wanted) | 5 |
+| Assembly | top side only, SMD and through-hole: 26 BOM lines, 43 placements (34 SMD, 9 through-hole: the two ESP sockets, five pluggable headers, the slide switch, U1). U1 (the 5 V module) is hand-fitted: mark it DNP / "do not source" | top side only: 9 BOM lines, 15 placements (10 SMD, 5 through-hole: fuse holder, two relays, two headers). Nothing excluded |
+| Parts to confirm sourcing | the LCSC-only brands (see above); the DORABO headers (J_LOADS C395768, J_24V C395734, J_SENS C430559, J_RLY JST C144395 is generic) | DORABO DB2EV-5.08-8P-GN C395787, XFCN PTF-76-B C48603682, Songle SRD-05VDC-SL-C C35449, JST C144395 |
+
+Steps on pcbway.com: PCB Instant Quote → enter the table (one quote per board, or both in one order as two parts) → tick "Assembly" and give the placement counts → upload the two zips, the BOMs and the CPLs → "Request a quote". Expect the manual review to ask about the mains board's slot (it is intentional, an isolation slot) and about sourcing the Chinese-brand parts.
+
 ## CI
 
 `.github/workflows/hardware.yml` runs `test`, `check` and `export --no-docs` in the `kicad/kicad:10.0.6` image (pinned to the patch release the TP2 placement was checked against; amd64 only; on Apple silicon use `docker run --platform linux/amd64 -u $(id -u):$(id -g) -e HOME=/tmp`). It never routes. `hardware/out/` is uploaded as an artifact and the review copies in `docs/hardware/` (`controller-*`, `mains-*`) are not touched, so they change only when someone runs `export` locally. A `pcb-*` tag attaches both boards' gerber zips, BOMs, CPLs and schematic PDFs to a GitHub release.
