@@ -36,6 +36,58 @@ class Export(unittest.TestCase):
         self.assertIn("K1", [r[0] for r in _rows(self.paths[boards.by_name("mains")]["cpl"])[1:]])
         self.assertIn("U1", [r[0] for r in _rows(self.paths[boards.by_name("controller")]["cpl"])[1:]])
 
+    def test_cpl_positions_are_part_centres(self):
+        """JLCPCB places a part at Mid X/Y, so the CPL must give the centre of the pads, not
+        KiCad's anchor (pin 1 on the through-hole parts). y is negated, as in KiCad's file."""
+        import pcbnew
+        for bd, paths in self.paths.items():
+            rows = {r[0]: r for r in _rows(paths["cpl"])[1:]}
+            b = pcbnew.LoadBoard(PCBS[bd])
+            for fp in b.GetFootprints():
+                ref = fp.GetReference()
+                if ref not in rows:
+                    continue
+                xs, ys = [], []
+                for p in fp.Pads():
+                    bb = p.GetBoundingBox()
+                    xs += [bb.GetX(), bb.GetX() + bb.GetWidth()]
+                    ys += [bb.GetY(), bb.GetY() + bb.GetHeight()]
+                self.assertAlmostEqual(float(rows[ref][1]), (min(xs) + max(xs)) / 2e6, places=3, msg=ref)
+                self.assertAlmostEqual(float(rows[ref][2]), -(min(ys) + max(ys)) / 2e6, places=3, msg=ref)
+        ctl = {r[0]: r for r in _rows(self.paths[boards.by_name("controller")]["cpl"])[1:]}
+        # the 12-pin socket's anchor is its pin 1 at (21.13, 10); its centre is 13.97 mm along the row
+        self.assertAlmostEqual(float(ctl["J_ESP12"][1]), 35.10, places=2)
+        self.assertAlmostEqual(float(ctl["J_ESP12"][2]), -10.00, places=2)
+        self.assertAlmostEqual(float(ctl["C1"][1]), 4.60, places=2)   # a two-pad part: anchor already the centre
+
+    def test_cpl_rotations_follow_jlcpcb(self):
+        """The corrections JLCPCB's preview asked for on 2026-10-16 (hardware/README.md)."""
+        ctl = {r[0]: r for r in _rows(self.paths[boards.by_name("controller")]["cpl"])[1:]}
+        mains = {r[0]: r for r in _rows(self.paths[boards.by_name("mains")]["cpl"])[1:]}
+        self.assertEqual(float(ctl["Q3"][4]), 180.0)        # SOT-23 at KiCad 0
+        self.assertEqual(float(ctl["J_LOADS"][4]), 180.0)   # pluggable header at KiCad 0
+        self.assertEqual(float(ctl["J_ESP12"][4]), 0.0)     # pin socket at KiCad 90
+        self.assertEqual(float(ctl["C1"][4]), -90.0)        # electrolytic at KiCad 90
+        self.assertEqual(float(ctl["R7"][4]), 0.0)          # resistor: unchanged
+        self.assertEqual(float(mains["J_CTRL"][4]), 90.0)   # JST XH at KiCad -90
+        self.assertEqual(float(mains["K1"][4]), 0.0)        # relay: no correction known yet
+
+    def test_jlc_rotation_table(self):
+        self.assertEqual(export.jlc_rotation("Package_TO_SOT_SMD:SOT-23", 0), 180.0)
+        self.assertEqual(export.jlc_rotation("Package_TO_SOT_SMD:SOT-23", 90), -90.0)
+        self.assertEqual(export.jlc_rotation("Connector_PinSocket_2.54mm:PinSocket_1x12_P2.54mm_Vertical", 90), 0.0)
+        self.assertEqual(export.jlc_rotation("Resistor_SMD:R_0805_2012Metric", 270), -90.0)
+        self.assertEqual(export.jlc_rotation("Relay_THT:Relay_SPDT_SANYOU_SRD_Series_Form_C", 0), 0.0)
+        self.assertEqual(export.jlc_rotation("Capacitor_SMD:CP_Elec_8x10.5", 180), 0.0)
+
+    def test_cpl_without_board_passes_kicad_values_through(self):
+        src = os.path.join(self.out, "plain-pos.csv"); dst = os.path.join(self.out, "plain-cpl.csv")
+        with open(src, "w", newline="") as f:
+            w = csv.writer(f); w.writerow(["Ref", "Val", "Package", "PosX", "PosY", "Rot", "Side"])
+            w.writerow(["Q9", "x", "SOT-23", "1.0", "-2.0", "90.0", "top"]); w.writerow(["TP1", "x", "TestPoint", "0", "0", "0", "top"])
+        export.jlc_cpl(src, dst)
+        self.assertEqual(_rows(dst)[1:], [["Q9", "1.0", "-2.0", "Top", "90.0"]])
+
     def test_bom_format(self):
         rows = _rows(self.paths[boards.by_name("mains")]["bom"])
         self.assertEqual(rows[0], ["Comment", "Designator", "Footprint", "LCSC Part #"])

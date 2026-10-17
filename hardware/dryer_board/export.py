@@ -1,7 +1,7 @@
 # hardware/dryer_board/export.py
 """Everything the fab and the reviewer need, from a committed project, with kicad-cli. Every
 file is named <PROJECT>-rev<REVISION>-..., so both boards' outputs share one directory."""
-import csv, os, shutil, subprocess, zipfile
+import csv, os, re, shutil, subprocess, zipfile
 from . import kicad_env
 
 GERBER_LAYERS = "F.Cu,B.Cu,F.Paste,B.Paste,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts"
@@ -11,10 +11,56 @@ def _cli(*args):
     return subprocess.run([kicad_env.kicad_cli()] + list(args), capture_output=True, text=True)
 
 
-def jlc_cpl(kicad_csv, out_csv):
+# JLCPCB reads the CPL rotation against its own library's zero orientation, which is not
+# KiCad's for every package. Degrees added to KiCad's rotation, by footprint name (regular
+# expression on "Library:Name"); the first match wins. The values come from JLCPCB's placement
+# preview of the controller board on 2026-10-16 (the hardware reviewer's upload): the wire
+# connectors showed 180 degrees out, the 1xN pin sockets 90 degrees, the SOT-23 and
+# electrolytic parts 180. SMA diodes and 0805 LEDs are set like the other polarised parts and,
+# with the sign of the pin-socket turn, the relays, the fuse holder and the slide switch,
+# are to be confirmed in the preview before ordering (hardware/README.md). Resistors, ceramic
+# capacitors and the PPTC have no polarity and keep KiCad's angle.
+JLC_ROTATIONS = [
+    (r"PhoenixContact_MSTB|PhoenixContact_MCV|JST_XH", 180),
+    (r"PinSocket_1x|PinHeader_1x", -90),
+    (r"SOT-23", 180),
+    (r"CP_Elec", 180),
+    (r"D_SMA", 180),
+    (r"LED_0805", 180),
+]
+
+
+def jlc_rotation(footprint, kicad_rot):
+    """JLCPCB's rotation for a footprint placed at KiCad's angle, in (-180, 180]."""
+    delta = next((d for pattern, d in JLC_ROTATIONS if re.search(pattern, footprint)), 0)
+    rot = (float(kicad_rot) + delta) % 360.0
+    return rot - 360.0 if rot > 180.0 else rot
+
+
+def part_centres(pcb_path):
+    """Reference -> (footprint id, centre of the pads' bounding box in mm, board y down) for
+    every footprint on the board. JLCPCB places a part at the CPL position, so it must be the
+    part's centre; KiCad's position file gives the footprint anchor, which is pin 1 on the
+    through-hole connectors, sockets, relays, the fuse holder, the switch and U1."""
+    import pcbnew
+    b = pcbnew.LoadBoard(pcb_path)
+    out = {}
+    for fp in b.GetFootprints():
+        xs, ys = [], []
+        for p in fp.Pads():
+            bb = p.GetBoundingBox()
+            xs += [bb.GetX(), bb.GetX() + bb.GetWidth()]
+            ys += [bb.GetY(), bb.GetY() + bb.GetHeight()]
+        out[fp.GetReference()] = (fp.GetFPIDAsString(), (min(xs) + max(xs)) / 2e6, (min(ys) + max(ys)) / 2e6)
+    return out
+
+
+def jlc_cpl(kicad_csv, out_csv, pcb_path=None):
     """KiCad position CSV -> JLCPCB CPL. Mounting holes and test points carry no part, so
-    they are dropped. Rotation is KiCad's; JLCPCB's viewer is where any per-footprint
-    offset (SOT-23, SMA) is corrected before ordering."""
+    they are dropped. With the board given, each part's position is the centre of its pads
+    (in the position file's frame: x as KiCad's, y negated) and its rotation is corrected by
+    JLC_ROTATIONS; without it (tests of the CSV plumbing) the KiCad values pass through."""
+    centres = part_centres(pcb_path) if pcb_path else {}
     with open(kicad_csv, newline="") as f, open(out_csv, "w", newline="") as g:
         r = csv.DictReader(f)
         w = csv.writer(g)
@@ -22,7 +68,12 @@ def jlc_cpl(kicad_csv, out_csv):
         for row in r:
             if row["Ref"].startswith(("H", "TP")):
                 continue
-            w.writerow([row["Ref"], row["PosX"], row["PosY"], "Top" if row["Side"] == "top" else "Bottom", row["Rot"]])
+            x, y, rot = row["PosX"], row["PosY"], row["Rot"]
+            if row["Ref"] in centres:
+                fpid, cx, cy = centres[row["Ref"]]
+                x, y = "%.6f" % cx, "%.6f" % -cy
+                rot = "%.6f" % jlc_rotation(fpid, row["Rot"])
+            w.writerow([row["Ref"], x, y, "Top" if row["Side"] == "top" else "Bottom", rot])
 
 
 def clean_bom(path):
@@ -60,7 +111,7 @@ def export_all(bd, project_dir, out_dir, docs_dir=None):
     kicad_env.run_cli("pcb", "export", "pos", "--format", "csv", "--units", "mm", "--side", "front", "--exclude-dnp",
                       "-o", kpos, pcb)
     paths["cpl"] = os.path.join(out_dir, stem + "-cpl.csv")
-    jlc_cpl(kpos, paths["cpl"])
+    jlc_cpl(kpos, paths["cpl"], pcb)
     paths["bom"] = os.path.join(out_dir, stem + "-bom.csv")
     kicad_env.run_cli("sch", "export", "bom", "--fields", "Value,Reference,Footprint,LCSC",
                       "--labels", "Comment,Designator,Footprint,LCSC Part #", "--group-by", "Value,Footprint,LCSC",
