@@ -4,7 +4,8 @@ Every hardware and software failure we could think of for this ESP32
 desiccant dryer controller, which replaces the original control board in an
 Azco VMD-08 dryer: an ESP32-S2 or ESP32-C6 Thing Plus, two 120 VAC pack heaters on Songle relays,
 two 24 V SMC valves, DS18B20 pack and case probes, an SHT45 outlet humidity
-sensor, SF129E thermal fuses, a Mean Well LRS-35-24 supply and an MP1584 buck.
+sensor, SF129E thermal fuses, a Mean Well LRS-35-24 supply and an MP1584 buck
+(a fixed 5 V module on the PCB, rev A; rows marked *PCB only* apply to it alone).
 
 Nothing here is verified against the running firmware. It is the starting
 inventory for a test and verification suite, in the spirit of the
@@ -80,7 +81,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | [C. Outlet humidity sensing (SHT45)](#c-outlet-humidity-sensing-sht45) |  |  | 10 | 4 |  | 14 |
 | [D. Valves and airflow](#d-valves-and-airflow) |  | 11 | 5 | 2 |  | 18 |
 | [E. Case cooling, enclosure and fan](#e-case-cooling-enclosure-and-fan) | 1 | 4 | 3 | 1 | 1 | 10 |
-| [F. Power supplies and rails](#f-power-supplies-and-rails) | 2 | 9 | 9 | 1 |  | 21 |
+| [F. Power supplies and rails](#f-power-supplies-and-rails) | 2 | 10 | 10 | 1 |  | 23 |
 | [G. Wiring, connectors, mechanical, environmental](#g-wiring-connectors-mechanical-environmental) | 4 | 7 | 5 | 1 |  | 17 |
 | [H. MCU and firmware runtime](#h-mcu-and-firmware-runtime) | 1 | 11 | 5 | 3 |  | 20 |
 | [I. Control logic and state machine](#i-control-logic-and-state-machine) |  | 6 | 12 | 7 |  | 25 |
@@ -95,7 +96,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | ID | Failure | Pri | Kind | Verify | Gap |
 |---|---|---|---|---|---|
 | A-01 | Relay contact welds closed; heater stays on with the coil de-energised. Hardware failure of the contact itself, found by exercising the relay live; the matching "no software check catches this" gap is B-02 | 🔴 P0 | HW | live |  |
-| A-02 | PN2222A driver shorts collector-emitter; relay held on permanently | 🔴 P0 | HW | bench |  |
+| A-02 | PN2222A (protoboard; MMBT2222A on the PCB) driver shorts collector-emitter; relay held on permanently | 🔴 P0 | HW | bench |  |
 | A-03 | A heater GPIO (12 or 13) stays high — firmware hang, pin latch-up or solder bridge — leaving outputs in their last state. The watchdog must reboot and `on_boot` (priority 700) force both heaters off; pass if the relay de-energises within one watchdog period. H-19 tests the watchdog itself | 🔴 P0 | FW | bench |  |
 | A-04 | P2N2222A fitted instead of PN2222A (mirrored pinout); stage misbehaves or B-E junction breaks down | 🔴 P0 | WIRE | inspect |  |
 | A-05 | Both heater relays on at once (interlock defeated by hardware fault or firmware bug); 2 A through fuse and double heat load | 🔴 P0 | FW | bench |  |
@@ -108,16 +109,16 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | A-12 | 24 V PSU L spur taken before F1 instead of after; unfused PSU fault path | 🔴 P0 | WIRE | inspect |  |
 | A-13 | Heater element shorted to sheath or partially shorted; over-current or sheath live | 🔴 P0 | HW | live |  |
 | A-14 | Heater sheath / chassis PE bond missing or broken; sheath live on insulation failure | 🔴 P0 | WIRE | inspect |  |
-| A-15 | Creepage between mains and logic rows on the protoboard (5.6 mm pad-to-pad, less on plated pads) arcs over in humidity or dust | 🔴 P0 | WIRE | inspect |  |
+| A-15 | Creepage between mains and logic rows on the protoboard (5.6 mm pad-to-pad, less on plated pads) arcs over in humidity or dust. PCB rev A: the mains is on its own board, where a 2 mm routed slot along the mains boundary and DRC rules hold mains copper 6 mm from SELV copper (3.5 mm inside the relay pad areas, where the relay's own COM-to-coil pad gap is 3.51 mm); what is left to inspect is solder splashes and contamination | 🔴 P0 | WIRE | inspect |  |
 | A-16 | Mains wire pulls out of a screw terminal (stranded not ferruled, under-torqued) and touches logic or chassis | 🔴 P0 | WIRE | inspect |  |
 | A-17 | Mains conductor of wrong insulation or temperature rating chafes on pack at 90 to 133 °C | 🔴 P0 | WIRE | inspect |  |
-| A-18 | Relay coil flyback diode missing or reversed; PN2222A destroyed, possible stuck-on failure later | 🟠 P1 | WIRE | bench |  |
+| A-18 | Relay coil flyback diode missing or reversed; PN2222A (protoboard; MMBT2222A on the PCB) destroyed, possible stuck-on failure later | 🟠 P1 | WIRE | bench |  |
 | A-19 | Relay contact fails open or high-resistance; heater never heats, or contact heats itself | 🟠 P1 | HW | live |  |
 | A-20 | Relay contact arcs and pits from switching the 1 A inductive-ish load every regen; life ends with a weld | 🟠 P1 | HW | live |  |
 | A-21 | Relay coil open; heater cannot be commanded on | 🟡 P2 | HW | bench |  |
 | A-22 | Heater element open circuit; no heat | 🟡 P2 | HW | live |  |
-| A-23 | PN2222A base resistor or 1 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
-| A-24 | Relay harness (JST-XH 4-way) unplugged or one conductor open; both heaters dead, or one dead | 🟡 P2 | WIRE | bench |  |
+| A-23 | PN2222A (protoboard; MMBT2222A on the PCB) base resistor or 1 kΩ pulldown open; relay floats or chatters | 🟠 P1 | HW | bench |  |
+| A-24 | Relay harness (JST-XH 4-way) unplugged or one conductor open; both heaters dead, or one dead. PCB rev A: the same connector and pin order joins the controller board (J_RLY) to the mains board (J_CTRL); the 1 kΩ pulldowns R2/R5 on the mains board hold both relays off with the link unplugged | 🟡 P2 | WIRE | bench |  |
 | A-25 | Relay chatter from marginal 5 V coil supply (buck sag under two coils plus WiFi peak) | 🟠 P1 | HW | bench |  |
 | A-26 | Heater partially failed (higher resistance); heats too slowly, trips the no-rise fault or never reaches regen temperature | 🔵 P3 | HW | virtual |  |
 | A-27 | SF129E has opened once (one-shot); pack permanently unheatable until replaced, dryer appears "not heating" | 🟡 P2 | HW | live |  |
@@ -220,7 +221,7 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 |---|---|---|---|---|---|
 | F-01 | LRS-35-24 fails with output shorted to mains (rare, Class I supply); FG/PE bond is the only protection | 🔴 P0 | HW | inspect |  |
 | F-02 | PSU FG not bonded to PE; chassis floats on a primary fault | 🔴 P0 | WIRE | inspect |  |
-| F-03 | 24 V rail reverse-polarity on the logic board (no protection, open item); buck and MOSFETs destroyed, possible stuck-on outputs | 🟠 P1 | WIRE | bench |  |
+| F-03 | 24 V rail reverse-polarity on the logic board (no protection, open item); buck and MOSFETs destroyed, possible stuck-on outputs. PCB rev A: series SS34 (D11) blocks reverse polarity and a 1.1 A PPTC (F2) limits the input current | 🟠 P1 | WIRE | bench |  |
 | F-04 | 24 V rail over-voltage (PSU trimmer, PSU fault); buck input above rating | 🟠 P1 | HW | bench |  |
 | F-05 | PSU hiccup mode from a shorted valve or fan; whole controller reboots repeatedly, outputs cycle | 🟠 P1 | HW | bench |  |
 | F-06 | Cold-start inrush (~45 A) opens F1 if a fast-blow fuse is fitted instead of the specified time-delay type and the dryer goes dead; the real risk is someone then bridging or upsizing it into A-11's unsafe state. Pass: the specified fuse rides through inrush | 🟠 P1 | HW | live |  |
@@ -239,6 +240,8 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | F-19 | LiPo charger / BAT pin accidentally fed 5 V; DMG2307L or MCP73831 damage | 🔵 P3 | WIRE | inspect |  |
 | F-20 | Nothing measures the 24 V rail, so a dead PSU or a tripped supply is reported only indirectly, as valves that never move. Pass: a rail monitor exists, or the state machine cross-checks valve commands against pack behaviour | 🟡 P2 | FW | virtual | ✱ |
 | F-21 | The ESP32-C6 board pulls RESET up with 100 kΩ where the S2 has 10 kΩ, so a tenth of the leakage on the RESET pin (flux residue, a damp socket) holds the chip in reset or resets it at random; every output goes off and the dryer stops. Pass: RESET measures at the 3.3 V rail, not below it, with the board seated and powered | 🟡 P2 | HW | bench |  |
+| F-22 | *PCB only.* The PPTC on the 24 V input (F2, 1.1 A hold at 20 °C, 0.73 A at 60 °C) trips on an inrush or in a hot enclosure and the valves drop out until it cools; the firmware sees it only as valves that never move (F-20). Pass: no trip through a cold start and a full regen cycle with the lid closed | 🟡 P2 | HW | live |  |
+| F-23 | *PCB only.* SW-USB left ON while a USB-C cable is connected: the 5 V module sources current into the host's port, the same consequence as JP-USB fitted (F-10). Pass: SW-USB is OFF before any USB-C cable, and the rule is printed beside the switch | 🟠 P1 | OPS | inspect |  |
 
 ## G. Wiring, connectors, mechanical, environmental
 
@@ -252,9 +255,9 @@ row is expanded into a hands-on step in `docs/inspection-checklist.md`; a new
 | G-06 | Screw terminal on a sensor triple loose; intermittent probe. Symptom looks like B-09's 1-wire CRC errors but the cause here is a loose mechanical joint, not bus noise | 🟡 P2 | WIRE | bench |  |
 | G-07 | Vibration from the compressor loosens headers and terminals over months | 🟠 P1 | HW | inspect |  |
 | G-08 | Solder bridge between adjacent heater and valve GPIO pins (12 and 13, 10 and 11) | 🔴 P0 | WIRE | bench |  |
-| G-09 | Wrong wire in a mains-rated terminal (24 V and mains blocks are the same 5.08 mm family) | 🔴 P0 | WIRE | inspect |  |
+| G-09 | Wrong wire in a mains-rated terminal (24 V and mains blocks are the same 5.08 mm family). PCB rev A: keyed plugs, each header with its own pitch and pin count (mains 8-pin 5.08, loads 6-pin 5.08, 24 V 2-pin 5.08, sensors 9-pin 3.5, display 8-pin 2.54, the board-to-board link 4-pin 2.5), so no plug fits another header; a wrong wire within the mains plug is still possible | 🔴 P0 | WIRE | inspect |  |
 | G-10 | Mains wiring routed next to the 1-wire and SPI lines; induced noise, false readings | 🟡 P2 | WIRE | inspect |  |
-| G-11 | Protoboard trace or bus wire overheats from a wiring error on the 24 V bus (no 24 V fuse) | 🟠 P1 | WIRE | bench |  |
+| G-11 | Protoboard trace or bus wire overheats from a wiring error on the 24 V bus (no 24 V fuse). PCB rev A: a 1.1 A PPTC (F2, trips at 1.95 A at 20 °C) on the 24 V input; the LRS-35-24's own hiccup protection (110 to 150 % of 1.5 A) may act first, so a fault current stays near 2 A either way | 🟠 P1 | WIRE | bench |  |
 | G-12 | Enclosure not earthed or metal enclosure with a chafed mains lead | 🔴 P0 | WIRE | inspect |  |
 | G-13 | Strain relief missing on the heater tails at the pack; conductor fatigue at 90 °C | 🔴 P0 | WIRE | inspect |  |
 | G-14 | Thermal fuse leads crimped badly; high-resistance joint heats and opens the fuse spuriously, or melts | 🟠 P1 | WIRE | inspect |  |
@@ -409,7 +412,7 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 | 16 | Verify case fan failure, fan-stuck-on and thermostat reset behaviour | E-01, E-02, E-03, E-05, E-11 | P1 |
 | 17 | Verify enclosure airflow, ambient derating and fan wiring polarity | E-06, E-07, E-10 | P1 |
 | 18 | Verify PSU FG/PE bonding and output-to-mains short protection | F-01, F-02 | P0 |
-| 19 | Verify 24 V rail fault tolerance (reverse polarity, overvoltage, hiccup, inrush) | F-03, F-04, F-05, F-06, F-20 | P1 |
+| 19 | Verify 24 V rail fault tolerance (reverse polarity, overvoltage, hiccup, inrush) | F-03, F-04, F-05, F-06, F-20, F-22 | P1 |
 | 20 | Verify MP1584 buck regulation, ripple and USB back-feed paths | F-07, F-08, F-09, F-10 | P1 |
 | 21 | Verify 5 V rail protection, brownout margin and mains-dip relay state | F-11, F-12, F-14, F-15, F-16, F-21 | P1 |
 | 22 | Verify power-loss-mid-swap recovery and ground-loop noise | F-17, F-18 | P2 |
@@ -435,7 +438,7 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 | 42 | Write mains wiring, creepage and earthing inspection checklist | A-12, A-14, A-15, A-16, A-17, G-09 | P0 |
 | 43 | Write enclosure and mechanical assembly inspection checklist | G-07, G-12, G-13, G-14, E-08, E-09, G-16 | P0 |
 | 44 | Write sensor wiring and placement inspection checklist | B-12, B-14, C-03, C-13, G-05, G-10 | P1 |
-| 45 | Write board, header and display assembly inspection checklist | G-02, G-03, G-04, G-15, F-13, F-19, D-18, G-17 | P1 |
+| 45 | Write board, header and display assembly inspection checklist | G-02, G-03, G-04, G-15, F-13, F-19, D-18, G-17, F-23 | P1 |
 | 46 | Write firmware build and config pre-flight inspection checklist | J-02, J-03, J-04, J-05, J-06, J-07, J-11, J-12 | P0 |
 | 47 | Write deployment and adoption-selector inspection checklist | H-18, K-10, L-12 | P0 |
 | 48 | Review the heater circuit's hardware protection layers (current sense, resettable cutout) | A-30, A-31 | P1 |
@@ -445,8 +448,8 @@ Opened on GitHub so far: #34 covers B-20 and J-09 through test T-B20 and seeds t
 | Priority | Count | Themes |
 |---|---|---|
 | P0 | 33 | Welded or stuck-on heater path, missing thermal fuse, probe/valve/relay mapping errors, mains wiring and creepage, firmware hang with heater on, no software detection of "heater off but still heating" |
-| P1 | 75 | Single-layer protection losses, sensor plausibility gaps, unverified watchdog and panic behaviour, 24 V and 5 V rail faults, valves stuck, manual Home Assistant toggles |
-| P2 | 70 | Wet air delivered, silent stalls, NaN and frozen sensors, no feedback from valves or fan, state machine dead ends |
+| P1 | 76 | Single-layer protection losses, sensor plausibility gaps, unverified watchdog and panic behaviour, 24 V and 5 V rail faults, valves stuck, manual Home Assistant toggles |
+| P2 | 71 | Wet air delivered, silent stalls, NaN and frozen sensors, no feedback from valves or fan, state machine dead ends |
 | P3 | 32 | Wasted regens, nuisance faults, manual resets |
 | P4 | 10 | Display and telemetry only |
 

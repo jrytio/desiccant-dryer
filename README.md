@@ -34,6 +34,21 @@ releases itself from the published manifest, on a 6 h poll, through the
 `Firmware` update entity in Home Assistant. See `docs/releasing.md`,
 which also records the accepted security trade-offs of that arrangement.
 
+## Printed circuit board
+
+`hardware/` holds a KiCad 10 design for two fab-assembled boards: a
+controller board that takes the same Thing Plus sockets and pin map, with
+keyed pluggable headers, and a mains board (fuse, relays, 120 VAC plug)
+behind a routed slot, joined by a keyed 4-way link. Both are generated from
+Python (`scripts/hardware.sh`), checked by ERC and DRC in CI, and not yet
+built. Commands, CI and ordering are in
+[`hardware/README.md`](hardware/README.md); BOM, pinouts and LEDs in
+`docs/hardware.md`.
+
+![Controller board rev A, top render](docs/hardware/controller-render-top.png)
+
+![Mains board rev A, top render](docs/hardware/mains-render-top.png)
+
 ## License
 
 Copyright (C) 2026 jrytio. Released under the GNU Affero General Public

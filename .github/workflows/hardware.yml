@@ -1,0 +1,54 @@
+name: hardware
+
+on:
+  push:
+    branches: [main]
+    tags: ['pcb-*']
+    paths: ['hardware/**', 'scripts/hardware.sh', 'tests/test_pinmap.py', '.github/workflows/hardware.yml']
+  pull_request:
+    paths: ['hardware/**', 'scripts/hardware.sh', 'tests/test_pinmap.py', '.github/workflows/hardware.yml']
+
+# The committed KiCad files are checked against the generator, then ERC, DRC and the fab
+# exports run with the same KiCad version as the desktop. Routing never runs here: it is
+# not deterministic, so the routed board is committed. The renders are not pixel-stable, so
+# they go to the artifact only; --no-docs keeps the committed review files in docs/hardware/
+# unchanged (they are refreshed by running the export locally).
+jobs:
+  check:
+    name: kicad check and export
+    runs-on: ubuntu-latest
+    container:
+      # Pinned to the patch release: TP2's position in placement.py works round a DRC false
+      # positive seen in 10.0.6, and another 10.0.x could move it.
+      image: kicad/kicad:10.0.6
+      options: --user root
+    steps:
+      - uses: actions/checkout@v7
+      - name: Hold the firmware pin map against the hardware pin map
+        run: python3 tests/test_pinmap.py
+      - name: Unit tests
+        run: scripts/hardware.sh test
+      - name: Generator sync, ERC, DRC
+        run: scripts/hardware.sh check
+      - name: Fab exports and renders
+        run: scripts/hardware.sh export --no-docs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hardware-outputs
+          path: hardware/out
+  release:
+    name: pcb release
+    if: startsWith(github.ref, 'refs/tags/pcb-')
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: hardware-outputs
+          path: out
+      - name: Create the release with the fab files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "PCB $GITHUB_REF_NAME" --notes "Fab files for board $GITHUB_REF_NAME (gerbers, JLCPCB BOM and CPL, schematic)." out/*.zip out/*-bom.csv out/*-cpl.csv out/*.pdf

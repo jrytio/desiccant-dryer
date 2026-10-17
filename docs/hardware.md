@@ -1,6 +1,12 @@
 # Hardware
 
-## Bill of materials
+## Bill of materials (protoboard build)
+
+The driver, buck and Schottky rows below (PN2222A, IRLZ44N, 1N4007, MP1584,
+the USB-pin Schottky and JP-USB) describe the protoboard build. The PCB's
+own parts are in the [Printed circuit board (rev A)](#printed-circuit-board-rev-a)
+BOM. The off-board items (MCU, sensors, display, relays, valves, fan,
+supply, heaters and thermal fuses) apply to both.
 
 | Item | Part | Notes |
 |---|---|---|
@@ -20,8 +26,9 @@
 | Heaters | 2× 120 VAC, 123 Ω (~117 W) | Existing packs; switched by relay contacts |
 | Heater over-temp cutouts | 2× SEFUSE SF129E one-shot thermal fuse (TCO), Tf 133 °C, Th 118 °C, 10 A / 250 VAC | In series with each heater's switched L lead, clamped to the pack body next to the DS18B20. Its holding temperature sets the `overtemp` latch — see [Mains and earthing](#mains-and-earthing) |
 
-Protoboard build (see [Protoboard layout](#protoboard-layout-proposal)), in
-addition to the parts above:
+Protoboard build (see [Protoboard layout](#protoboard-layout-previous-build)), in
+addition to the parts above. The PCB's own parts list is under
+[Printed circuit board (rev A)](#printed-circuit-board-rev-a).
 
 | Item | Part | Notes |
 |---|---|---|
@@ -106,7 +113,7 @@ Before the board goes in a socket:
 5. **Flash it before seating it**, over USB-C, from the published manifest
    (docs/releasing.md). Seated, the fan's gate pulldown holds the chip's
    GPIO8 boot strap low, and download mode with GPIO8 low is not a valid
-   boot mode for the C6. The JP-USB rule is the same as for the S2: never
+   boot mode for the C6. The JP-USB rule (SW-USB on the PCB) is the same as for the S2: never
    a USB cable and the buck's 5 V together.
 
 The same header positions, with each board's GPIO:
@@ -218,7 +225,532 @@ up with USB-C at the left, the 12-pin row is on top.
 - Nothing above 24 V on the breadboard. Heater contacts and mains wiring go
   on the relay module / a terminal block in the enclosure.
 
-## Protoboard layout (proposal)
+## Printed circuit board (rev A)
+
+![Controller board rev A, top render](hardware/controller-render-top.png)
+
+![Mains board rev A, top render](hardware/mains-render-top.png)
+
+Two two-layer boards replace the protoboards and keep their split at the
+mains boundary: an 85 × 70 mm **controller board** (`dryer-controller`)
+and a 45 × 70 mm **mains board** (`dryer-mains`), the sizes of the two
+spaces in the enclosure, joined by the same keyed
+JST-XH 4-way link the protoboard harness used (5 V, GND, heater A, heater
+B; [The board-to-board link](#the-board-to-board-link)). The controller
+board takes the same socketed Thing Plus (S2 or C6) at the same header
+positions, so the firmware, the board packages and the pin map are
+unchanged. The mains board carries the fuse, the two relays with their
+driver stages and the 120 VAC plug; its mains zone is x ≥ 9 mm behind a
+2 mm routed slot (x 7 to 9) in five segments with four gaps, one per relay
+coil track. Nothing mains exists on the controller board
+(`controller.check()` rejects a mains net). The mounting holes on both
+boards are 4.3 mm, for the M4 hardware on hand, one in each corner 4 mm
+in from the edges: controller (4, 4), (81, 4), (4, 66), (81, 66), mains
+(4, 4), (41, 4), (4, 66), (41, 66). The 4 mm inset is an assumption until
+the reviewer gives the real pattern (unverified).
+
+On the controller board the Thing Plus lies along the top edge, 12-pin
+row above the 16-pin row, pin 1 at the USB end, with its USB-C face 3 mm
+past the left edge (x = −3); its antenna end is at the right, over a
+keep-out (x 50.5 to 66, y 6 to 34) with no copper on either layer. The top
+copper is also bare in a band right of the 12-pin socket as far as the
+keep-out, an island between tracks that the pour removed (read from the
+render, not measured); that is not a keep-out. J_LOADS, J_24V and
+J_DISP are on the bottom edge (vertical headers, plugs from above),
+J_SENS is vertical on the right edge and J_RLY, the link, is at the top
+right beside the keep-out. On the mains board the plug J_MAINS is a
+vertical header along the right edge, wires leaving perpendicular to the
+board (a wall borders that space, reviewer 2026-10-15), pin 1 at the top,
+its body inside the outline. The USB-C overhang is an assumption awaiting
+the reviewer (unverified).
+
+Every field connection is a pluggable header with its own pitch and pin
+count, so no plug fits another header, except that a smaller plug of the
+same pitch does enter a larger header: the 6-pin J_LOADS plug (controller)
+fits the 8-pin J_MAINS header (mains board), so the silkscreen labels and
+the loom's own labelling are the defence between them, and a different
+pitch for J_LOADS is a rev B option. That mis-plug is self-limiting: with
+the 6-pin plug in J_MAINS the mains board receives no mains at all, because
+the 8-pin mains plug fits no other header and the 24 V supply is itself
+fed from J_MAINS pins 7 and 8, so the controller is unpowered too. The link
+is 2.5 mm pitch and fits neither 2.54 mm header. JLCPCB fabricates and
+assembles both boards, SMD and through-hole, all on the top side. The hand
+work is seating the ESP, soldering the 5 V module U1 (from the parts on
+hand, [hardware/README.md](../hardware/README.md)), fitting the T 3.15 A
+fuse in the fab-fitted holder, and the 4-wire link cable. Nothing in this
+section has been built yet. Not yet checked, besides the items marked
+unverified below:
+
+- Board thermal: U1 at about 0.4 A and the SS34s (D11, D14) at about
+  0.2 W each, in a closed enclosure. Unmeasured.
+- The USB-C overhang: the Thing Plus's USB-C face sits 3 mm past the
+  controller board's left edge. Whether a plug fits with the board on its
+  standoffs is unchecked.
+- The vertical mains header (DORABO DB2EV-5.08-8P-GN, LCSC C395787): its
+  drawing is not retrieved. The perpendicular wire entry is inferred from
+  the series letter and LCSC's "open side" listing, the 1.7 mm holes from
+  the DB2EVC and DB2ERC drawings on file, and the body envelope is KiCad's
+  MSTBVA footprint (5.34 mm one side of the pin row, 4.34 the other). A
+  latch like the DB2EVC's (8.65 mm deep in all) facing the fuse would reach
+  x ≈ 34.75, 2.2 mm from the PTF-76-B's body. Its UL rating is unknown
+  (the right-angle DB2ERC it replaced was UL 300 V 15 A). The reviewer
+  wants the plug's screws to face away from the wall at the right edge;
+  which side they face depends on the header's keying, which the drawing
+  would show. If a first article has them facing the wall, turn the
+  header 180° (pin 1 at the bottom) and re-lay the two switched lines;
+  nothing changes at the plug end. Confirm all of this from the drawing
+  before ordering.
+- The pin order of the Amazon-sourced 5 V module: bench-check before
+  soldering ([USB-pin drop budget](#usb-pin-drop-budget)).
+
+The design is generated from `hardware/dryer_board/` (commands, CI and
+ordering in [hardware/README.md](../hardware/README.md); design in
+[the PCB spec](superpowers/specs/2026-10-14-pcb-design-kicad-design.md),
+whose "As built" section lists where the boards differ from it). Review
+files, regenerated by `scripts/hardware.sh export`:
+[controller top-view SVG](hardware/controller-top.svg) and
+[mains top-view SVG](hardware/mains-top.svg) (print 1:1),
+[controller isometric render](hardware/controller-render-iso.png),
+[mains isometric render](hardware/mains-render-iso.png),
+[controller schematic PDF](hardware/controller-schematic.pdf),
+[mains schematic PDF](hardware/mains-schematic.pdf).
+
+### What differs from the protoboard
+
+- 24 V input protection: a 1.1 A PPTC (F2) and a series SS34 Schottky
+  (D11) for reverse polarity, then 100 µF / 50 V bulk. The loads see 24 V
+  less the SS34 drop.
+- A fixed 5 V module (U1) in place of the MP1584 buck: no trimmer to set.
+- SMD drivers: MMBT2222A relay drivers, CJ2310 MOSFETs (60 V, SOT-23) in
+  place of the IRLZ44N, MDD M7 flybacks (S1M class, 1 A 1000 V) in place
+  of the 1N4007.
+- Seven status LEDs (table below), five on the controller and the two
+  heater LEDs on the mains board beside their relays.
+- A slide switch, SW-USB, in place of the JP-USB shunt.
+- One 8-pin mains plug in place of four 2-position mains blocks; one
+  6-pin load plug in place of three 24 V blocks.
+- The same two-board split and the same JST-XH 4-way harness between
+  them, with the 1 kΩ base series resistors at the controller end and the
+  1 kΩ pulldowns on the mains board, as the protoboard had them; the mains
+  board's SELV strip is separated from its mains zone by a routed slot and
+  DRC-enforced clearance instead of cleared rows.
+- Test points TP1 to TP9 on the controller: GND, 3V3, 5 V, 24 V and the
+  five output drive nets at the ESP side of their series resistors.
+- Component values the protoboard settled are kept: 1 kΩ base series and
+  1 kΩ base pulldown, 100 Ω gate and 10 kΩ gate pulldown, 5.1 kΩ 1-wire
+  pullup.
+- M4 (4.3 mm) mounting holes in place of M3.
+
+### The board-to-board link
+
+J_RLY on the controller and J_CTRL on the mains board are JST B4B-XH-A
+4-way headers (2.5 mm pitch, keyed and latched; LCSC C144395), pin 1 at
+the top of each with the boards side by side, controller on the left. The
+cable is 1:1, XHP-4 housing to XHP-4 housing; keep it under 30 cm and away
+from the mains loom.
+
+| Pin | Net | Carries |
+|---|---|---|
+| 1 | +5V | Coil supply from the controller's 5 V module (C4 bulk), about 72 mA per energised relay |
+| 2 | GND | Return |
+| 3 | RLY_A | Heater A drive: 12-pin position 4 through R1 (1 kΩ) on the controller; R2 (1 kΩ) pulldown and Q1's base on the mains board |
+| 4 | RLY_B | Heater B drive: 12-pin position 5 through R4; R5 and Q2 on the mains board |
+
+With the link unplugged the pulldowns hold both relays off (A-24). The
+series resistors at the controller end mean a reversed or shifted plug,
+which the key makes hard to do, puts at most 5 V through 1 kΩ onto a
+GPIO. TP5 and TP6 still read the drive at the GPIO side of R1 and R4.
+
+The SHT45 has no header on either board: it plugs into the Thing Plus's
+own Qwiic connector (4-pin JST-SH: GND, 3.3 V, SDA, SCL), as the
+protoboard did. SDA/SCL are GPIO1/GPIO2 on the S2 and GPIO6/GPIO7 on the
+C6, the 12-pin header's positions 12/11, which the controller board leaves
+unconnected. The breakout's own pull-ups serve the bus (the S2 board has
+none; the C6's are behind its I2C jumper), and `hw-real.yaml`'s `sht4x`
+block uses the default bus and address 0x44 with the heater off.
+
+### Bill of materials
+
+Generated from `hardware/dryer_board/controller.py` and `mains.py` (the
+part descriptions there carry maker, part number and JLCPCB class). Test
+points TP1 to TP9 and mounting holes H1 to H4 are bare pads and holes, not
+parts. Datasheets for every part are in [datasheets/](datasheets/README.md).
+
+Controller board:
+
+| Reference | Qty | Value | Footprint | LCSC | JLCPCB |
+|---|---|---|---|---|---|
+| C1 | 1 | 100u 50V | `CP_Elec_8x10.5` | C294509 | extended |
+| C2 | 1 | 10u 50V | `C_0805_2012Metric` | C440198 | basic |
+| C3 | 1 | 22u 10V | `C_0805_2012Metric` | C45783 | basic |
+| C4 | 1 | 100u 16V | `CP_Elec_6.3x7.7` | C231174 | extended |
+| C5 | 1 | 100n | `C_0805_2012Metric` | C49678 | basic |
+| C6 | 1 | 10u 10V | `C_0805_2012Metric` | C15850 | basic |
+| D5, D6, D7 | 3 | S1M | `D_SMA` | C95872 | basic |
+| D8, D9, D10 | 3 | LED yellow | `LED_0805_2012Metric` | C2296 | basic |
+| D11, D14 | 2 | SS34 | `D_SMA` | C8678 | basic |
+| D12, D13 | 2 | LED green | `LED_0805_2012Metric` | C2297 | basic |
+| F2 | 1 | PPTC 1.1 A 30 V | `Fuse_1812_4532Metric` | C142747 | extended |
+| J_24V | 1 | 24 V in | `PhoenixContact_MSTBVA_2,5_2-G-5,08_1x02_P5.08mm_Vertical_Drill1.7mm` | C395734 | extended |
+| J_DISP | 1 | ST7789 240x240 | `PinHeader_1x08_P2.54mm_Vertical` | C492407 | extended |
+| J_ESP12 | 1 | Thing Plus 12-pin | `PinSocket_1x12_P2.54mm_Vertical` | C2905419 | extended |
+| J_ESP16 | 1 | Thing Plus 16-pin | `PinSocket_1x16_P2.54mm_Vertical` | C2905421 | extended |
+| J_LOADS | 1 | valves + fan | `PhoenixContact_MSTBVA_2,5_6-G-5,08_1x06_P5.08mm_Vertical_Drill1.7mm` | C395768 | extended |
+| J_RLY | 1 | to mains board | `JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical` | C144395 | extended |
+| J_SENS | 1 | DS18B20 x3 | `PhoenixContact_MCV_1,5_9-G-3.5_1x09_P3.50mm_Vertical_Drill1.4mm` | C430559 | extended |
+| Q3, Q4, Q5 | 3 | CJ2310 | `SOT-23` | C75882 | extended |
+| R1, R4 | 2 | 1k | `R_0805_2012Metric` | C17513 | basic |
+| R7, R10, R13 | 3 | 100 | `R_0805_2012Metric` | C17408 | basic |
+| R8, R9, R11, R12, R14, R15, R16 | 7 | 10k | `R_0805_2012Metric` | C17414 | basic |
+| R17 | 1 | 2.2k | `R_0805_2012Metric` | C17520 | basic |
+| R18 | 1 | 5.1k | `R_0805_2012Metric` | C27834 | basic |
+| SW1 | 1 | SW-USB | `SW_Slide_SPDT_SOFNG_SS-12D00_P2.50mm` | C22355741 | extended |
+| U1 | 1 | TSR 1-2450 | `Converter_DCDC_TRACO_TSR-1_THT` | — | hand-fit |
+
+Mains board:
+
+| Reference | Qty | Value | Footprint | LCSC | JLCPCB |
+|---|---|---|---|---|---|
+| D1, D2 | 2 | S1M | `D_SMA` | C95872 | basic |
+| D3, D4 | 2 | LED red | `LED_0805_2012Metric` | C84256 | basic |
+| F1 | 1 | T 3.15 A 5x20 | `Fuseholder_5x20mm_Covered_XFCN_PTF-76-B_P15.00mm` | C48603682 | extended |
+| J_CTRL | 1 | from controller | `JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical` | C144395 | extended |
+| J_MAINS | 1 | 120 VAC | `PhoenixContact_MSTBVA_2,5_8-G-5,08_1x08_P5.08mm_Vertical_Drill1.7mm` | C395787 | extended |
+| K1, K2 | 2 | SRD-05VDC-SL-C | `Relay_SPDT_SANYOU_SRD_Series_Form_C` | C35449 | extended |
+| Q1, Q2 | 2 | MMBT2222A | `SOT-23` | C8512 | basic |
+| R2, R5 | 2 | 1k | `R_0805_2012Metric` | C17513 | basic |
+| R3, R6 | 2 | 2.2k | `R_0805_2012Metric` | C17520 | basic |
+
+Notes on the tables:
+
+- The value field is the design value; the fitted part can be better.
+  `S1M` is fitted as MDD M7 (the S1M rating: 1 A, 1000 V, SMA). C3
+  (`22u 10V`) and C6 (`10u 10V`) are 25 V Samsung parts.
+- U1 has no LCSC number: MornSun's K7805-1000R3 is not stocked at
+  LCSC/JLCPCB or Mouser (checked 2026-10-14). The footprint is drawn for
+  the TRACO TSR 1-2450 (Mouser 495-TSR-1-2450; 1 Vin, 2 GND, 3 Vout). The
+  Amazon-listed "TSR 1-2450" to be fitted (hardware/README.md) matches it
+  in body (11.5 × 7.5 × 10 mm inside the 11.7 × 7.6 outline), pitch and
+  pin-1 mark, but the listing states no pinout: bench-check the pin order
+  before soldering (docs/board-continuity-check.md, PCB item 0). A
+  K7805-1000R3 from another distributor has the same SIP-3, 2.54 mm pinout
+  but a wider tolerance (budget below).
+- F1 is the XFCN PTF-76-B covered holder (LCSC C48603682, 15 mm pitch,
+  UL 250 VAC 20 A), fab-fitted, as the single-board rev A had it. The
+  covered 5 × 20 mm holders on hand (Amazon B0FCS5MK1Y, the BLX-A
+  moulding; the reviewer confirmed their pitch at about 22 mm on
+  2026-10-15, after a first reading of 12.5 mm taken from the listing's
+  picture) are not fitted: with mains copper 1 mm from the slot their
+  25.8 mm body would run from x 10.35 to 36.15, into the vertical plug
+  (strip, slot, clearance, holder and the plug's body add up to 45.6 mm
+  across a 45 mm board; against the plug's courtyard it is 1 mm over). The 22.5 mm slotted footprint stays in
+  `hardware/lib/dryer.pretty` for a right-angle-plug layout, where it
+  fits. The T 3.15 A 5 × 20 mm fuse is bought separately.
+- The four pluggable headers are DORABO parts on local copies of the
+  stock Phoenix footprints, drilled to the DORABO drawings: Ø1.7 mm for
+  the 5.08 mm headers (1.0 mm square pins), Ø1.4 mm for J_SENS (0.8 mm
+  pins). Their mating plugs are loose parts; the LCSC numbers are in
+  [hardware/README.md](../hardware/README.md#ordering-jlcpcb).
+- J_RLY and J_CTRL are genuine JST (B4B-XH-A(LF)(SN)) on KiCad's stock
+  footprint; the XHP-4 housings and crimps for the cable are loose parts.
+- SW1 is a SOFNG SS-12D00 on a 2.5 mm pitch (not 2.54).
+
+### Header pinouts
+
+J_MAINS (mains board), 8-pin 5.08 mm, vertical (DORABO DB2EV-5.08-8P-GN,
+630 V 15 A per LCSC; it was right-angle until the reviewer reported a wall
+beside the mains space). Pin 1 is the top pin on the board's right edge
+and the wires leave perpendicular to the board; the entry direction and
+the hole size are inferred from the DB2EVC/DB2ERC drawings, the DB2EV's
+own drawing not being retrieved (unverified, see above). Silkscreen
+labels in brackets.
+
+| Pin | Net | Function |
+|---|---|---|
+| 1 | L_IN | Mains L in, to F1 (L IN) |
+| 2 | N | Mains N in (N IN) |
+| 3 | L_SW_A | Heater A switched L, from K1 NO (HTR A) |
+| 4 | N | Heater A N (N) |
+| 5 | L_SW_B | Heater B switched L, from K2 NO (HTR B) |
+| 6 | N | Heater B N (N) |
+| 7 | L_FUSED | 24 V PSU L, fused side of F1 (PSU L) |
+| 8 | N | 24 V PSU N (PSU N) |
+
+N passes straight through to pins 4, 6 and 8, never switched or fused.
+The mains nets are `L_IN`, `L_FUSED`, `L_SW_A`, `L_SW_B` and `N`; only
+J_MAINS, F1, K1 and K2 touch them, all on the mains board
+(`mains.check()` enforces it).
+
+J_RLY (controller) and J_CTRL (mains board), JST-XH 4-way: 1 5V, 2 GND,
+3 HTR A, 4 HTR B ([The board-to-board link](#the-board-to-board-link)).
+
+J_LOADS (controller), 6-pin 5.08 mm (VA+ VA- VB+ VB- F+ F-):
+
+| Pin | Net | Function |
+|---|---|---|
+| 1 | +24V | Valve A + |
+| 2 | SW_VA | Valve A −, Q3 drain |
+| 3 | +24V | Valve B + |
+| 4 | SW_VB | Valve B −, Q4 drain |
+| 5 | +24V | Fan + |
+| 6 | SW_FAN | Fan −, Q5 drain |
+
+J_24V (controller), 2-pin 5.08 mm (24V+ 0V): pin 1 is 24 V + (before F2
+and D11), pin 2 is 0 V (GND).
+
+J_SENS (controller), 9-pin 3.5 mm: three triples, pins 1/4/7 3V3, 2/5/8
+DQ (1-wire, 5.1 kΩ R18 to 3V3), 3/6/9 GND, one triple per DS18B20. 10 µF
+and 100 nF on 3V3 at the header.
+
+J_DISP (controller), 8-pin 2.54 mm pin header, in the existing display order:
+
+| Pin | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| Panel | GND | 3V3 | SCL | SDA | RES | DC | CS | BLK |
+| Net | GND | +3V3 | SPI_CLK | SPI_MOSI | LCD_RST | LCD_DC | LCD_CS | LCD_BL |
+
+The Waveshare caveat under [Harness and off-board wiring](#harness-and-off-board-wiring)
+applies unchanged. The SHT45 uses the Thing Plus's Qwiic connector, not a
+board header ([The board-to-board link](#the-board-to-board-link)).
+
+### Status LEDs
+
+| LED | Board | Colour | Wired | Lit means |
+|---|---|---|---|---|
+| D12 | controller | green | +24V through R16 10 kΩ to GND | 24 V present after F2 and D11 |
+| D13 | controller | green | +5V through R17 2.2 kΩ to GND | 5 V module output present |
+| D3 | mains | red | +5V through R3 2.2 kΩ to COIL_A (Q1 collector) | Heater A relay driven |
+| D4 | mains | red | +5V through R6 2.2 kΩ to COIL_B (Q2 collector) | Heater B relay driven |
+| D8 | controller | yellow | +24V through R9 10 kΩ to SW_VA (Q3 drain) | Valve A driven |
+| D9 | controller | yellow | +24V through R12 10 kΩ to SW_VB (Q4 drain) | Valve B driven |
+| D10 | controller | yellow | +24V through R15 10 kΩ to SW_FAN (Q5 drain) | Fan driven |
+
+The five output LEDs show that the driver stage is conducting, not that
+the load works: a relay with a dead coil or an unplugged valve still
+lights its LED. With the ESP out of its sockets none of them may light;
+D3 and D4 also need the link plugged in to light at all.
+
+### SW-USB
+
+SW1 is the JP-USB shunt as a switch, with the same rule, printed beside
+it: **SW-USB OFF before any USB-C cable is plugged into the ESP; ON for
+normal operation.** The feed is +5V → D14 (SS34) → SW1 pin 2 (common) →
+pin 1 → the ESP's USB pin (12-pin position 3); pin 3 is unconnected. D14
+stops a host back-feeding the 5 V bus and the relay coils. Nothing stops
+the 5 V module sourcing current into a host's port with SW-USB ON, which
+is why the switch exists (failure mode F-23). Which slider position
+joins pin 2 to pin 1 is checked with a meter at first article
+(docs/board-continuity-check.md).
+
+### Relay contacts: NO and NC
+
+K1 and K2 (mains board) use KiCad's stock `Relay_SPDT_SANYOU_SRD_Series_Form_C`
+footprint (the Songle SRD pattern; `hardware/tests/test_libs.py` holds its
+pad positions to the Songle numbers below within 0.1 mm). Pad 1 is COM,
+pads 2 and 5 the coil, **pad 3 NO and pad 4 NC**. That reading comes from
+KiCad's `SANYOU_SRD_Form_C` symbol drawing, where the switch arm rests on
+pin 4, and agrees with Songle's wiring diagram. Pad 3 takes the heater's
+switched L; pad 4 has no net and no copper, but it is live mains whenever
+the coil is off, so a DRC rule keeps every non-mains item 6 mm from it.
+The first-article check confirms it on the parts fitted: coil unpowered,
+COM to pad 4 closed, COM to J_MAINS pin 3 (pin 5 for K2) open. A closed
+COM-to-heater reading means NO and NC are swapped: stop, do not connect a
+heater.
+
+### Mains layout and clearance
+
+Both relays sit wholly inside the mains board's mains zone, with their coil
+pads as SELV islands: the Songle pattern puts COM outboard of the coil
+column, so no straight boundary separates COM from the coil pins. The coil
+tracks reach those islands through the four slot gaps (COIL_A at y 22.75,
++5V at y 35.05, COIL_B at y 45.55, +5V at y 57.55, as routed; they move on
+any re-route, and the gaps are what the generator fixes). The mains copper is
+laid by hand, not by the autorouter: 1.5 mm tracks, fixed geometry in
+`mains.MAINS_TRACKS`, locked on the board. The first autorouted board
+left 31 pads unconnected, because KiCad's Specctra export turns every rule
+area into a full keep-out and Freerouting cannot see the custom clearance
+rules; Freerouting now routes only the low-voltage nets.
+
+The mains board's layout, in board millimetres (origin top left): the SELV
+strip is x 0 to 7, with J_CTRL at (3.95, 33) and the two relay driver
+stages in two columns beside it; the slot is x 7 to 9, in segments
+(3, 21), (25, 33), (37, 43.5), (47.5, 55.5), (59.5, 67); F1 is at
+(28.7, 14), rotated 180° so that its L_IN pad is on the plug side, on the
+15 mm XFCN footprint (body x 9.0 to 33.4); K1's COM
+is at (12, 29) and K2's at (12, 51.5); J_MAINS is at (39.5, 17.94), rotated
+270° so that pin 1 is at the top and the body's deeper side faces the edge
+(courtyard x 35.16 to 44.84). The mains
+GND pour is small (F.Cu about x 2 to 5.1, y 21 to 56.1 in three pieces;
+B.Cu about y 23.7 to 55) and GND is routed as tracks as well. Every position is fixed
+by a distance, explained in the comment block above `PLACE` in
+`mains.py`: J_MAINS's N links against the board edge, F1's body flush with
+the slot edge (its courtyard 1.5 mm short of J_MAINS's), F1's pad 2
+6.303 mm above K1's top coil pad.
+
+DRC enforces these rules (`hardware/dryer_board/mains.py`, `RULES`):
+
+| Rule | Value |
+|---|---|
+| Mains copper to any other net | 6 mm |
+| Mains copper to other nets inside the two `relay_pads` areas | 3.5 mm |
+| Relay NC pad (K1/K2 pad 4, live, netless) to any non-mains item | 6 mm |
+| Mains copper to a mounting hole | 6 mm hole clearance |
+| Mains track width / to board edge | 1.5 mm / 1 mm |
+| Between the L-side mains nets (L_IN, L_FUSED, L_SW_A, L_SW_B) | 1.6 mm |
+| Between mains nets (netclass; L to N) | 1.0 mm |
+
+The two mains-to-SELV rules exclude the NC pads on the SELV side, since
+those pads are mains: mains tracks pass them at the in-class clearance.
+KiCad applies the 3.5 mm relaxation to a whole track segment if any part
+of it touches a `relay_pads` area, so the mains tracks are split at the
+area edges and only the pieces at the relay pads are relaxed.
+
+Measured on the committed mains board, in three groups by what guards
+each figure. DRC re-checks the rules on every generate and route.
+
+Printed and asserted by `hardware/tests/test_margins.py`:
+
+- Mains to SELV outside the relay areas: 6.303 mm, L_FUSED at F1's pad 2
+  to K1's top coil pad. The rule is 6.0 mm, so the margin is 0.30 mm.
+- Mains to a mounting hole's edge (rule 6.0 mm): H1 10.281 mm,
+  H2 10.640 mm, H3 12.910 mm, H4 9.229 mm.
+- Between the L-side mains nets, the relay NC pads included (rule
+  1.6 mm): 1.850 mm, the L_FUSED branch to J_MAINS pin 7 against K2's NC
+  pad.
+- Mains to the board edge: 1.050 mm, the N links at x 43.15 (rule 1.0 mm).
+  This is the tightest margin on the board.
+- J_CTRL's pads to the relay COM pads: 6.325 mm (+5V pad to K1 COM),
+  asserted at 6.0 mm by `test_selv_to_relay_com`. DRC does not enforce
+  this: inside the relay areas it holds every SELV item to 3.5 mm.
+- Any SELV track or pad (the relays' own coil pads excepted) to a relay COM
+  pad: 3.950 mm minimum, a +5V track to K1's COM; asserted at 3.5 mm by `test_selv_to_relay_com`.
+- The SELV strip itself (copper left of the slot, x < 7) to the COM pads:
+  4.407 mm, a +5V track to K2's COM, across the slot;
+  printed and asserted at 3.5 mm by the same test.
+
+Floor asserted by a test, value measured once on the committed board with
+pcbnew (not printed by the suite):
+
+- The saved GND fill is 4.000 mm from mains copper inside the relay areas
+  and 10.17 mm outside them, asserted at 3.5 and 6.0 mm by
+  `test_saved_pour_fill_keeps_the_mains_rules`. The pour outline is kept
+  at y ≥ 21 as a conservative outline, and the fill that is saved is what
+  the test checks, after a refill that applies the custom rules
+  (`board.refill_with_rules`, then `kicad-cli pcb drc --refill-zones
+  --save-board` after every save).
+- The relay NC pads (netless, live when the coil is off) are 2.05 mm from
+  L_SW_B's lane; `test_l_side_nets_apart` holds them at 1.6 mm, and its
+  printed worst case is the 1.850 mm to the L_FUSED branch above.
+
+DRC only (no test prints it):
+
+- Strip to COM, across the slot: the "mains to SELV at relay pads" rule
+  tests the mains item, and a COM pad is always inside a relay area, so DRC
+  holds any SELV item near COM, not only the relay's own coil pads, to
+  3.5 mm. The minimum is 3.950 mm over all SELV copper and 4.407 mm for
+  the strip itself (both printed above). Outside the relay areas the 6 mm holds (6.303 mm,
+  printed above); inside them the strip sits at the 3.5 mm rule's
+  clearance across the 2 mm slot, which is above the 3.2 mm reinforced
+  figure in the desk review below.
+
+- Inside the relay areas: 3.511 mm minimum, a coil pad to the COM pad of
+  the same relay, against the 3.5 mm rule (detail below).
+- L to N: 1.10 mm copper to copper, from J_MAINS's L_SW_A pad 3 to the N
+  link at x 43.15, held by the 1.0 mm MAINS netclass clearance (the
+  single board had 1.55 mm). The desk review below gives 1.6 mm creepage
+  for this working voltage, so 1.10 mm is under it (unverified: for the
+  hardware reviewer, not settled). Regaining it is blocked by the
+  geometry: the N link cannot move right without breaking the 1 mm edge
+  rule, and moving the pads left moves the N link with them, so the gap
+  is set by the edge rule, not by the fuse. Rev A's reasoning: an L to N insulation failure
+  blows F1 (fail-safe), whereas an L to L failure across a relay contact
+  runs a heater uncontrolled, so L to L is held at 1.6 mm and L to N at
+  the 1.0 mm netclass clearance.
+
+A known gap in the rules, parked rather than fixed: the DRC rules hold
+the netless relay NC pads to SELV at 6 mm, but to L-side mains copper
+only at the 1.0 mm MAINS netclass clearance (the "mains L to L" rule
+needs both sides in the MAINS class). `test_margins.py` holds them at
+1.6 mm, which is why the NC pad figure above is a test, not a DRC result.
+A rev B rule, NC to L-side 1.6 mm, is the fix.
+
+Freerouting narrowed some SELV tracks below their netclass width where
+space is tight. All are at least 0.2 mm, the board minimum, and DRC-clean.
+On the mains board P5 is down to 0.6 mm (netclass 0.8 mm), including its
+crossing of the COIL_A slot gap, and its Default-class SELV tracks go down
+to 0.225 mm too; on the controller the Default-class
+pieces go down to 0.225 mm, P24 to 0.4 mm and P5 to 0.48 mm. The currents
+are small (the relay coils about 70 mA, the valves and fan well under
+1 A). The mains tracks are 1.5 mm, locked, hand-placed and never routed.
+
+The smallest mains-to-SELV gap on the board is the relay's own: COM pad
+to coil pad. On the stock footprint (COM pad Ø3.0 mm, coil pads Ø2.5 mm,
+centres 6.26 and 6.36 mm apart) the copper gap is 3.51 mm to the COIL net
+pad and 3.61 mm to the +5V pad, measured on the committed board. The spec's
+3.8 mm assumed smaller pads. The 3.5 mm `relay_pads` rule is what lets
+this gap pass DRC; the hand-placed mains tracks keep 3.5 mm or more from
+the coil pads and coil tracks (`mains.py`).
+
+Against IEC 62368-1, as a desk review, not a test: for a working voltage
+of 150 V r.m.s. (taken on the 160 V row), pollution degree 2 and material
+group IIIb (assumed for FR-4, whose CTI the fab does not state), the
+creepage table (IEC 62368-1 Table 17, the same values as IEC 60664-1
+Table F.4) gives 1.6 mm for basic insulation, so 3.2 mm for reinforced
+(twice basic). L to N is 1.10 mm, below the 1.6 mm figure (unverified: for
+the hardware reviewer; the fail-safe reasoning is under "L to N" above).
+The 6 mm rule, the 3.5 mm relay-area rule and the 3.51 mm
+relay pad gap all exceed 3.2 mm; the relay gap by only 0.3 mm. Clearance
+through air was not looked up; at this voltage it is normally smaller than
+creepage, so creepage governs. These table values are quoted from the
+standard, which is not in `docs/datasheets/`; check them against a copy
+before relying on them (unverified). The relay's own coil-to-contact
+rating (1500 VAC, Songle datasheet) is basic insulation, which is why 0 V
+stays bonded to PE at the PSU, as in [Mains and earthing](#mains-and-earthing).
+The controller board carries no mains, so none of this applies to it; the
+link cable carries 5 V and two logic-level drives.
+
+### MOSFET gate drive
+
+The CJ2310 is rated 60 V, V<sub>GS(th)</sub> 0.5 to 2 V, R<sub>DS(on)</sub>
+125 mΩ max at 4.5 V (datasheet in `datasheets/discretes/`). 3.3 V is not a
+specified R<sub>DS(on)</sub> point, but the output-characteristic plot
+draws one curve for V<sub>GS</sub> 5 V, 4 V and 3.0 V: at low V<sub>DS</sub>
+they coincide. At 125 mA per valve the 3.3 V drive is therefore well
+inside full enhancement, unlike the IRLZ44N. Not measured on a board
+(unverified).
+
+### USB-pin drop budget
+
+The ESP's USB pin is fed from the 5 V module through D14 (SS34) and SW1.
+Same arithmetic as [JP-USB and the Schottky](#jp-usb-and-the-schottky),
+with the module's tolerance in place of the trimmed buck:
+
+| Step | Protoboard (MP1584, trimmed) | PCB rev A (TSR 1-2450) | Source |
+|---|---|---|---|
+| 5 V source, low end | 5.00 V | 4.87 V: 5 V −2 % set accuracy, −0.2 % line, −0.4 % load | TRACO TSR-1 datasheet |
+| Series Schottky | −0.40 V | −0.40 V typical at 0.4 A (fig. 3 reads about 0.38 V); −0.55 V as a bound (the maximum, specified at 3 A) | MDD SS34 datasheet |
+| BAT20J on the Thing Plus | −0.62 V (max, at 1 A) | −0.62 V | ST BAT20J datasheet |
+| AP2112 dropout at the 430 mA peak | −0.29 V (max, between 200 mV at 300 mA and 400 mV at 600 mA) | −0.29 V | Diodes AP2112 datasheet |
+| 3.3 V output | −3.30 V | −3.30 V | |
+| **Margin** | **0.39 V** | **0.26 V typical, 0.11 V with the 0.55 V bound** | |
+
+The TSR-1's temperature coefficient (±0.015 %/K max) takes about another
+20 mV for a 25 K rise. A MornSun K7805-1000R3 (±3 % accuracy, ±0.4 % line,
+±0.6 % load, max) would start at 4.80 V and leave 0.19 V typical, 0.04 V
+with the bound, which is a reason to fit the TSR 1-2450. The Amazon-listed
+"TSR 1-2450" has no datasheet of its own, so its set accuracy is unknown
+until TP3 is read; the first-article limits below apply to it as to any
+module. The margin is positive in every case but smaller than the
+protoboard's. The high end, 5.13 V, keeps the AP2112 input far below its
+6.5 V absolute maximum. The check is the first-article power-path
+measurement (docs/board-continuity-check.md, PCB section, item 6): TP3
+4.9 to 5.1 V with the ESP out, and 12-pin position 3 0.2 to 0.4 V below
+TP3 with SW-USB ON (with the ESP in). A module reading between 4.87 and
+4.9 V is inside its datasheet but fails that check and is replaced.
+
+## Protoboard layout (previous build)
+
+The [printed circuit board](#printed-circuit-board-rev-a) supersedes this layout; it is kept as the record of the protoboard build.
 
 ![Protoboard layout](board-layout.svg)
 

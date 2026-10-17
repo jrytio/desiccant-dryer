@@ -6,10 +6,12 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+      - 'hardware/**'
   pull_request:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+      - 'hardware/**'
 
 env:
   ESPHOME_VERSION: 2026.9.0
@@ -51,6 +53,8 @@ jobs:
       # and writes JSON, so its test needs neither the image nor a compile.
       - name: Test the release manifest script
         run: bash tests/make_manifest_test.sh
+      - name: Hold the firmware pin map against the hardware pin map
+        run: python3 tests/test_pinmap.py
 
   host-cases:
     name: host cases

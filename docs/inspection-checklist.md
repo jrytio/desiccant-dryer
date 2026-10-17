@@ -5,7 +5,7 @@ replaces the original control board in an Azco VMD-08 dryer. Every `inspect`
 row in `docs/failure-modes.md` appears here exactly once (the ID in bold is
 the failure mode the check guards against), expanded into what to look at and
 what "pass" means. A few bench and live rows (for example G-08, A-13,
-A-01/A-19 and the buck preset) are included too, because a human does them
+A-01/A-19 and the 5 V module output) are included too, because a human does them
 with a meter at the same visit; they are the commissioning subset, and the
 automated verify suite still owns them. Adding an `inspect` row to the
 catalogue means adding its item here in the same change.
@@ -28,14 +28,15 @@ that board alone.
 
 ## Stage 1 · Board and header assembly (mains off, 24 V off)
 
-Reference: `docs/hardware.md`, `docs/board-layout.svg`, `docs/pinout-verification.md`. The pin-by-pin meter pass (connections and pad bridges) is `docs/board-continuity-check.md`.
+Reference: `docs/hardware.md` (the PCB section for a rev A board), `docs/board-layout.svg` (protoboard), `docs/pinout-verification.md`. The pin-by-pin meter pass (connections and pad bridges) is `docs/board-continuity-check.md`. Items marked *PCB* apply to the printed board, *protoboard* to the previous build.
 
 - [ ] **G-02** Thing Plus (ESP32-S2 or ESP32-C6) seated in its 16-pin and 12-pin sockets. **Pass:** USB-C end and antenna end match the silkscreen, no empty socket pin at either end, no pin bent under the module. *(eyes, torch)*
-- [ ] **A-04** Both relay-driver transistors. **Pass:** marking reads `PN2222A` (pinout E-B-C, flat face toward you). A `P2N2222A` (C-B-E) is a reject; do not power the board. *(magnifier)*
+- [ ] **A-04** Both relay-driver transistors. **Pass:** *protoboard:* marking reads `PN2222A` (pinout E-B-C, flat face toward you). A `P2N2222A` (C-B-E) is a reject; do not power the board. *PCB:* Q1 and Q2 are SOT-23 MMBT2222A, fitted by the fab from the BOM (LCSC C8512), so no `PN2222A` marking is expected. The committed CJ datasheet's marking field is partly garbled (it reads "13"; LCSC's listing names the part "MMBT2222A 1P"), so compare the code on Q1/Q2 with the reel or JLCPCB's placement photo rather than with a fixed string; a SOT-23 at Q1/Q2 that matches Q3 to Q5 (CJ2310) is a reject. *(magnifier)*
 - [ ] **F-13** Both 100 µF electrolytics. **Pass:** stripe (negative) on the GND side of the silkscreen on each board, can flat, no bulge or residue. *(eyes)*
-- [ ] **F-19** ESP BAT pin and JST battery connector. **Pass:** nothing wired to BAT; 5 V from the buck lands only on the USB pin through the Schottky and JP-USB. *(eyes, continuity: BAT to 5 V bus open)*
-- [ ] **G-15** MP1584 buck module fit. **Pass:** module sits flat on its own header holes with no forced or bent pins; if the vendor footprint differs from the drilled holes it is on flying leads, not sprung into place. *(eyes)*
-- [ ] **G-15** Buck output preset. **Pass:** 5.00 to 5.10 V measured at the module OUT+ pad with 24 V applied to the module alone and JP-USB **removed**. *(meter)*
+- [ ] **F-19** ESP BAT pin and JST battery connector. **Pass:** nothing wired to BAT; 5 V lands only on the USB pin, through the Schottky and JP-USB (*protoboard*) or D14 and SW-USB (*PCB*). *(eyes, continuity: BAT to 5 V bus open)*
+- [ ] **G-15** 5 V module fit (MP1584 on the protoboard, U1 on the PCB). **Pass:** module sits flat on its own header holes with no forced or bent pins; if the vendor footprint differs from the drilled holes it is on flying leads, not sprung into place. *PCB:* a module not bought as a TRACO part (the Amazon-listed "TSR 1-2450") was bench-checked for pin order before soldering (docs/board-continuity-check.md, PCB item 0). *(eyes)*
+- [ ] **G-15** 5 V module output. **Pass:** 4.9 to 5.1 V at TP3 (to TP1) with 24 V applied and the ESP **out** of its sockets. No trimmer: a fixed module outside that range is replaced, not adjusted. *(meter)*
+- [ ] **F-23** *PCB.* SW-USB. **Pass:** OFF before any USB-C cable is connected to the ESP; ON for normal operation. The rule is printed beside the switch; write it on the enclosure too. *(eyes, label)*
 - [ ] **G-03** Display cable order. **Pass:** module header reads GND / VCC / SCL / SDA / RES / DC / CS / BLK in that order (LCDWIKI or QDtech MSP1541 style) and matches the board header 1:1. A Waveshare module (VCC GND DIN CLK CS DC RST BL) needs a re-pinned cable; straight-through is a reject. *(eyes, module silkscreen)*
 - [ ] **G-04** Display backlight input. **Pass:** BLK to VCC measures about 10 kΩ unpowered, showing an on-module transistor. A near-zero or diode-like reading means BLK is a bare LED anode; do not connect GPIO17 to it. *(meter)*
 - [ ] **G-05** SHT45 on the Qwiic cable. **Pass:** genuine Qwiic/STEMMA QT breakout on a 4-pin JST-SH cable, black to GND, red to 3.3 V. A breakout with a different 4-pin order is rewired before plugging in. *(eyes)*
@@ -63,17 +64,17 @@ Reference: `docs/hardware.md` relay board section, `docs/datasheets/thermal-fuse
 
 ## Stage 3 · Mains wiring, creepage and earthing (mains off)
 
-- [ ] **G-09** Terminal block usage. **Pass:** every mains conductor lands in a **mains-rated** block (UL1059 300 V / 10 A or IEC 250 V class) on the relay board; no mains conductor in a 24 V or sensor block, and no 24 V conductor in a mains block. Label each block. *(eyes)*
+- [ ] **G-09** Terminal block usage. **Pass:** *protoboard:* every mains conductor lands in a **mains-rated** block (UL1059 300 V / 10 A or IEC 250 V class) on the relay board; no mains conductor in a 24 V or sensor block, and no 24 V conductor in a mains block. Label each block. *PCB:* every plug matches its header (each has its own pitch and pin count; the board-to-board link is a 2.5 mm JST-XH that fits neither 2.54 mm header); the mains plug's wires follow the silkscreen labels L IN / N IN / HTR A / N / HTR B / N / PSU L / PSU N. *(eyes)*
 - [ ] **A-16** Terminal torque and wire prep. **Pass:** stranded mains wire is ferruled, no loose strands, each conductor holds a firm pull; no conductor passes through a protoboard hole. *(hands, pull test)*
-- [ ] **A-15** Creepage on the protoboard. **Pass:** at least two cleared rows (pads removed or slot cut) between any mains pad and any logic or 24 V pad, no plated pad left in the gap, board clean of flux. *(eyes, ruler)*
+- [ ] **A-15** Creepage. **Pass:** *protoboard:* at least two cleared rows (pads removed or slot cut) between any mains pad and any logic or 24 V pad, no plated pad left in the gap, board clean of flux. *PCB:* on the mains board, slot present and clean along the mains boundary, no copper within 6 mm of mains copper outside the relay areas (DRC enforces it; look for solder splashes), board clean of flux; nothing mains on the controller board. *(eyes, ruler)*
 - [ ] **A-14** Protective earth. **Pass:** inlet PE to each heater sheath, to the chassis and to the PSU FG terminal each reads under 0.1 Ω, all bonded at one star point that is not on the protoboard. *(low-ohms meter)*
 - [ ] **F-02** PSU FG. **Pass:** the LRS-35-24 FG screw has its own PE conductor, not shared through the chassis paint. *(eyes, meter)*
 - [ ] **F-01** PSU mounting and guarding. **Pass:** open-frame PSU mains terminals are covered, PSU standoffs are metal to the earthed chassis, no mains terminal within finger reach when the lid is open. *(eyes)*
 - [ ] **G-12** Enclosure. **Pass:** metal enclosure bonded to PE; every mains lead that passes an edge or a panel has a grommet or sleeve; lid closes without pinching a lead. *(eyes, meter)*
 - [ ] **G-10** Routing. **Pass:** mains L/N run as a twisted or tightly paired loom, at least 25 mm from the 1-wire, I2C and SPI cables, crossing at right angles where they must cross. *(eyes)*
-- [ ] **A-06** Relay-to-heater identity. **Pass:** relay A (GPIO13, harness pin 3) feeds the heater on pack A, relay B (GPIO12, pin 4) feeds pack B, matched to the DS18B20 and valve labelled for the same pack. *(continuity, labels)*
+- [ ] **A-06** Relay-to-heater identity. **Pass:** *protoboard:* relay A (GPIO13, harness pin 3) feeds the heater on pack A, relay B (GPIO12, pin 4) feeds pack B. *PCB:* K1 NO (heater A, 12-pin position 4) goes to J_MAINS pin 3 (HTR A) and K2 NO (heater B, 12-pin position 5) to pin 5 (HTR B); the heater wired to pin 3 is the one on pack A. Either build: matched to the DS18B20 and valve labelled for the same pack. *(continuity, labels)*
 - [ ] **G-16** Labelling. **Pass:** each pack, its heater tail, its DS18B20 lead and its valve carry a permanent A or B label that agrees with the relay and GPIO map, so a later reassembly cannot cross a pair. No unlabelled member of a pair. *(eyes)*
-- [ ] **A-24** Relay harness. **Pass:** JST-XH 4-way plugged home with the latch engaged; pin 1 = 5 V, 2 = GND, 3 = GPIO13, 4 = GPIO12 at both ends. *(eyes, continuity)*
+- [ ] **A-24** Relay harness. **Pass:** *protoboard:* JST-XH 4-way plugged home with the latch engaged; pin 1 = 5 V, 2 = GND, 3 = GPIO13, 4 = GPIO12 at both ends. *PCB:* the JST-XH 4-way link is plugged home with the latch engaged at J_RLY (controller) and J_CTRL (mains), and the cable is 1:1: pin 1 = 5 V, 2 = GND, 3 = heater A, 4 = heater B at both ends (silkscreen beside each header). *(eyes, continuity)*
 
 ## Stage 4 · Sensors and placement (mains off)
 
@@ -103,11 +104,11 @@ Reference: `CLAUDE.md` invariants, `docs/releasing.md`.
 - [ ] **J-11** Persisted state compatibility. **Pass:** the firmware being flashed uses the same `standby_state` and `active_pack` numbering and the same counter units as the one it replaces; otherwise the unit's globals are erased as part of the update. *(diff `base.yaml` globals, release notes)*
 - [ ] **B-19 / B-20** Tunables on this unit. **Pass:** in Home Assistant, `Pack overtemp limit` reads 110 °C or lower (below the SF129E holding temperature of 118 °C); `regen_temp` is below `overtemp`; `cooldown_temp` is below `regen_temp`; `arm_rh` is below `swap_rh`. *(HA entities)*
 - [ ] **K-10** Adoption selector. **Pass:** `desiccant-dryer-adopt.yaml` references the release tag that exists on GitHub and the same component version as the flashed image. *(read file, `git tag`)*
-- [ ] **F-10** JP-USB discipline. **Pass:** the shunt is **removed** before any USB-C cable is connected to the board, and refitted before the lid goes on. Write this on the enclosure. *(eyes, label)*
+- [ ] **F-10** *Protoboard.* JP-USB discipline (on the PCB this is F-23, SW-USB, in Stage 1). **Pass:** the shunt is **removed** before any USB-C cable is connected to the board, and refitted before the lid goes on. Write this on the enclosure. *(eyes, label)*
 
 ## Stage 6 · First energised check (24 V on, mains on, heaters disconnected at their terminals)
 
-- [ ] **F-07 / F-08** Rails. **Pass:** 24.0 ± 0.5 V at the PSU; 5.00 to 5.10 V at the buck OUT+; 3.3 V on the ESP 3V3 pin. *(meter)*
+- [ ] **F-07 / F-08** Rails. **Pass:** 24.0 ± 0.5 V at the PSU; 5.00 to 5.10 V at the buck OUT+ (PCB: 4.9 to 5.1 V at TP3); 3.3 V on the ESP 3V3 pin. *(meter)*
 - [ ] **A-29 / F-15** Power-on behaviour. **Pass:** neither relay clicks and no valve pulls in during power-up, boot, or a pressed `Restart`; the blue LED stays off until heater A is genuinely commanded (watch `Heater A Relay`). *(ears, eyes, three power cycles)*
 - [ ] **A-05 / D-01** Interlock at the terminals. **Pass:** on the hw-test build (the only one with the manual switches; the release makes them `internal`), with `Dryer Enabled` off, toggling `Heater A` on then `Heater B` on from HA never shows both relay NO contacts closed at once; same for the two valves. *(meter on relay NO, eyes on valves)*
 - [ ] **L-12** Operator indicators. **Pass:** the front display, not the blue LED, is the status indicator; the LED meaning is written on the enclosure. *(eyes)*
